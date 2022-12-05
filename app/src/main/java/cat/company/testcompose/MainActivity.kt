@@ -1,6 +1,5 @@
 package cat.company.testcompose
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import cat.company.testcompose.bottomSheet.BottomSheetContent
 import cat.company.testcompose.camera.CameraPreview
@@ -20,7 +20,6 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterialApi::class)
 @ExperimentalGetImage
 class MainActivity : ComponentActivity() {
-    @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -30,21 +29,22 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    val scaffoldState= rememberBottomSheetScaffoldState(bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed))
+                    val bottomSheetState= rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
                     val coroutineScope= rememberCoroutineScope()
                     val lastBarcode:MutableState<List<Barcode>?> = remember{mutableStateOf(null)}
-                    BottomSheetScaffold(
-                        scaffoldState = scaffoldState,
+                    ModalBottomSheetLayout(
                         sheetShape = RoundedCornerShape(25.dp,25.dp,0.dp,0.dp),
                         sheetContent = {
-                            if(lastBarcode.value!=null)
                             BottomSheetContent(lastBarcode = lastBarcode)
-                        }
+                        },
+                        sheetState = bottomSheetState,
+                        scrimColor = Color.DarkGray.copy(alpha=0.8f)
                     ) {
                         CameraPreview {
                             lastBarcode.value = it
                             coroutineScope.launch {
-                                scaffoldState.bottomSheetState.expand()
+                                if (!bottomSheetState.isVisible)
+                                    bottomSheetState.show()
                             }
                         }
                     }
