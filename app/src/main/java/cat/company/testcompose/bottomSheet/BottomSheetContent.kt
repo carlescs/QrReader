@@ -1,6 +1,7 @@
 package cat.company.testcompose.bottomSheet
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -11,7 +12,9 @@ import com.google.mlkit.vision.barcode.common.Barcode
 
 @Composable
 fun BottomSheetContent(lastBarcode: MutableState<List<Barcode>?>){
-    Column(modifier = Modifier.padding(15.dp)) {
+    Column(modifier = Modifier
+        .padding(15.dp)
+        .defaultMinSize(minHeight = 250.dp)) {
         if (lastBarcode.value != null) {
             val barcode=lastBarcode.value?.first()
             if(barcode!=null) {
@@ -23,6 +26,7 @@ fun BottomSheetContent(lastBarcode: MutableState<List<Barcode>?>){
                         ContactBarcodeDisplay(barcode=barcode)
                     }
                     else -> {
+                        Title(title = "Other")
                         Text(text = lastBarcode.value?.first()?.displayValue?: "No")
                     }
                 }

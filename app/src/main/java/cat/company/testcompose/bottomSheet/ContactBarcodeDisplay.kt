@@ -10,6 +10,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 
 @Composable
 fun ContactBarcodeDisplay(barcode: Barcode) {
+    Title(title = "Contact")
     Text(text = buildAnnotatedString {
         this.withStyle(SpanStyle(fontWeight = FontWeight.Bold)){
             append("eMail: ")
