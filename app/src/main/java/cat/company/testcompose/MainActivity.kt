@@ -7,12 +7,15 @@ import androidx.activity.compose.setContent
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.*
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import cat.company.testcompose.bottomSheet.BottomSheetContent
 import cat.company.testcompose.camera.CameraPreview
 import cat.company.testcompose.ui.theme.TestComposeTheme
+import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterialApi::class)
 @ExperimentalGetImage
 class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -25,14 +28,19 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    val scaffoldState= rememberScaffoldState()
+                    val scaffoldState= rememberBottomSheetScaffoldState(bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed))
                     val coroutineScope= rememberCoroutineScope()
-                    Scaffold(
-                        scaffoldState = scaffoldState
+                    val lastBarcode:MutableState<List<Barcode>?> = remember{mutableStateOf(null)}
+                    BottomSheetScaffold(
+                        scaffoldState = scaffoldState,
+                        sheetContent = {
+                            BottomSheetContent(lastBarcode = lastBarcode)
+                        }
                     ) {
-                        CameraPreview{
+                        CameraPreview {
+                            lastBarcode.value = it
                             coroutineScope.launch {
-                                scaffoldState.snackbarHostState.showSnackbar(it.first().toString())
+                                scaffoldState.bottomSheetState.expand()
                             }
                         }
                     }
