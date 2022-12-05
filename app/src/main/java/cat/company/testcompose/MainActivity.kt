@@ -41,10 +41,11 @@ class MainActivity : ComponentActivity() {
                         scrimColor = Color.DarkGray.copy(alpha=0.8f)
                     ) {
                         CameraPreview {
-                            lastBarcode.value = it
-                            coroutineScope.launch {
-                                if (!bottomSheetState.isVisible)
+                            if(!bottomSheetState.isVisible) {
+                                lastBarcode.value = it
+                                coroutineScope.launch {
                                     bottomSheetState.show()
+                                }
                             }
                         }
                     }
