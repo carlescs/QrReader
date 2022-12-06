@@ -1,4 +1,4 @@
-package cat.company.testcompose.bottomSheet
+package cat.company.qrreader.bottomSheet
 
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable

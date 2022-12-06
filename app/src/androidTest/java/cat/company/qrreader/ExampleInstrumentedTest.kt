@@ -1,4 +1,4 @@
-package cat.company.testcompose
+package cat.company.qrreader
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("cat.company.testcompose", appContext.packageName)
+        assertEquals("cat.company.qrreader", appContext.packageName)
     }
 }

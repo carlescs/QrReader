@@ -1,4 +1,4 @@
-package cat.company.testcompose
+package cat.company.qrreader
 
 import org.junit.Test
 

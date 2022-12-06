@@ -1,4 +1,4 @@
-package cat.company.testcompose.ui.theme
+package cat.company.qrreader.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

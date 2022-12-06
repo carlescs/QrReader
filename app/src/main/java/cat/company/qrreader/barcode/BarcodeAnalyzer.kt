@@ -1,4 +1,4 @@
-package cat.company.testcompose.barcode
+package cat.company.qrreader.barcode
 
 import android.util.Log
 import androidx.camera.core.ExperimentalGetImage

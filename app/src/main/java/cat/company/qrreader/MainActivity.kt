@@ -1,4 +1,4 @@
-package cat.company.testcompose
+package cat.company.qrreader
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -12,9 +12,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import cat.company.testcompose.bottomSheet.BottomSheetContent
-import cat.company.testcompose.camera.CameraPreview
-import cat.company.testcompose.ui.theme.TestComposeTheme
+import cat.company.qrreader.bottomSheet.BottomSheetContent
+import cat.company.qrreader.camera.CameraPreview
+import cat.company.qrreader.ui.theme.QrReaderTheme
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.launch
 
@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            TestComposeTheme {
+            QrReaderTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),

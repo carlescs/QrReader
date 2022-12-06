@@ -1,14 +1,12 @@
-package cat.company.testcompose.camera
+package cat.company.qrreader.camera
 
 import android.util.Log
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.CameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
@@ -17,7 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import cat.company.testcompose.barcode.BarcodeAnalyzer
+import cat.company.qrreader.barcode.BarcodeAnalyzer
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.mlkit.vision.barcode.common.Barcode
 import java.util.concurrent.ExecutorService
@@ -29,7 +27,6 @@ fun CameraPreview(notifyBarcode:((List<Barcode>)->Unit)?) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var preview by remember { mutableStateOf<Preview?>(null) }
-    val barCodeVal = remember { mutableStateOf("") }
 
     AndroidView(
         factory = { AndroidViewContext ->

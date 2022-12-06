@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'cat.company.testcompose'
+    namespace 'cat.company.qrreader'
     compileSdk 33
 
     defaultConfig {
-        applicationId "cat.company.testcompose"
+        applicationId "cat.company.qrreader"
         minSdk 21
         targetSdk 33
         versionCode 1
