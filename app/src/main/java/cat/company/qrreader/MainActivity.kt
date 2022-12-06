@@ -10,11 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import cat.company.qrreader.camera.QrCamera
 import cat.company.qrreader.drawer.DrawerItem
@@ -37,6 +39,8 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     val scaffoldState = rememberScaffoldState()
                     val coroutineScope= rememberCoroutineScope()
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentRoute = navBackStackEntry?.destination?.route
                     Scaffold(
                         scaffoldState = scaffoldState,
                         topBar = { TopAppBar(
@@ -51,8 +55,8 @@ class MainActivity : ComponentActivity() {
                             }}
                         ) },
                         drawerContent = {
-                            DrawerItem(title = "Camera", route = "camera", navController = navController, drawerState = scaffoldState.drawerState)
-                            DrawerItem(title = "History", route = "history", navController = navController, drawerState = scaffoldState.drawerState)
+                            DrawerItem(title = "Camera", route = "camera", navController = navController, drawerState = scaffoldState.drawerState, selected = currentRoute=="camera")
+                            DrawerItem(title = "History", route = "history", navController = navController, drawerState = scaffoldState.drawerState, selected = currentRoute=="history")
                         }
                     ) {
                         NavHost(navController = navController, startDestination = "camera") {
