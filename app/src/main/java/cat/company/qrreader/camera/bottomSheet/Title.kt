@@ -1,4 +1,4 @@
-package cat.company.qrreader.bottomSheet
+package cat.company.qrreader.camera.bottomSheet
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
