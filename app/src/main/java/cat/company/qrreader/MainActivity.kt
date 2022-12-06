@@ -1,24 +1,30 @@
 package cat.company.qrreader
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import cat.company.qrreader.camera.QrCamera
+import cat.company.qrreader.drawer.DrawerItem
+import cat.company.qrreader.history.History
 import cat.company.qrreader.ui.theme.QrReaderTheme
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterialApi::class,ExperimentalPermissionsApi::class)
 @ExperimentalGetImage
 class MainActivity : ComponentActivity() {
+    @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -28,9 +34,31 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    val navController= rememberNavController()
-                    NavHost(navController = navController, startDestination = "camera"){
-                        composable("camera"){ QrCamera()}
+                    val navController = rememberNavController()
+                    val scaffoldState = rememberScaffoldState()
+                    val coroutineScope= rememberCoroutineScope()
+                    Scaffold(
+                        scaffoldState = scaffoldState,
+                        topBar = { TopAppBar(
+                            title = { Text(text = "QrReader") },
+                            navigationIcon = { IconButton(onClick = { coroutineScope.launch { scaffoldState.drawerState.open() } }) {
+                                Icon(
+                                    imageVector = Icons.Default.Menu,
+                                    modifier = Modifier
+                                        .padding(start = 8.dp),
+                                    contentDescription = "Main menu"
+                                )
+                            }}
+                        ) },
+                        drawerContent = {
+                            DrawerItem(title = "Camera", route = "camera", navController = navController, drawerState = scaffoldState.drawerState)
+                            DrawerItem(title = "History", route = "history", navController = navController, drawerState = scaffoldState.drawerState)
+                        }
+                    ) {
+                        NavHost(navController = navController, startDestination = "camera") {
+                            composable("camera") { QrCamera() }
+                            composable("history") { History() }
+                        }
                     }
                 }
             }
