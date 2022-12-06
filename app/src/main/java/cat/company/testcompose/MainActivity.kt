@@ -2,6 +2,7 @@ package cat.company.testcompose
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,23 +30,30 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    val bottomSheetState= rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
-                    val coroutineScope= rememberCoroutineScope()
-                    val lastBarcode:MutableState<List<Barcode>?> = remember{mutableStateOf(null)}
+                    val bottomSheetState =
+                        rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+                    val coroutineScope = rememberCoroutineScope()
+                    val lastBarcode: MutableState<List<Barcode>?> =
+                        remember { mutableStateOf(null) }
                     ModalBottomSheetLayout(
-                        sheetShape = RoundedCornerShape(25.dp,25.dp,0.dp,0.dp),
+                        sheetShape = RoundedCornerShape(25.dp, 25.dp, 0.dp, 0.dp),
                         sheetContent = {
                             BottomSheetContent(lastBarcode = lastBarcode)
                         },
                         sheetState = bottomSheetState,
-                        scrimColor = Color.DarkGray.copy(alpha=0.8f)
+                        scrimColor = Color.DarkGray.copy(alpha = 0.8f)
                     ) {
                         CameraPreview {
-                            if(!bottomSheetState.isVisible) {
+                            if (!bottomSheetState.isVisible) {
                                 lastBarcode.value = it
                                 coroutineScope.launch {
                                     bottomSheetState.show()
                                 }
+                            }
+                        }
+                        BackHandler(enabled = bottomSheetState.isVisible) {
+                            coroutineScope.launch {
+                                bottomSheetState.hide()
                             }
                         }
                     }
