@@ -1,5 +1,6 @@
 package cat.company.qrreader
 
+import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -15,10 +16,13 @@ import androidx.compose.ui.unit.dp
 import cat.company.qrreader.bottomSheet.BottomSheetContent
 import cat.company.qrreader.camera.CameraPreview
 import cat.company.qrreader.ui.theme.QrReaderTheme
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionRequired
+import com.google.accompanist.permissions.rememberPermissionState
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class,ExperimentalPermissionsApi::class)
 @ExperimentalGetImage
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,6 +34,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
+                    val permissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)
                     val bottomSheetState =
                         rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
                     val coroutineScope = rememberCoroutineScope()
@@ -43,11 +48,18 @@ class MainActivity : ComponentActivity() {
                         sheetState = bottomSheetState,
                         scrimColor = Color.DarkGray.copy(alpha = 0.8f)
                     ) {
-                        CameraPreview {
-                            if (!bottomSheetState.isVisible) {
-                                lastBarcode.value = it
-                                coroutineScope.launch {
-                                    bottomSheetState.show()
+                        if(!permissionState.hasPermission)
+                            permissionState.launchPermissionRequest()
+                        PermissionRequired(
+                            permissionState = permissionState,
+                            permissionNotGrantedContent = {Text(text = "You need to give permission to the camera.")},
+                            permissionNotAvailableContent = { Text(text = "No camera permission.") }) {
+                            CameraPreview {
+                                if (!bottomSheetState.isVisible) {
+                                    lastBarcode.value = it
+                                    coroutineScope.launch {
+                                        bottomSheetState.show()
+                                    }
                                 }
                             }
                         }
