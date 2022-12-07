@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">QrReader</string>
+    <string name="camera">Camera</string>
+    <string name="history">History</string>
 </resources>

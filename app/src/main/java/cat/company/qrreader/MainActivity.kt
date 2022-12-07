@@ -6,23 +6,21 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import cat.company.qrreader.camera.QrCamera
-import cat.company.qrreader.drawer.DrawerItem
 import cat.company.qrreader.history.History
+import cat.company.qrreader.navigation.Screen
 import cat.company.qrreader.ui.theme.QrReaderTheme
-import kotlinx.coroutines.launch
 
 @ExperimentalGetImage
 class MainActivity : ComponentActivity() {
@@ -38,25 +36,39 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val navController = rememberNavController()
                     val scaffoldState = rememberScaffoldState()
-                    val coroutineScope= rememberCoroutineScope()
-                    val navBackStackEntry by navController.currentBackStackEntryAsState()
-                    val currentRoute = navBackStackEntry?.destination?.route
+                    val items = listOf(
+                        Screen.Camera,
+                        Screen.History,
+                    )
                     Scaffold(
                         scaffoldState = scaffoldState,
-                        topBar = { TopAppBar(
-                            title = { Text(text = "QrReader") },
-                            navigationIcon = { IconButton(onClick = { coroutineScope.launch { scaffoldState.drawerState.open() } }) {
-                                Icon(
-                                    imageVector = Icons.Default.Menu,
-                                    modifier = Modifier
-                                        .padding(start = 8.dp),
-                                    contentDescription = "Main menu"
-                                )
-                            }}
-                        ) },
-                        drawerContent = {
-                            DrawerItem(title = "Camera", route = "camera", navController = navController, drawerState = scaffoldState.drawerState, selected = currentRoute=="camera")
-                            DrawerItem(title = "History", route = "history", navController = navController, drawerState = scaffoldState.drawerState, selected = currentRoute=="history")
+                        bottomBar = {
+                            BottomNavigation {
+                                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                                val currentDestination = navBackStackEntry?.destination
+                                items.forEach { screen ->
+                                    BottomNavigationItem(
+                                        icon = { Icon(painterResource(id = screen.icon), contentDescription = null) },
+                                        label = { Text(stringResource(screen.resourceId)) },
+                                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                                        onClick = {
+                                            navController.navigate(screen.route) {
+                                                // Pop up to the start destination of the graph to
+                                                // avoid building up a large stack of destinations
+                                                // on the back stack as users select items
+                                                popUpTo(navController.graph.findStartDestination().id) {
+                                                    saveState = true
+                                                }
+                                                // Avoid multiple copies of the same destination when
+                                                // reselecting the same item
+                                                launchSingleTop = true
+                                                // Restore state when reselecting a previously selected item
+                                                restoreState = true
+                                            }
+                                        }
+                                    )
+                                }
+                            }
                         }
                     ) {
                         NavHost(navController = navController, startDestination = "camera") {
