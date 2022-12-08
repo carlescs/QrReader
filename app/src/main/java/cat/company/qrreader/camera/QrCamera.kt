@@ -20,11 +20,11 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterialApi::class,)
 @ExperimentalGetImage
 @Composable
-fun QrCamera(vm:QrCameraViewModel= QrCameraViewModel()){
+fun QrCamera(viewModel:QrCameraViewModel= QrCameraViewModel()){
     val permissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)
     val bottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val coroutineScope = rememberCoroutineScope()
-    val state by vm.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsState()
 
     ModalBottomSheetLayout(
         sheetShape = RoundedCornerShape(25.dp, 25.dp, 0.dp, 0.dp),
@@ -42,7 +42,7 @@ fun QrCamera(vm:QrCameraViewModel= QrCameraViewModel()){
             permissionNotAvailableContent = { Text(text = "No camera permission.") }) {
             CameraPreview {
                 if (!bottomSheetState.isVisible) {
-                    vm.saveBarcodes(it)
+                    viewModel.saveBarcodes(it)
                     coroutineScope.launch {
                         bottomSheetState.show()
                     }
