@@ -23,10 +23,10 @@ fun BottomSheetContent(lastBarcode: List<Barcode>?, db: BarcodesDb){
                 items(items= lastBarcode, itemContent = { barcode ->
                     Card(modifier = Modifier
                         .fillMaxWidth()
-                        .padding(15.dp)
+                        .padding(10.dp)
                         .clickable { },
                         shape = RoundedCornerShape(5.dp),
-                        elevation = 10.dp) {
+                        elevation = 5.dp) {
                         Column(modifier = Modifier.padding(15.dp)) {
                             when (barcode.valueType) {
                                 Barcode.TYPE_URL -> {
