@@ -9,6 +9,7 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.Card
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -78,18 +79,9 @@ fun History(
                             uriHandler.openUri(barcode.barcode)
                         })
                         Spacer(modifier = Modifier.height(20.dp))
-                        ClickableText(text = buildAnnotatedString {
-                            this.withStyle(
-                                SpanStyle(
-                                    color = Color.Blue,
-                                    textDecoration = TextDecoration.Underline
-                                )
-                            ) {
-                                append("Delete")
-                            }
-                        }, onClick = {
-                            coroutineScope.launch { db.savedBarcodeDao().delete(barcode) }
-                        })
+                        TextButton(onClick = { coroutineScope.launch { db.savedBarcodeDao().delete(barcode) } }) {
+                            Text(text = "Delete")
+                        }
                     }
                 }
             }

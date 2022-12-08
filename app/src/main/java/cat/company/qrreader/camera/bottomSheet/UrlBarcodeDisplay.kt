@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,21 +43,11 @@ fun UrlBarcodeDisplay(barcode: Barcode,db:BarcodesDb) {
             uriHandler.openUri(barcode.displayValue!!)
     })
     Spacer(modifier = Modifier.height(20.dp))
-    if(!saved.value)
-        ClickableText(text = buildAnnotatedString {
-            this.withStyle(
-                SpanStyle(
-                    color = Color.Blue,
-                    textDecoration = TextDecoration.Underline
-                )
-            ) {
-                append("Save")
-            }
-        }, onClick = {
+      TextButton(onClick = {
             coroutineScope.launch { db.savedBarcodeDao().insertAll(SavedBarcode(type = barcode.valueType, barcode = barcode.displayValue!!)) }
             saved.value=true
-        })
-    else
-        Text(text = "Saved!")
+        }, enabled = !saved.value) {
+          Text(text = if (!saved.value) "Save" else "Saved")
+      }
 }
 
