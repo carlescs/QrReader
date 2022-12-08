@@ -5,30 +5,31 @@ import androidx.activity.compose.BackHandler
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.camera.bottomSheet.BottomSheetContent
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionRequired
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterialApi::class,)
 @ExperimentalGetImage
 @Composable
-fun QrCamera(){
+fun QrCamera(vm:QrCameraViewModel= QrCameraViewModel()){
     val permissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)
-    val bottomSheetState =
-        rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val bottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val coroutineScope = rememberCoroutineScope()
-    val lastBarcode: MutableState<List<Barcode>?> =
-        remember { mutableStateOf(null) }
+    val state by vm.uiState.collectAsState()
+
     ModalBottomSheetLayout(
         sheetShape = RoundedCornerShape(25.dp, 25.dp, 0.dp, 0.dp),
         sheetContent = {
-            BottomSheetContent(lastBarcode = lastBarcode)
+            BottomSheetContent(lastBarcode = state.lastBarcode)
         },
         sheetState = bottomSheetState,
         scrimColor = Color.DarkGray.copy(alpha = 0.8f)
@@ -41,7 +42,7 @@ fun QrCamera(){
             permissionNotAvailableContent = { Text(text = "No camera permission.") }) {
             CameraPreview {
                 if (!bottomSheetState.isVisible) {
-                    lastBarcode.value = it
+                    vm.saveBarcodes(it)
                     coroutineScope.launch {
                         bottomSheetState.show()
                     }
