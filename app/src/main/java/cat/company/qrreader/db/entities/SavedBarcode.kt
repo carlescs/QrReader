@@ -6,7 +6,7 @@ import java.util.*
 
 @Entity(tableName = "saved_barcodes")
 data class SavedBarcode(
-    @PrimaryKey(autoGenerate = true) val id:Int,
+    @PrimaryKey(autoGenerate = true) val id:Int=0,
     val date: Date = Date(),
     val type:Int,
     val barcode: String

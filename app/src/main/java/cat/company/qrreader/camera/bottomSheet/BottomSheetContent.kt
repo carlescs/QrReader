@@ -10,10 +10,11 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.db.BarcodesDb
 import com.google.mlkit.vision.barcode.common.Barcode
 
 @Composable
-fun BottomSheetContent(lastBarcode: List<Barcode>?){
+fun BottomSheetContent(lastBarcode: List<Barcode>?, db: BarcodesDb){
     Column(modifier = Modifier
         .padding(15.dp)
         .defaultMinSize(minHeight = 250.dp)) {
@@ -29,7 +30,7 @@ fun BottomSheetContent(lastBarcode: List<Barcode>?){
                         Column(modifier = Modifier.padding(15.dp)) {
                             when (barcode.valueType) {
                                 Barcode.TYPE_URL -> {
-                                    UrlBarcodeDisplay(barcode = barcode)
+                                    UrlBarcodeDisplay(barcode = barcode, db = db)
                                 }
                                 Barcode.TYPE_CONTACT_INFO -> {
                                     ContactBarcodeDisplay(barcode=barcode)

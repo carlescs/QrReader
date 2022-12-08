@@ -17,7 +17,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.room.Room
 import cat.company.qrreader.camera.QrCamera
+import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.history.History
 import cat.company.qrreader.navigation.Screen
 import cat.company.qrreader.ui.theme.QrReaderTheme
@@ -27,6 +29,9 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val db= Room
+            .databaseBuilder(applicationContext, BarcodesDb::class.java,"barcodes_db")
+            .build()
         setContent {
             QrReaderTheme {
                 // A surface container using the 'background' color from the theme
@@ -72,8 +77,8 @@ class MainActivity : ComponentActivity() {
                         }
                     ) {
                         NavHost(navController = navController, startDestination = "camera") {
-                            composable("camera") { QrCamera() }
-                            composable("history") { History() }
+                            composable("camera") { QrCamera(db) }
+                            composable("history") { History(db) }
                         }
                     }
                 }
