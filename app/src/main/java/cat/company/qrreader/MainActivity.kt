@@ -5,7 +5,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.camera.core.ExperimentalGetImage
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -76,9 +78,11 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     ) {
-                        NavHost(navController = navController, startDestination = "camera") {
-                            composable("camera") { QrCamera(db) }
-                            composable("history") { History(db) }
+                        Box(modifier = Modifier.fillMaxSize().padding(it)) {
+                            NavHost(navController = navController, startDestination = "camera") {
+                                composable("camera") { QrCamera(db) }
+                                composable("history") { History(db) }
+                            }
                         }
                     }
                 }
