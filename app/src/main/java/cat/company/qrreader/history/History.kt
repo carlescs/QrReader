@@ -11,6 +11,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
@@ -30,43 +31,51 @@ fun History(db: BarcodesDb, viewModel: HistoryViewModel=HistoryViewModel(db = db
     viewModel.loadBarcodes()
     val state by viewModel.savedBarcodes.collectAsState(initial = emptyList())
     val coroutineScope= CoroutineScope(Dispatchers.IO)
-    LazyColumn(modifier = Modifier.fillMaxSize()){
-        items(items = state){ barcode->
-            Card(modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
-                .clickable { },
-                shape = RoundedCornerShape(5.dp),
-                elevation = 5.dp) {
-                Column(modifier = Modifier.padding(15.dp)) {
-                    val uriHandler = LocalUriHandler.current
-                    Title(title = "URL")
-                    Text(text = barcode.date.toString())
-                    ClickableText(text = buildAnnotatedString {
-                        this.withStyle(
-                            SpanStyle(
-                                color = Color.Blue,
-                                textDecoration = TextDecoration.Underline
-                            )
-                        ) {
-                            append(barcode.barcode)
-                        }
-                    }, onClick = {
-                        uriHandler.openUri(barcode.barcode)
-                    })
-                    Spacer(modifier = Modifier.height(20.dp))
-                    ClickableText(text = buildAnnotatedString {
-                        this.withStyle(
-                            SpanStyle(
-                                color = Color.Blue,
-                                textDecoration = TextDecoration.Underline
-                            )
-                        ) {
-                            append("Delete")
-                        }
-                    }, onClick = {
-                        coroutineScope.launch { db.savedBarcodeDao().delete(barcode) }
-                    })
+    if(state.isEmpty()){
+        Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
+            Text(text = "No saved barcodes!", modifier = Modifier.align(CenterHorizontally))
+        }
+    }else {
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(items = state) { barcode ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp)
+                        .clickable { },
+                    shape = RoundedCornerShape(5.dp),
+                    elevation = 5.dp
+                ) {
+                    Column(modifier = Modifier.padding(15.dp)) {
+                        val uriHandler = LocalUriHandler.current
+                        Title(title = "URL")
+                        Text(text = barcode.date.toString())
+                        ClickableText(text = buildAnnotatedString {
+                            this.withStyle(
+                                SpanStyle(
+                                    color = Color.Blue,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            ) {
+                                append(barcode.barcode)
+                            }
+                        }, onClick = {
+                            uriHandler.openUri(barcode.barcode)
+                        })
+                        Spacer(modifier = Modifier.height(20.dp))
+                        ClickableText(text = buildAnnotatedString {
+                            this.withStyle(
+                                SpanStyle(
+                                    color = Color.Blue,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            ) {
+                                append("Delete")
+                            }
+                        }, onClick = {
+                            coroutineScope.launch { db.savedBarcodeDao().delete(barcode) }
+                        })
+                    }
                 }
             }
         }
