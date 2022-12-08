@@ -3,11 +3,13 @@ package cat.company.qrreader.camera.bottomSheet
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
@@ -24,6 +26,7 @@ import kotlinx.coroutines.launch
 fun UrlBarcodeDisplay(barcode: Barcode,db:BarcodesDb) {
     val uriHandler = LocalUriHandler.current
     val coroutineScope= CoroutineScope(Dispatchers.IO)
+    val saved = remember{mutableStateOf(false)}
     Title(title = "URL")
     ClickableText(text = buildAnnotatedString {
         this.withStyle(
@@ -39,7 +42,21 @@ fun UrlBarcodeDisplay(barcode: Barcode,db:BarcodesDb) {
             uriHandler.openUri(barcode.displayValue!!)
     })
     Spacer(modifier = Modifier.height(20.dp))
-    ClickableText(text = AnnotatedString("Save")){
-        coroutineScope.launch { db.savedBarcodeDao().insertAll(SavedBarcode(type = barcode.valueType, barcode = barcode.displayValue!!)) }
-    }
+    if(!saved.value)
+        ClickableText(text = buildAnnotatedString {
+            this.withStyle(
+                SpanStyle(
+                    color = Color.Blue,
+                    textDecoration = TextDecoration.Underline
+                )
+            ) {
+                append("Save")
+            }
+        }, onClick = {
+            coroutineScope.launch { db.savedBarcodeDao().insertAll(SavedBarcode(type = barcode.valueType, barcode = barcode.displayValue!!)) }
+            saved.value=true
+        })
+    else
+        Text(text = "Saved!")
 }
+
