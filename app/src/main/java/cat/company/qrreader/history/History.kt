@@ -25,6 +25,8 @@ import cat.company.qrreader.db.BarcodesDb
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun History(db: BarcodesDb, viewModel: HistoryViewModel=HistoryViewModel(db = db)){
@@ -36,6 +38,7 @@ fun History(db: BarcodesDb, viewModel: HistoryViewModel=HistoryViewModel(db = db
             Text(text = "No saved barcodes!", modifier = Modifier.align(CenterHorizontally))
         }
     }else {
+        val sdf=SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(items = state) { barcode ->
                 Card(
@@ -49,7 +52,7 @@ fun History(db: BarcodesDb, viewModel: HistoryViewModel=HistoryViewModel(db = db
                     Column(modifier = Modifier.padding(15.dp)) {
                         val uriHandler = LocalUriHandler.current
                         Title(title = "URL")
-                        Text(text = barcode.date.toString())
+                        Text(text = sdf.format(barcode.date))
                         ClickableText(text = buildAnnotatedString {
                             this.withStyle(
                                 SpanStyle(
