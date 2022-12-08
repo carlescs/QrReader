@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.Card
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -14,7 +15,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
@@ -29,7 +33,11 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun History(db: BarcodesDb, viewModel: HistoryViewModel=HistoryViewModel(db = db)){
+fun History(
+    db: BarcodesDb,
+    snackbarHostState: SnackbarHostState,
+    viewModel: HistoryViewModel = HistoryViewModel(db = db)
+){
     viewModel.loadBarcodes()
     val state by viewModel.savedBarcodes.collectAsState(initial = emptyList())
     val coroutineScope= CoroutineScope(Dispatchers.IO)
@@ -38,6 +46,7 @@ fun History(db: BarcodesDb, viewModel: HistoryViewModel=HistoryViewModel(db = db
             Text(text = "No saved barcodes!", modifier = Modifier.align(CenterHorizontally))
         }
     }else {
+        val clipboardManager:ClipboardManager= LocalClipboardManager.current
         val sdf=SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(items = state) { barcode ->
@@ -45,7 +54,10 @@ fun History(db: BarcodesDb, viewModel: HistoryViewModel=HistoryViewModel(db = db
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(10.dp)
-                        .clickable { },
+                        .clickable {
+                            clipboardManager.setText(AnnotatedString(barcode.barcode))
+                            coroutineScope.launch { snackbarHostState.showSnackbar("Copied!") }
+                        },
                     shape = RoundedCornerShape(5.dp),
                     elevation = 5.dp
                 ) {

@@ -80,8 +80,8 @@ class MainActivity : ComponentActivity() {
                     ) {
                         Box(modifier = Modifier.fillMaxSize().padding(it)) {
                             NavHost(navController = navController, startDestination = "camera") {
-                                composable("camera") { QrCamera(db) }
-                                composable("history") { History(db) }
+                                composable("camera") { QrCamera(db,scaffoldState.snackbarHostState) }
+                                composable("history") { History(db,scaffoldState.snackbarHostState) }
                             }
                         }
                     }
