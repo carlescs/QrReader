@@ -94,8 +94,8 @@ stages:
               targetPath: $(System.DefaultWorkingDirectory)
           - task: GooglePlayRelease@4
             inputs:
-              serviceConnection: 'Google'
-              applicationId: 'cat.company.ppcalc'
+              serviceConnection: 'Google Play'
+              applicationId: 'cat.company.qrreader'
               action: 'SingleBundle'
-              bundleFile: '$(System.DefaultWorkingDirectory)/PPCalc/build/outputs/bundle/release/PPCalc-release.aab'
-              track: 'beta'
+              bundleFile: '$(System.DefaultWorkingDirectory)/QrReader/build/outputs/bundle/release/QrReader-release.aab'
+              track: 'alpha'
