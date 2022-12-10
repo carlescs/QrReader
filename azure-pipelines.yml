@@ -39,7 +39,7 @@ stages:
         restoreKeys: |
           "$(Build.Repository.Name)" | "$(Build.SourceBranchName)"
           "$(Build.Repository.Name)"
-    - task: QodanaScan@1
+    - task: QodanaScan@2022
 - stage: build
   displayName: Build
   jobs:
