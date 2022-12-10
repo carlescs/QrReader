@@ -23,15 +23,14 @@ steps:
       sonar.projectName=PPCalc
 - task: Gradle@2
   inputs:
-    workingDirectory: ''
     gradleWrapperFile: 'gradlew'
-    gradleOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.8'
-    jdkArchitectureOption: 'x64'
+    tasks: 'bundleRelease'
     publishJUnitResults: true
     testResultsFiles: '**/TEST-*.xml'
-    tasks: 'build'
+    javaHomeOption: 'JDKVersion'
+    sqGradlePluginVersionChoice: 'specify'
+    sonarQubeGradlePluginVersion: '3.3'
+    spotBugsAnalysis: false
 - task: SonarCloudAnalyze@1
 - task: SonarCloudPublish@1
   inputs:
