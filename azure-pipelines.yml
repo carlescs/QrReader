@@ -67,10 +67,10 @@ stages:
         publishLocation: 'pipeline'
     - task: DownloadSecureFile@1
       inputs:
-        secureFile: 'keystore.jks'
+        secureFile: 'debugkeystore.jks'
     - task: CmdLine@2
       inputs:
-        script: 'jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore $(Agent.TempDirectory)/keystore.jks -storepass 43128927 $(build.artifactstagingdirectory)/app/build/outputs/bundle/release/app-release.aab carles'
+        script: 'jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore $(Agent.TempDirectory)/debugkeystore.jks -storepass 43128927 $(build.artifactstagingdirectory)/app/build/outputs/bundle/release/app-release.aab carles'
     - task: PublishPipelineArtifact@1
       inputs:
         targetPath: '$(build.artifactstagingdirectory)'
