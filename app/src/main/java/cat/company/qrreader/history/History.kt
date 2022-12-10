@@ -6,13 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
-import androidx.compose.material.Card
-import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,17 +33,18 @@ fun History(
     db: BarcodesDb,
     snackbarHostState: SnackbarHostState,
     viewModel: HistoryViewModel = HistoryViewModel(db = db)
-){
+) {
     viewModel.loadBarcodes()
     val state by viewModel.savedBarcodes.collectAsState(initial = emptyList())
-    val coroutineScope= CoroutineScope(Dispatchers.IO)
-    if(state.isEmpty()){
+    val coroutineScope = CoroutineScope(Dispatchers.IO)
+    if (state.isEmpty()) {
         Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
             Text(text = "No saved barcodes!", modifier = Modifier.align(CenterHorizontally))
         }
-    }else {
-        val clipboardManager:ClipboardManager= LocalClipboardManager.current
-        val sdf=SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
+    } else {
+        val clipboardManager: ClipboardManager = LocalClipboardManager.current
+        val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
+        val openDialog = remember{ mutableStateOf(false) }
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(items = state) { barcode ->
                 Card(
@@ -79,8 +75,31 @@ fun History(
                             uriHandler.openUri(barcode.barcode)
                         })
                         Spacer(modifier = Modifier.height(20.dp))
-                        TextButton(onClick = { coroutineScope.launch { db.savedBarcodeDao().delete(barcode) } }) {
+                        TextButton(onClick = {
+                            openDialog.value=true
+                        }) {
                             Text(text = "Delete")
+                        }
+
+                        if(openDialog.value) {
+                            AlertDialog(
+                                title = { Text(text = "Delete")},
+                                text = { Text(text = "Do you really want to delete this entry?")},
+                                confirmButton = {TextButton(onClick = {
+
+                                    coroutineScope.launch { db.savedBarcodeDao().delete(barcode) }
+                                    openDialog.value=false
+                                }) {
+                                    Text(text = "Ok")
+                                }},
+                                dismissButton = {
+                                    TextButton(onClick = {
+                                        openDialog.value=false
+                                    }) {
+                                        Text(text = "Cancel")
+                                    }
+                                },
+                                onDismissRequest = { openDialog.value=false })
                         }
                     }
                 }
