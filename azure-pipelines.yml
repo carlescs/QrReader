@@ -97,5 +97,5 @@ stages:
               serviceConnection: 'Google Play'
               applicationId: 'cat.company.qrreader'
               action: 'SingleBundle'
-              bundleFile: '$(System.DefaultWorkingDirectory)/QrReader/build/outputs/bundle/release/QrReader-release.aab'
+              bundleFile: '$(System.DefaultWorkingDirectory)/build/outputs/bundle/release/app-release.aab'
               track: 'alpha'
