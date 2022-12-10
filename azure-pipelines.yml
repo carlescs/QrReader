@@ -78,7 +78,7 @@ stages:
         publishLocation: 'pipeline'
 - stage: release
   displayName: 'Release to AppStore'
-  condition: and(succeeded(), and(eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  condition: and(succeeded(), and(eq(variables['Build.SourceBranch'], 'refs/heads/master')))
   jobs: 
   - deployment: deploy
     pool:
