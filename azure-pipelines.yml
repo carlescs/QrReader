@@ -1,0 +1,101 @@
+# Android
+# Build your Android project with Gradle.
+# Add steps that test, sign, and distribute the APK, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/android
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - master
+      - feature/*
+
+pool:
+  vmImage: 'windows-latest'
+
+stages:
+- stage: test
+  displayName: Test
+  jobs:
+  - job: test
+    displayName: Test
+    steps:
+    - task: JavaToolInstaller@0
+      inputs:
+        versionSpec: '11'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
+    - task: Gradle@2
+      inputs:
+        gradleWrapperFile: 'gradlew'
+        tasks: 'testRelease'
+        publishJUnitResults: true
+        javaHomeOption: 'JDKVersion'
+        sonarQubeRunAnalysis: false
+- stage: build
+  displayName: Build
+  jobs:
+  - job: build
+    displayName: Build    
+    steps:
+    - task: JavaToolInstaller@0
+      inputs:
+        versionSpec: '11'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
+    - task: Gradle@2
+      inputs:
+        gradleWrapperFile: 'gradlew'
+        tasks: 'bundleRelease'
+        publishJUnitResults: true
+        testResultsFiles: '**/TEST-*.xml'
+        javaHomeOption: 'JDKVersion'
+        sqGradlePluginVersionChoice: 'specify'
+        sonarQubeGradlePluginVersion: '3.3'
+        spotBugsAnalysis: false
+    - task: CopyFiles@2
+      displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+      inputs:
+        SourceFolder: '$(build.sourcesdirectory)'
+        Contents: '**/*.aab'
+        TargetFolder: '$(build.artifactstagingdirectory)'
+      condition: succeededOrFailed()
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(build.artifactstagingdirectory)'
+        artifact: 'drop'
+        publishLocation: 'pipeline'
+    - task: DownloadSecureFile@1
+      inputs:
+        secureFile: 'keystore.jks'
+    - task: CmdLine@2
+      inputs:
+        script: 'jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore $(Agent.TempDirectory)/keystore.jks -storepass 43128927 $(build.artifactstagingdirectory)/app/build/outputs/bundle/release/app-release.aab carles'
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(build.artifactstagingdirectory)'
+        artifact: 'drop-signed'
+        publishLocation: 'pipeline'
+- stage: release
+  displayName: 'Release to AppStore'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  jobs: 
+  - deployment: deploy
+    pool:
+      vmImage: 'windows-latest'
+    environment: PlayStore
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadPipelineArtifact@0
+            inputs:
+              artifactName: 'drop-signed'
+              targetPath: $(System.DefaultWorkingDirectory)
+          - task: GooglePlayRelease@4
+            inputs:
+              serviceConnection: 'Google Play'
+              applicationId: 'cat.company.qrreader'
+              action: 'SingleBundle'
+              bundleFile: '$(System.DefaultWorkingDirectory)/build/outputs/bundle/release/app-release.aab'
+              track: 'alpha'
