@@ -5,23 +5,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import cat.company.qrreader.camera.bottomSheet.Title
 import cat.company.qrreader.db.BarcodesDb
+import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -59,21 +52,11 @@ fun History(
                     elevation = 5.dp
                 ) {
                     Column(modifier = Modifier.padding(15.dp)) {
-                        val uriHandler = LocalUriHandler.current
-                        Title(title = "URL")
-                        Text(text = sdf.format(barcode.date))
-                        ClickableText(text = buildAnnotatedString {
-                            this.withStyle(
-                                SpanStyle(
-                                    color = Color.Blue,
-                                    textDecoration = TextDecoration.Underline
-                                )
-                            ) {
-                                append(barcode.barcode)
-                            }
-                        }, onClick = {
-                            uriHandler.openUri(barcode.barcode)
-                        })
+                        if(barcode.type==Barcode.TYPE_URL)
+                            UrlHistoryContent(sdf = sdf, barcode = barcode)
+                        else
+                            OtherHistoryContent(sdf = sdf, barcode = barcode)
+
                         Spacer(modifier = Modifier.height(20.dp))
                         TextButton(onClick = {
                             openDialog.value=true
@@ -86,7 +69,6 @@ fun History(
                                 title = { Text(text = "Delete")},
                                 text = { Text(text = "Do you really want to delete this entry?")},
                                 confirmButton = {TextButton(onClick = {
-
                                     coroutineScope.launch { db.savedBarcodeDao().delete(barcode) }
                                     openDialog.value=false
                                 }) {

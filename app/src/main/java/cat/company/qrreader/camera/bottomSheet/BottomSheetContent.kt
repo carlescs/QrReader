@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -59,8 +58,7 @@ fun BottomSheetContent(
                                         ContactBarcodeDisplay(barcode = barcode)
                                     }
                                     else -> {
-                                        Title(title = "Other")
-                                        Text(text = barcode.displayValue ?: "No")
+                                        OtherContent(barcode = barcode, db = db)
                                     }
                                 }
                             }
