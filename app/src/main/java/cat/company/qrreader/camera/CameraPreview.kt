@@ -8,7 +8,9 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.layout.*
+import androidx.camera.view.TransformExperimental
+import androidx.camera.view.transform.CoordinateTransform
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,10 +25,13 @@ import java.util.concurrent.Executors
 
 @Composable
 @ExperimentalGetImage
-fun CameraPreview(notifyBarcode:((List<Barcode>)->Unit)?) {
+@TransformExperimental
+fun CameraPreview(notifyBarcode:((List<Barcode>?)->Unit)?) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var preview by remember { mutableStateOf<Preview?>(null) }
+
+    var savedBarcodes by remember { mutableStateOf<List<Barcode>?>(null) }
 
     AndroidView(
         factory = { AndroidViewContext ->
@@ -49,13 +54,23 @@ fun CameraPreview(notifyBarcode:((List<Barcode>)->Unit)?) {
             val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
                 ProcessCameraProvider.getInstance(context)
 
+            previewView.setOnClickListener {_ ->
+                notifyBarcode?.invoke(savedBarcodes)
+            }
             cameraProviderFuture.addListener({
                 preview = Preview.Builder().build().also {
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
                 val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
                 val barcodeAnalyser = BarcodeAnalyzer { barcodes ->
-                    notifyBarcode?.invoke(barcodes)
+                    val target = previewView.outputTransform
+
+                    val coordinateTransform = CoordinateTransform(barcodes.source, target!!)
+                    previewView.overlay.clear()
+                    barcodes.barcodes.forEach {
+                        previewView.overlay.add(QrCodeDrawable(it,coordinateTransform))
+                    }
+                    savedBarcodes=barcodes.barcodes
                 }
                 val imageAnalysis: ImageAnalysis = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)

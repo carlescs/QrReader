@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
+import androidx.camera.view.TransformExperimental
+import androidx.camera.view.transform.ImageProxyTransformFactory
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -11,8 +13,9 @@ import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.TimeUnit
 
 @ExperimentalGetImage
+@TransformExperimental
 class BarcodeAnalyzer(
-    private val onBarcodeDetected: (barcodes: List<Barcode>) -> Unit,
+    private val onBarcodeDetected: (result: AnalyzedBarcode) -> Unit,
 ): ImageAnalysis.Analyzer {
     private var lastAnalyzedTimeStamp = 0L
 
@@ -25,14 +28,12 @@ class BarcodeAnalyzer(
                     .build()
                 val barcodeScanner = BarcodeScanning.getClient(options)
                 val imageToProcess = InputImage.fromMediaImage(imageToAnalyze, image.imageInfo.rotationDegrees)
-
+                val imageProxyTransformFactory = ImageProxyTransformFactory()
+                imageProxyTransformFactory.isUsingRotationDegrees=true
+                val source = imageProxyTransformFactory.getOutputTransform(image)
                 barcodeScanner.process(imageToProcess)
                     .addOnSuccessListener { barcodes ->
-                        if (barcodes.isNotEmpty()) {
-                            onBarcodeDetected(barcodes)
-                        } else {
-                            Log.d("TAG", "analyze: No barcode Scanned")
-                        }
+                        onBarcodeDetected(AnalyzedBarcode(barcodes, source))
                     }
                     .addOnFailureListener { exception ->
                         Log.d("TAG", "BarcodeAnalyser: Something went wrong $exception")
