@@ -9,6 +9,7 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.camera.view.TransformExperimental
+import androidx.camera.view.transform.CoordinateTransform
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -57,11 +58,14 @@ fun CameraPreview(notifyBarcode:((List<Barcode>)->Unit)?) {
                 }
                 val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
                 val barcodeAnalyser = BarcodeAnalyzer { barcodes ->
+                    val target = previewView.outputTransform
+
+                    val coordinateTransform = CoordinateTransform(barcodes.source, target!!)
                     previewView.overlay.clear()
-                    barcodes.forEach {
-                        previewView.overlay.add(QrCodeDrawable(it))
+                    barcodes.barcodes.forEach {
+                        previewView.overlay.add(QrCodeDrawable(it,coordinateTransform))
                     }
-                    //notifyBarcode?.invoke(barcodes)
+                    notifyBarcode?.invoke(barcodes.barcodes)
                 }
                 val imageAnalysis: ImageAnalysis = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)

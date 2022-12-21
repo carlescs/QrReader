@@ -18,12 +18,16 @@ package cat.company.qrreader.camera
 
 import android.graphics.*
 import android.graphics.drawable.Drawable
+import androidx.camera.view.TransformExperimental
+import androidx.camera.view.transform.CoordinateTransform
 import com.google.mlkit.vision.barcode.common.Barcode
+import kotlin.math.roundToInt
 
+@TransformExperimental
 /**
  * A Drawable that handles displaying a QR Code's data and a bounding box around the QR code.
  */
-class QrCodeDrawable(private val barcode: Barcode) : Drawable() {
+class QrCodeDrawable(private val barcode: Barcode, private val coordinateTransform: CoordinateTransform) : Drawable() {
     private val boundingRectPaint = Paint().apply {
         style = Paint.Style.STROKE
         color = Color.YELLOW
@@ -47,19 +51,28 @@ class QrCodeDrawable(private val barcode: Barcode) : Drawable() {
     private var textWidth = contentTextPaint.measureText(barcode.displayValue).toInt()
 
     override fun draw(canvas: Canvas) {
-        canvas.drawRect(barcode.boundingBox!!, boundingRectPaint)
+        val rect = barcode.boundingBox!!
+        val rectF=RectF(rect)
+        coordinateTransform.mapRect(rectF)
+        val boundingBox=Rect().apply {
+            this.right= rectF.right.roundToInt()
+            this.top= rectF.top.roundToInt()
+            this.bottom= rectF.bottom.roundToInt()
+            this.left= rectF.left.roundToInt()
+        }
+        canvas.drawRect(boundingBox, boundingRectPaint)
         canvas.drawRect(
             Rect(
-                barcode.boundingBox!!.left,
-                barcode.boundingBox!!.bottom + contentPadding/2,
-                barcode.boundingBox!!.left + textWidth + contentPadding*2,
-                barcode.boundingBox!!.bottom + contentTextPaint.textSize.toInt() + contentPadding),
+                boundingBox.left,
+                boundingBox.bottom + contentPadding/2,
+                boundingBox.left + textWidth + contentPadding*2,
+                boundingBox.bottom + contentTextPaint.textSize.toInt() + contentPadding),
             contentRectPaint
         )
         canvas.drawText(
             barcode.displayValue?:"No code",
-            (barcode.boundingBox!!.left + contentPadding).toFloat(),
-            (barcode.boundingBox!!.bottom + contentPadding*2).toFloat(),
+            (boundingBox.left + contentPadding).toFloat(),
+            (boundingBox.bottom + contentPadding*2).toFloat(),
             contentTextPaint
         )
     }
