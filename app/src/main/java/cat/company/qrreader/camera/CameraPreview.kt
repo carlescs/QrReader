@@ -8,7 +8,8 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.layout.*
+import androidx.camera.view.TransformExperimental
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,6 +24,7 @@ import java.util.concurrent.Executors
 
 @Composable
 @ExperimentalGetImage
+@TransformExperimental
 fun CameraPreview(notifyBarcode:((List<Barcode>)->Unit)?) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -55,7 +57,11 @@ fun CameraPreview(notifyBarcode:((List<Barcode>)->Unit)?) {
                 }
                 val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
                 val barcodeAnalyser = BarcodeAnalyzer { barcodes ->
-                    notifyBarcode?.invoke(barcodes)
+                    previewView.overlay.clear()
+                    barcodes.forEach {
+                        previewView.overlay.add(QrCodeDrawable(it))
+                    }
+                    //notifyBarcode?.invoke(barcodes)
                 }
                 val imageAnalysis: ImageAnalysis = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
