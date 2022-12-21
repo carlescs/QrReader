@@ -26,10 +26,12 @@ import java.util.concurrent.Executors
 @Composable
 @ExperimentalGetImage
 @TransformExperimental
-fun CameraPreview(notifyBarcode:((List<Barcode>)->Unit)?) {
+fun CameraPreview(notifyBarcode:((List<Barcode>?)->Unit)?) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var preview by remember { mutableStateOf<Preview?>(null) }
+
+    var savedBarcodes by remember { mutableStateOf<List<Barcode>?>(null) }
 
     AndroidView(
         factory = { AndroidViewContext ->
@@ -52,6 +54,9 @@ fun CameraPreview(notifyBarcode:((List<Barcode>)->Unit)?) {
             val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
                 ProcessCameraProvider.getInstance(context)
 
+            previewView.setOnClickListener {_ ->
+                notifyBarcode?.invoke(savedBarcodes)
+            }
             cameraProviderFuture.addListener({
                 preview = Preview.Builder().build().also {
                     it.setSurfaceProvider(previewView.surfaceProvider)
@@ -65,7 +70,7 @@ fun CameraPreview(notifyBarcode:((List<Barcode>)->Unit)?) {
                     barcodes.barcodes.forEach {
                         previewView.overlay.add(QrCodeDrawable(it,coordinateTransform))
                     }
-                    notifyBarcode?.invoke(barcodes.barcodes)
+                    savedBarcodes=barcodes.barcodes
                 }
                 val imageAnalysis: ImageAnalysis = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)

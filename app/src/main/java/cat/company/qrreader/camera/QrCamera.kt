@@ -39,12 +39,13 @@ fun QrCamera(db: BarcodesDb, snackbarHostState: SnackbarHostState, viewModel: Qr
             permissionState.launchPermissionRequest()
         else{
             CameraPreview {
-                if (!bottomSheetState.isVisible) {
-                    viewModel.saveBarcodes(it)
-                    coroutineScope.launch {
-                        bottomSheetState.show()
+                if (it?.isNotEmpty() == true)
+                    if (!bottomSheetState.isVisible) {
+                        viewModel.saveBarcodes(it)
+                        coroutineScope.launch {
+                            bottomSheetState.show()
+                        }
                     }
-                }
             }
         }
         BackHandler(enabled = bottomSheetState.isVisible) {
