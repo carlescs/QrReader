@@ -29,23 +29,28 @@ fun OtherContent(barcode: Barcode, db: BarcodesDb){
     val coroutineScope= CoroutineScope(Dispatchers.IO)
     val saved = remember{ mutableStateOf(false) }
     Title(title = if (barcode.format==Barcode.FORMAT_EAN_13) "EAN13" else "Other")
-    if(barcode.format==Barcode.FORMAT_EAN_13) {
-        ClickableText(text = buildAnnotatedString {
-            this.withStyle(
-                SpanStyle(
-                    color = Color.Blue,
-                    textDecoration = TextDecoration.Underline
-                )
-            ) {
-                append(barcode.displayValue ?: "No")
-            }
-        }, onClick = {
-            if (barcode.displayValue != null)
-                uriHandler.openUri("https://www.google.com/search?q=${barcode.displayValue!!}&tbm=shop")
-        })
-    }
-    else{
-        Text(text = barcode.displayValue ?: "No")
+    when (barcode.format) {
+        Barcode.FORMAT_EAN_13,
+        Barcode.FORMAT_EAN_8,
+        Barcode.FORMAT_UPC_A,
+        Barcode.FORMAT_UPC_E -> {
+            ClickableText(text = buildAnnotatedString {
+                this.withStyle(
+                    SpanStyle(
+                        color = Color.Blue,
+                        textDecoration = TextDecoration.Underline
+                    )
+                ) {
+                    append(barcode.displayValue ?: "No")
+                }
+            }, onClick = {
+                if (barcode.displayValue != null)
+                    uriHandler.openUri("https://www.google.com/search?q=${barcode.displayValue!!}&tbm=shop")
+            })
+        }
+        else -> {
+            Text(text = barcode.displayValue ?: "No")
+        }
     }
     Spacer(modifier = Modifier.height(20.dp))
     TextButton(onClick = {
