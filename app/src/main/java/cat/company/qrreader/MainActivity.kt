@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
         val db= Room
             .databaseBuilder(applicationContext, BarcodesDb::class.java,"barcodes_db")
             .addMigrations(
-                Migrations.MIGRATION_0_1
+                Migrations.MIGRATION_1_2
             )
             .build()
         setContent {
