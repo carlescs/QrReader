@@ -22,6 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import cat.company.qrreader.camera.QrCamera
 import cat.company.qrreader.db.BarcodesDb
+import cat.company.qrreader.db.Migrations
 import cat.company.qrreader.history.History
 import cat.company.qrreader.navigation.Screen
 import cat.company.qrreader.ui.theme.QrReaderTheme
@@ -33,6 +34,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val db= Room
             .databaseBuilder(applicationContext, BarcodesDb::class.java,"barcodes_db")
+            .addMigrations(
+                Migrations.MIGRATION_0_1
+            )
             .build()
         setContent {
             QrReaderTheme {

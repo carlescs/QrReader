@@ -44,7 +44,7 @@ fun UrlBarcodeDisplay(barcode: Barcode,db:BarcodesDb) {
     })
     Spacer(modifier = Modifier.height(20.dp))
       TextButton(onClick = {
-            coroutineScope.launch { db.savedBarcodeDao().insertAll(SavedBarcode(type = barcode.valueType, barcode = barcode.displayValue!!)) }
+            coroutineScope.launch { db.savedBarcodeDao().insertAll(SavedBarcode(type = barcode.valueType, barcode = barcode.displayValue!!, format = barcode.format)) }
             saved.value=true
         }, enabled = !saved.value) {
           Text(text = if (!saved.value) "Save" else "Saved")
