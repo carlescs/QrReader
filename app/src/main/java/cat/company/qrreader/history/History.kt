@@ -37,7 +37,8 @@ fun History(
     } else {
         val clipboardManager: ClipboardManager = LocalClipboardManager.current
         val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
-        val openDialog = remember{ mutableStateOf(false) }
+        val confirmDeleteOpen = remember{ mutableStateOf(false) }
+        val editOpen=remember{ mutableStateOf(false) }
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(items = state) { barcode ->
                 Card(
@@ -58,30 +59,43 @@ fun History(
                             OtherHistoryContent(sdf = sdf, barcode = barcode)
 
                         Spacer(modifier = Modifier.height(20.dp))
-                        TextButton(onClick = {
-                            openDialog.value=true
-                        }) {
-                            Text(text = "Delete")
+                        Row {
+                            TextButton(onClick = {
+                                confirmDeleteOpen.value = true
+                            }) {
+                                Text(text = "Delete")
+                            }
+                            TextButton(onClick = {
+                                editOpen.value = true
+                            }) {
+                                Text(text = "Edit")
+                            }
                         }
-
-                        if(openDialog.value) {
+                        if(editOpen.value){
+                            EditBarcodeDialog(savedBarcode = barcode, onRequestClose = {editOpen.value=false},db=db)
+                        }
+                        if(confirmDeleteOpen.value) {
                             AlertDialog(
-                                title = { Text(text = "Delete")},
-                                text = { Text(text = "Do you really want to delete this entry?")},
-                                confirmButton = {TextButton(onClick = {
-                                    coroutineScope.launch { db.savedBarcodeDao().delete(barcode) }
-                                    openDialog.value=false
-                                }) {
-                                    Text(text = "Ok")
-                                }},
+                                title = { Text(text = "Delete") },
+                                text = { Text(text = "Do you really want to delete this entry?") },
+                                confirmButton = {
+                                    TextButton(onClick = {
+                                        coroutineScope.launch {
+                                            db.savedBarcodeDao().delete(barcode)
+                                        }
+                                        confirmDeleteOpen.value = false
+                                    }) {
+                                        Text(text = "Ok")
+                                    }
+                                },
                                 dismissButton = {
                                     TextButton(onClick = {
-                                        openDialog.value=false
+                                        confirmDeleteOpen.value = false
                                     }) {
                                         Text(text = "Cancel")
                                     }
                                 },
-                                onDismissRequest = { openDialog.value=false })
+                                onDismissRequest = { confirmDeleteOpen.value = false })
                         }
                     }
                 }

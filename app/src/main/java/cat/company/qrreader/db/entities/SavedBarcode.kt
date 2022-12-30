@@ -10,5 +10,7 @@ data class SavedBarcode(
     val date: Date = Date(),
     val type:Int,
     val format: Int,
+    var title: String?=null,
+    var description: String?=null,
     val barcode: String
 )

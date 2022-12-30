@@ -1,9 +1,6 @@
 package cat.company.qrreader.db.daos
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
+import androidx.room.*
 import cat.company.qrreader.db.entities.SavedBarcode
 import kotlinx.coroutines.flow.Flow
 
@@ -14,6 +11,9 @@ interface SavedBarcodeDao {
 
     @Insert
     fun insertAll(vararg savedBarcodes: SavedBarcode)
+
+    @Update
+    fun updateItem(savedBarcode:SavedBarcode)
 
     @Delete
     fun delete(barcode:SavedBarcode)

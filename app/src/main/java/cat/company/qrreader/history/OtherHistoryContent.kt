@@ -1,6 +1,7 @@
 package cat.company.qrreader.history
 
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -17,7 +18,7 @@ import java.text.SimpleDateFormat
 @Composable
 fun OtherHistoryContent(sdf:SimpleDateFormat, barcode:SavedBarcode){
     val uriHandler = LocalUriHandler.current
-    Title(title = if (barcode.format==Barcode.FORMAT_EAN_13) "EAN13" else "Other")
+    Title(title = getTitle(barcode))
     Text(text = sdf.format(barcode.date))
     when (barcode.format) {
         Barcode.FORMAT_EAN_13,
@@ -40,4 +41,9 @@ fun OtherHistoryContent(sdf:SimpleDateFormat, barcode:SavedBarcode){
         else ->
             Text(text = barcode.barcode)
     }
+    if(barcode.description!=null&&barcode.description!!.trim()!="") {
+        Divider()
+        Text(text = barcode.description!!)
+    }
 }
+
