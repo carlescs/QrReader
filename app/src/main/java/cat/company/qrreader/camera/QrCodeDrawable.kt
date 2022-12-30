@@ -30,8 +30,8 @@ import kotlin.math.roundToInt
 class QrCodeDrawable(private val barcode: Barcode, private val coordinateTransform: CoordinateTransform) : Drawable() {
     private val boundingRectPaint = Paint().apply {
         style = Paint.Style.STROKE
-        color = Color.LTGRAY
-        strokeWidth = 5F
+        color = Color.rgb(255,128,0)
+        strokeWidth = 15F
         alpha = 200
     }
 
@@ -60,7 +60,7 @@ class QrCodeDrawable(private val barcode: Barcode, private val coordinateTransfo
             this.bottom= rectF.bottom.roundToInt()
             this.left= rectF.left.roundToInt()
         }
-        canvas.drawRect(boundingBox, boundingRectPaint)
+
         canvas.drawRect(
             Rect(
                 boundingBox.left,
@@ -69,6 +69,25 @@ class QrCodeDrawable(private val barcode: Barcode, private val coordinateTransfo
                 boundingBox.bottom + contentTextPaint.textSize.toInt() + contentPadding),
             contentRectPaint
         )
+
+        if(barcode.cornerPoints!=null) {
+            for (i in 0..3) {
+                val point1 = PointF(barcode.cornerPoints!![i])
+                coordinateTransform.mapPoint(point1)
+                val point2 = PointF(barcode.cornerPoints!![(i + 1) % 4])
+                coordinateTransform.mapPoint(point2)
+                    canvas.drawLine(
+                        point1.x,
+                        point1.y,
+                        point2.x,
+                        point2.y,
+                        boundingRectPaint
+                    )
+            }
+        }
+        else
+            canvas.drawRect(boundingBox, boundingRectPaint)
+
         canvas.drawText(
             barcode.displayValue?:"No code",
             (boundingBox.left + contentPadding).toFloat(),
