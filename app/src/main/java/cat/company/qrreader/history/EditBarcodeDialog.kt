@@ -36,10 +36,10 @@ fun EditBarcodeDialog(savedBarcode:SavedBarcode, db: BarcodesDb, onRequestClose:
                 contentAlignment = Alignment.Center
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    TextField(value = text, singleLine = true, onValueChange = {text=it}, label = { Text(
+                    TextField(modifier = Modifier.padding(vertical = 5.dp), value = text, singleLine = true, onValueChange = {text=it}, label = { Text(
                         text = "Title"
                     )})
-                    TextField(value = description, onValueChange = {description=it}, label = { Text(
+                    TextField(modifier = Modifier.padding(vertical = 5.dp), value = description, onValueChange = {description=it}, label = { Text(
                         text = "Description"
                     )})
                     Row{
