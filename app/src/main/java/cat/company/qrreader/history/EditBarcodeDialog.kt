@@ -42,7 +42,7 @@ fun EditBarcodeDialog(savedBarcode:SavedBarcode, db: BarcodesDb, onRequestClose:
                     TextField(modifier = Modifier.padding(vertical = 5.dp), value = description, onValueChange = {description=it}, label = { Text(
                         text = "Description"
                     )})
-                    Row{
+                    Row(modifier = Modifier.align(Alignment.End)){
                         TextButton(onClick = {
                             coroutineScope.launch {
                                 db.runInTransaction {
