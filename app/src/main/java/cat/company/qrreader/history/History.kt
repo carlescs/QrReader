@@ -37,10 +37,10 @@ fun History(
     } else {
         val clipboardManager: ClipboardManager = LocalClipboardManager.current
         val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
-        val confirmDeleteOpen = remember{ mutableStateOf(false) }
-        val editOpen=remember{ mutableStateOf(false) }
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(items = state) { barcode ->
+                val editOpen=remember{ mutableStateOf(false) }
+                val confirmDeleteOpen = remember{ mutableStateOf(false) }
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
