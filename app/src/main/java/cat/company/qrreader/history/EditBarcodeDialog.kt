@@ -44,6 +44,11 @@ fun EditBarcodeDialog(savedBarcode:SavedBarcode, db: BarcodesDb, onRequestClose:
                     )})
                     Row(modifier = Modifier.align(Alignment.End)){
                         TextButton(onClick = {
+                            onRequestClose()
+                        }) {
+                            Text(text = "Cancel")
+                        }
+                        TextButton(onClick = {
                             coroutineScope.launch {
                                 db.runInTransaction {
                                     savedBarcode.title = text.text
@@ -54,11 +59,6 @@ fun EditBarcodeDialog(savedBarcode:SavedBarcode, db: BarcodesDb, onRequestClose:
                             onRequestClose()
                         }) {
                             Text(text = "Save")
-                        }
-                        TextButton(onClick = {
-                            onRequestClose()
-                        }) {
-                            Text(text = "Cancel")
                         }
                     }
                 }
