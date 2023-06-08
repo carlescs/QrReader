@@ -30,6 +30,7 @@ import cat.company.qrreader.ui.theme.QrReaderTheme
 
 @ExperimentalGetImage
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
