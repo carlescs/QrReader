@@ -8,8 +8,9 @@ import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -44,22 +45,22 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
+                    color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    val scaffoldState = rememberScaffoldState()
+                    val snackbarHostState = remember { SnackbarHostState() }
                     val items = listOf(
                         Screen.Camera,
                         Screen.History,
                     )
                     Scaffold(
-                        scaffoldState = scaffoldState,
+                        snackbarHost = { SnackbarHost(snackbarHostState) },
                         bottomBar = {
-                            BottomNavigation {
+                            NavigationBar() {
                                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                                 val currentDestination = navBackStackEntry?.destination
                                 items.forEach { screen ->
-                                    BottomNavigationItem(
+                                    NavigationBarItem(
                                         icon = { Icon(painterResource(id = screen.icon), contentDescription = null) },
                                         label = { Text(stringResource(screen.resourceId)) },
                                         selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
@@ -83,10 +84,12 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     ) {
-                        Box(modifier = Modifier.fillMaxSize().padding(it)) {
+                        Box(modifier = Modifier
+                            .fillMaxSize()
+                            .padding(it)) {
                             NavHost(navController = navController, startDestination = "camera") {
-                                composable("camera") { QrCamera(db,scaffoldState.snackbarHostState) }
-                                composable("history") { History(db,scaffoldState.snackbarHostState) }
+                                composable("camera") { QrCamera(db,snackbarHostState) }
+                                composable("history") { History(db,snackbarHostState) }
                             }
                         }
                     }
