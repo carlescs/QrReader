@@ -6,6 +6,7 @@ import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,7 +48,9 @@ fun QrCamera(db: BarcodesDb, snackbarHostState: SnackbarHostState, viewModel: Qr
         horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center){
         if(!permissionState.status.isGranted) {
-            Column {
+            Column (Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally){
                 val textToShow = if (permissionState.status.shouldShowRationale) {
                     // If the user has denied the permission but the rationale can be shown,
                     // then gently explain why the app requires this permission
@@ -59,7 +62,7 @@ fun QrCamera(db: BarcodesDb, snackbarHostState: SnackbarHostState, viewModel: Qr
                     "Camera permission required for this feature to be available. " +
                             "Please grant the permission"
                 }
-                Text(textToShow)
+                Text(textToShow, Modifier.padding(0.dp, 20.dp))
                 Button(onClick = { permissionState.launchPermissionRequest() }) {
                     Text("Request permission")
                 }
