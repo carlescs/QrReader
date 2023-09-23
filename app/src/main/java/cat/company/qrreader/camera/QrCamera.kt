@@ -2,6 +2,7 @@ package cat.company.qrreader.camera
 
 import android.Manifest
 import androidx.activity.compose.BackHandler
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,7 +19,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,10 +40,14 @@ import kotlinx.coroutines.launch
 @ExperimentalGetImage
 @ExperimentalMaterial3Api
 @Composable
-fun QrCamera(db: BarcodesDb, snackbarHostState: SnackbarHostState, viewModel: QrCameraViewModel = QrCameraViewModel()){
+fun QrCamera(db: BarcodesDb, snackbarHostState: SnackbarHostState, viewModel: QrCameraViewModel = viewModel()){
+    var openBottomSheet by rememberSaveable { mutableStateOf(false) }
+    val skipPartiallyExpanded by remember { mutableStateOf(false) }
     val permissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)
     val coroutineScope = rememberCoroutineScope()
-    val bottomSheetState = rememberModalBottomSheetState()
+    val bottomSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = skipPartiallyExpanded
+    )
     val state by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit){
@@ -71,7 +80,8 @@ fun QrCamera(db: BarcodesDb, snackbarHostState: SnackbarHostState, viewModel: Qr
         else{
             CameraPreview {
                 if (it?.isNotEmpty() == true)
-                    if (!bottomSheetState.isVisible) {
+                    if (!openBottomSheet) {
+                        openBottomSheet= true
                         viewModel.saveBarcodes(it)
                         coroutineScope.launch {
                             bottomSheetState.show()
@@ -79,19 +89,20 @@ fun QrCamera(db: BarcodesDb, snackbarHostState: SnackbarHostState, viewModel: Qr
                     }
             }
         }
-        BackHandler(enabled = bottomSheetState.isVisible) {
+        BackHandler(enabled = openBottomSheet) {
             coroutineScope.launch {
                 bottomSheetState.hide()
+            }.invokeOnCompletion {
+                if(!bottomSheetState.isVisible) openBottomSheet=false
             }
         }
-        if(bottomSheetState.isVisible) {
+
+        if(openBottomSheet) {
             ModalBottomSheet(
                 shape = RoundedCornerShape(25.dp, 25.dp, 0.dp, 0.dp),
-//                sheetState = bottomSheetState,
+                sheetState = bottomSheetState,
                 onDismissRequest = {
-                    coroutineScope.launch {
-                        bottomSheetState.hide()
-                    }
+                    openBottomSheet=false
                 },
                 scrimColor = Color.DarkGray.copy(alpha = 0.8f)
             ){
