@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -32,8 +33,8 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val db= Room
-            .databaseBuilder(applicationContext, BarcodesDb::class.java,"barcodes_db")
+        val db = Room
+            .databaseBuilder(applicationContext, BarcodesDb::class.java, "barcodes_db")
             .addMigrations(
                 Migrations.MIGRATION_1_2,
                 Migrations.MIGRATION_2_3
@@ -57,37 +58,44 @@ class MainActivity : ComponentActivity() {
                             )
                         },
                         floatingActionButton = {
-                            FloatingActionButton(onClick = {
-                                navController.navigate("camera") {
-                                    // Pop up to the start destination of the graph to
-                                    // avoid building up a large stack of destinations
-                                    // on the back stack as users select items
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    // Avoid multiple copies of the same destination when
-                                    // reselecting the same item
-                                    launchSingleTop = true
-                                    // Restore state when reselecting a previously selected item
-                                    restoreState = true
+                            val currentRoute = navController
+                                .currentBackStackEntryFlow
+                                .collectAsState(initial = navController.currentBackStackEntry)
+                            if (currentRoute.value?.destination?.route != "camera")
+                                FloatingActionButton(
+                                    onClick = {
+                                        navController.navigate("camera") {
+                                            // Pop up to the start destination of the graph to
+                                            // avoid building up a large stack of destinations
+                                            // on the back stack as users select items
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            // Avoid multiple copies of the same destination when
+                                            // reselecting the same item
+                                            launchSingleTop = true
+                                            // Restore state when reselecting a previously selected item
+                                            restoreState = true
+                                        }
+                                    },
+                                    containerColor = MaterialTheme.colorScheme.secondary,
+                                    shape = RoundedCornerShape(16.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_baseline_qr_code_scanner_24),
+                                        contentDescription = stringResource(id = R.string.scan_qr_code)
+                                    )
                                 }
-                            },
-                                containerColor = MaterialTheme.colorScheme.secondary,
-                                shape = RoundedCornerShape(16.dp)
-                            ){
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_baseline_qr_code_scanner_24),
-                                    contentDescription = stringResource(id = R.string.scan_qr_code)
-                                )
-                            }
                         }
                     ) {
-                        Box(modifier = Modifier
-                            .fillMaxSize()
-                            .padding(it)) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(it)
+                        ) {
                             NavHost(navController = navController, startDestination = "history") {
-                                composable("camera") { QrCamera(db,snackbarHostState) }
-                                composable("history") { History(db,snackbarHostState) }
+                                composable("camera") { QrCamera(db, snackbarHostState) }
+                                composable("history") { History(db, snackbarHostState) }
                             }
                         }
                     }
