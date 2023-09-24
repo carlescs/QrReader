@@ -35,10 +35,13 @@ steps:
 - task: Gradle@2
   inputs:
     gradleWrapperFile: 'gradlew'
-    tasks: 'bundleRelease'
+    tasks: 'buildRelease'
     javaHomeOption: 'JDKVersion'
 - task: AdvancedSecurity-Codeql-Analyze@1
 - task: AdvancedSecurity-Publish@1
+- task: SonarCloudAnalyze@1
+  inputs:
+    jdkversion: 'JAVA_HOME_17_X64'
 - task: SonarCloudPublish@1
   inputs:
     pollingTimeoutSec: '300'
