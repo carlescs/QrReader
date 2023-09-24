@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
@@ -54,7 +56,17 @@ class MainActivity : ComponentActivity() {
                         snackbarHost = { SnackbarHost(snackbarHostState) },
                         topBar = {
                             TopAppBar(
-                                title = { Text(stringResource(id = R.string.app_name)) }
+                                title = { Text(stringResource(id = R.string.app_name)) },
+                                navigationIcon = {
+                                    if (navController.previousBackStackEntry != null) {
+                                        IconButton(onClick = { navController.navigateUp() }) {
+                                            Icon(
+                                                imageVector = Icons.Filled.ArrowBack,
+                                                contentDescription = "Back"
+                                            )
+                                        }
+                                    }
+                                }
                             )
                         },
                         floatingActionButton = {
