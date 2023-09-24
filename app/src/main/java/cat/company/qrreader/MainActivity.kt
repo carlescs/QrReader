@@ -51,14 +51,18 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val navController = rememberNavController()
                     val snackbarHostState = remember { SnackbarHostState() }
+                    val currentRoute = navController
+                        .currentBackStackEntryFlow
+                        .collectAsState(initial = navController.currentBackStackEntry)
 
                     Scaffold(
                         snackbarHost = { SnackbarHost(snackbarHostState) },
                         topBar = {
                             TopAppBar(
                                 title = { Text(stringResource(id = R.string.app_name)) },
-                                navigationIcon = {
-                                    if (navController.previousBackStackEntry != null) {
+                                navigationIcon =
+                                {
+                                    if (currentRoute.value?.destination?.route == "camera") {
                                         IconButton(onClick = { navController.navigateUp() }) {
                                             Icon(
                                                 imageVector = Icons.Filled.ArrowBack,
@@ -70,9 +74,7 @@ class MainActivity : ComponentActivity() {
                             )
                         },
                         floatingActionButton = {
-                            val currentRoute = navController
-                                .currentBackStackEntryFlow
-                                .collectAsState(initial = navController.currentBackStackEntry)
+
                             if (currentRoute.value?.destination?.route != "camera")
                                 FloatingActionButton(
                                     onClick = {
