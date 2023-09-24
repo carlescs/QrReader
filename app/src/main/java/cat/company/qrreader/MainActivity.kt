@@ -56,6 +56,11 @@ class MainActivity : ComponentActivity() {
                     )
                     Scaffold(
                         snackbarHost = { SnackbarHost(snackbarHostState) },
+                        topBar = {
+                            TopAppBar(
+                                title = { Text(stringResource(id = R.string.app_name)) }
+                            )
+                        },
                         bottomBar = {
                             NavigationBar {
                                 val navBackStackEntry by navController.currentBackStackEntryAsState()
