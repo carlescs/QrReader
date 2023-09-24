@@ -36,12 +36,17 @@ steps:
   inputs:
     gradleWrapperFile: 'gradlew'
     tasks: 'buildRelease'
+    publishJUnitResults: true
+    testResultsFiles: '**/TEST-*.xml'
     javaHomeOption: 'JDKVersion'
+    sonarQubeRunAnalysis: true
+    sqGradlePluginVersionChoice: 'specify'
+    sonarQubeGradlePluginVersion: '2.6.1'
+    spotBugsAnalysis: true
+    spotBugsGradlePluginVersionChoice: 'specify'
+    spotbugsGradlePluginVersion: '4.7.0'
 - task: AdvancedSecurity-Codeql-Analyze@1
 - task: AdvancedSecurity-Publish@1
-- task: SonarCloudAnalyze@1
-  inputs:
-    jdkversion: 'JAVA_HOME_17_X64'
 - task: SonarCloudPublish@1
   inputs:
     pollingTimeoutSec: '300'
