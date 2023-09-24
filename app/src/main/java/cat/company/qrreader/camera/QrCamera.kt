@@ -27,7 +27,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import cat.company.qrreader.camera.bottomSheet.BottomSheetContent
 import cat.company.qrreader.db.BarcodesDb
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -63,13 +65,12 @@ fun QrCamera(db: BarcodesDb, snackbarHostState: SnackbarHostState, viewModel: Qr
                 val textToShow = if (permissionState.status.shouldShowRationale) {
                     // If the user has denied the permission but the rationale can be shown,
                     // then gently explain why the app requires this permission
-                    "The camera is important for this app. Please grant the permission."
+                    stringResource(R.string.camera_permissions_rationale)
                 } else {
                     // If it's the first time the user lands on this feature, or the user
                     // doesn't want to be asked again for this permission, explain that the
                     // permission is required
-                    "Camera permission required for this feature to be available. " +
-                            "Please grant the permission"
+                    stringResource(R.string.camera_permission_request)
                 }
                 Text(textToShow, Modifier.padding(0.dp, 20.dp))
                 Button(onClick = { permissionState.launchPermissionRequest() }) {

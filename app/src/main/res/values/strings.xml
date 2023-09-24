@@ -2,4 +2,7 @@
     <string name="app_name">QrReader</string>
     <string name="camera">Camera</string>
     <string name="history">History</string>
+    <string name="scan_qr_code">Scan QR code</string>
+    <string name="camera_permissions_rationale">The camera is important for this app. Please grant the permission.</string>
+    <string name="camera_permission_request">Camera permission required for this feature to be available. Please grant the permission</string>
 </resources>
