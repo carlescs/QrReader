@@ -41,10 +41,8 @@ steps:
     javaHomeOption: 'JDKVersion'
     sonarQubeRunAnalysis: true
     sqGradlePluginVersionChoice: 'specify'
-    sonarQubeGradlePluginVersion: '2.6.1'
-    spotBugsAnalysis: true
-    spotBugsGradlePluginVersionChoice: 'specify'
-    spotbugsGradlePluginVersion: '4.7.0'
+    sonarQubeGradlePluginVersion: '4.3.1.3277'
+    spotBugsAnalysis: false
 - task: AdvancedSecurity-Codeql-Analyze@1
 - task: AdvancedSecurity-Publish@1
 - task: SonarCloudPublish@1
