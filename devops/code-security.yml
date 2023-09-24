@@ -24,4 +24,5 @@ steps:
     gradleWrapperFile: 'gradlew'
     tasks: 'bundleRelease'
     javaHomeOption: 'JDKVersion'
+- task: AdvancedSecurity-Codeql-Analyze@1
 - task: AdvancedSecurity-Publish@1
