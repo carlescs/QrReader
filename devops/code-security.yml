@@ -10,11 +10,24 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
+- checkout: self
+  fetchDepth: 0
 - task: JavaToolInstaller@0
   inputs:
     versionSpec: '17'
     jdkArchitectureOption: 'x64'
     jdkSourceOption: 'PreInstalled'
+- task: SonarCloudPrepare@1
+  inputs:
+    SonarCloud: 'Sonar'
+    organization: 'carles-cs'
+    scannerMode: 'Other'
+    extraProperties: |
+      # Additional properties that will be passed to the scanner,
+      # Put one key=value per line, example:
+      # sonar.exclusions=**/*.bin
+      sonar.projectKey=carles-cs_QrReader
+      sonar.projectName=QrReader
 - task: AdvancedSecurity-Codeql-Init@1
   inputs:
     languages: 'java'
@@ -26,3 +39,6 @@ steps:
     javaHomeOption: 'JDKVersion'
 - task: AdvancedSecurity-Codeql-Analyze@1
 - task: AdvancedSecurity-Publish@1
+- task: SonarCloudPublish@1
+  inputs:
+    pollingTimeoutSec: '300'
