@@ -34,8 +34,8 @@ fun CameraPreview(notifyBarcode:((List<Barcode>?)->Unit)?) {
     var savedBarcodes by remember { mutableStateOf<List<Barcode>?>(null) }
 
     AndroidView(
-        factory = { AndroidViewContext ->
-            PreviewView(AndroidViewContext).apply {
+        factory = { androidViewContext ->
+            PreviewView(androidViewContext).apply {
                 this.scaleType = PreviewView.ScaleType.FILL_CENTER
                 layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,

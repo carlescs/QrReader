@@ -19,6 +19,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +31,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.db.BarcodesDb
+import cat.company.qrreader.db.entities.SavedBarcode
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -87,35 +89,58 @@ fun History(
                                 Text(text = "Edit")
                             }
                         }
-                        if(editOpen.value){
-                            EditBarcodeDialog(savedBarcode = barcode, onRequestClose = {editOpen.value=false},db=db)
-                        }
-                        if(confirmDeleteOpen.value) {
-                            AlertDialog(
-                                title = { Text(text = "Delete") },
-                                text = { Text(text = "Do you really want to delete this entry?") },
-                                confirmButton = {
-                                    TextButton(onClick = {
-                                        coroutineScope.launch {
-                                            db.savedBarcodeDao().delete(barcode)
-                                        }
-                                        confirmDeleteOpen.value = false
-                                    }) {
-                                        Text(text = "Ok")
-                                    }
-                                },
-                                dismissButton = {
-                                    TextButton(onClick = {
-                                        confirmDeleteOpen.value = false
-                                    }) {
-                                        Text(text = "Cancel")
-                                    }
-                                },
-                                onDismissRequest = { confirmDeleteOpen.value = false })
-                        }
+                        ShowEditBarcodeDialog(editOpen, barcode, db)
+                        ShowDeleteConfirmationDialog(confirmDeleteOpen, coroutineScope, db, barcode)
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ShowEditBarcodeDialog(
+    editOpen: MutableState<Boolean>,
+    barcode: SavedBarcode,
+    db: BarcodesDb
+) {
+    if (editOpen.value) {
+        EditBarcodeDialog(
+            savedBarcode = barcode,
+            onRequestClose = { editOpen.value = false },
+            db = db
+        )
+    }
+}
+
+@Composable
+private fun ShowDeleteConfirmationDialog(
+    confirmDeleteOpen: MutableState<Boolean>,
+    coroutineScope: CoroutineScope,
+    db: BarcodesDb,
+    barcode: SavedBarcode
+) {
+    if (confirmDeleteOpen.value) {
+        AlertDialog(
+            title = { Text(text = "Delete") },
+            text = { Text(text = "Do you really want to delete this entry?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    coroutineScope.launch {
+                        db.savedBarcodeDao().delete(barcode)
+                    }
+                    confirmDeleteOpen.value = false
+                }) {
+                    Text(text = "Ok")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    confirmDeleteOpen.value = false
+                }) {
+                    Text(text = "Cancel")
+                }
+            },
+            onDismissRequest = { confirmDeleteOpen.value = false })
     }
 }
