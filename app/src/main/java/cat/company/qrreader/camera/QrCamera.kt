@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -38,14 +37,17 @@ import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @ExperimentalGetImage
 @ExperimentalMaterial3Api
 @Composable
-fun QrCamera(db: BarcodesDb, snackbarHostState: SnackbarHostState, viewModel: QrCameraViewModel = viewModel()){
+fun QrCamera(
+    db: BarcodesDb,
+    snackbarHostState: SnackbarHostState,
+    viewModel: QrCameraViewModel = viewModel()
+) {
     var openBottomSheet by rememberSaveable { mutableStateOf(false) }
     val skipPartiallyExpanded by remember { mutableStateOf(false) }
     val permissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)
@@ -55,31 +57,44 @@ fun QrCamera(db: BarcodesDb, snackbarHostState: SnackbarHostState, viewModel: Qr
     )
     val state by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(Unit){
+    LaunchedEffect(Unit) {
         bottomSheetState.hide()
     }
-    Column(modifier=Modifier.fillMaxSize(),
+    Column(
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-    verticalArrangement = Arrangement.Center){
-        openBottomSheet =
-            handleCameraPermissions(permissionState, openBottomSheet, viewModel, coroutineScope, bottomSheetState)
+        verticalArrangement = Arrangement.Center
+    ) {
+        if (!permissionState.status.isGranted) {
+            PermissionPrompt(permissionState)
+        } else {
+            CameraPreview {
+                if (it?.isNotEmpty() == true && !openBottomSheet) {
+                    openBottomSheet = true
+                    viewModel.saveBarcodes(it)
+                    coroutineScope.launch {
+                        bottomSheetState.show()
+                    }
+                }
+            }
+        }
         BackHandler(enabled = openBottomSheet) {
             coroutineScope.launch {
                 bottomSheetState.hide()
             }.invokeOnCompletion {
-                if(!bottomSheetState.isVisible) openBottomSheet=false
+                if (!bottomSheetState.isVisible) openBottomSheet = false
             }
         }
 
-        if(openBottomSheet) {
+        if (openBottomSheet) {
             ModalBottomSheet(
                 shape = RoundedCornerShape(25.dp, 25.dp, 0.dp, 0.dp),
                 sheetState = bottomSheetState,
                 onDismissRequest = {
-                    openBottomSheet=false
+                    openBottomSheet = false
                 },
                 scrimColor = Color.DarkGray.copy(alpha = 0.8f)
-            ){
+            ) {
                 BottomSheetContent(lastBarcode = state.lastBarcode, db = db, snackbarHostState)
             }
         }
@@ -87,47 +102,27 @@ fun QrCamera(db: BarcodesDb, snackbarHostState: SnackbarHostState, viewModel: Qr
 }
 
 @Composable
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
-@ExperimentalGetImage
-private fun handleCameraPermissions(
-    permissionState: PermissionState,
-    openBottomSheet: Boolean,
-    viewModel: QrCameraViewModel,
-    coroutineScope: CoroutineScope,
-    bottomSheetState: SheetState
-): Boolean {
-    var openBottomSheet1 = openBottomSheet
-    if (!permissionState.status.isGranted) {
-        Column(
-            Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            val textToShow = if (permissionState.status.shouldShowRationale) {
-                // If the user has denied the permission but the rationale can be shown,
-                // then gently explain why the app requires this permission
-                stringResource(R.string.camera_permissions_rationale)
-            } else {
-                // If it's the first time the user lands on this feature, or the user
-                // doesn't want to be asked again for this permission, explain that the
-                // permission is required
-                stringResource(R.string.camera_permission_request)
-            }
-            Text(textToShow, Modifier.padding(0.dp, 20.dp))
-            Button(onClick = { permissionState.launchPermissionRequest() }) {
-                Text("Request permission")
-            }
+@OptIn(ExperimentalPermissionsApi::class)
+private fun PermissionPrompt(permissionState: PermissionState) {
+    Column(
+        Modifier.padding(20.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        val textToShow = if (permissionState.status.shouldShowRationale) {
+            // If the user has denied the permission but the rationale can be shown,
+            // then gently explain why the app requires this permission
+            stringResource(R.string.camera_permissions_rationale)
+        } else {
+            // If it's the first time the user lands on this feature, or the user
+            // doesn't want to be asked again for this permission, explain that the
+            // permission is required
+            stringResource(R.string.camera_permission_request)
         }
-    } else {
-        CameraPreview {
-            if (it?.isNotEmpty() == true && !openBottomSheet1) {
-                openBottomSheet1 = true
-                viewModel.saveBarcodes(it)
-                coroutineScope.launch {
-                    bottomSheetState.show()
-                }
-            }
+        Text(textToShow, Modifier.padding(0.dp, 20.dp))
+        Button(onClick = { permissionState.launchPermissionRequest() }) {
+            Text("Request permission")
         }
     }
-    return openBottomSheet1
 }
+
