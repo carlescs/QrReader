@@ -24,6 +24,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipboardManager
@@ -47,7 +48,8 @@ fun History(
 ) {
     viewModel.loadBarcodes()
     val state by viewModel.savedBarcodes.collectAsState(initial = emptyList())
-    val coroutineScope = CoroutineScope(Dispatchers.IO)
+    val coroutineScope = rememberCoroutineScope()
+
     if (state.isEmpty()) {
         Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
             Text(text = "No saved barcodes!", modifier = Modifier.align(CenterHorizontally))
@@ -90,7 +92,7 @@ fun History(
                             }
                         }
                         ShowEditBarcodeDialog(editOpen, barcode, db)
-                        ShowDeleteConfirmationDialog(confirmDeleteOpen, coroutineScope, db, barcode)
+                        ShowDeleteConfirmationDialog(confirmDeleteOpen, db, barcode)
                     }
                 }
             }
@@ -116,10 +118,10 @@ private fun ShowEditBarcodeDialog(
 @Composable
 private fun ShowDeleteConfirmationDialog(
     confirmDeleteOpen: MutableState<Boolean>,
-    coroutineScope: CoroutineScope,
     db: BarcodesDb,
     barcode: SavedBarcode
 ) {
+    val coroutineScope= CoroutineScope(Dispatchers.IO)
     if (confirmDeleteOpen.value) {
         AlertDialog(
             title = { Text(text = "Delete") },
