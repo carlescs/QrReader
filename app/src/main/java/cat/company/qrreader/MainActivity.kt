@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         snackbarHost = { SnackbarHost(snackbarHostState) },
                         topBar = {
-                            TopAppBar(
+                            CenterAlignedTopAppBar(
                                 title = { Text(stringResource(id = R.string.app_name)) },
                                 navigationIcon =
                                 {
