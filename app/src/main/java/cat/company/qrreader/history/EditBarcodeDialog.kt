@@ -24,12 +24,15 @@ import androidx.compose.ui.window.Dialog
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.db.entities.SavedBarcode
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun EditBarcodeDialog(savedBarcode:SavedBarcode, db: BarcodesDb, onRequestClose:()->Unit) {
-    val coroutineScope= CoroutineScope(Dispatchers.IO)
+fun EditBarcodeDialog(
+    savedBarcode: SavedBarcode,
+    db: BarcodesDb,
+    onRequestClose: () -> Unit,
+    ioCoroutineScope: CoroutineScope
+) {
     var text by remember { mutableStateOf(TextFieldValue(savedBarcode.title?:"")) }
     var description by remember { mutableStateOf(TextFieldValue(savedBarcode.description?:"")) }
     Dialog(
@@ -59,7 +62,7 @@ fun EditBarcodeDialog(savedBarcode:SavedBarcode, db: BarcodesDb, onRequestClose:
                             Text(text = "Cancel")
                         }
                         TextButton(onClick = {
-                            coroutineScope.launch {
+                            ioCoroutineScope.launch {
                                 db.runInTransaction {
                                     savedBarcode.title = text.text
                                     savedBarcode.description=description.text

@@ -48,9 +48,10 @@ fun History(
     viewModel: HistoryViewModel = HistoryViewModel(db = db)
 ) {
     viewModel.loadBarcodes()
-    val state= rememberLazyListState()
+    val lazyListState = rememberLazyListState()
     val items by viewModel.savedBarcodes.collectAsState(initial = emptyList())
     val coroutineScope = rememberCoroutineScope()
+    val ioCoroutineScope= CoroutineScope(Dispatchers.IO)
 
     if (items.isEmpty()) {
         Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
@@ -59,7 +60,7 @@ fun History(
     } else {
         val clipboardManager: ClipboardManager = LocalClipboardManager.current
         val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
-        LazyColumn(modifier = Modifier.fillMaxSize(), state= state) {
+        LazyColumn(modifier = Modifier.fillMaxSize(), state= lazyListState) {
             items(items = items) { barcode ->
                 val editOpen=remember{ mutableStateOf(false) }
                 val confirmDeleteOpen = remember{ mutableStateOf(false) }
@@ -75,7 +76,7 @@ fun History(
                     elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
                 ) {
                     Column(modifier = Modifier.padding(15.dp)) {
-                        if(barcode.type==Barcode.TYPE_URL)
+                        if (barcode.type == Barcode.TYPE_URL)
                             UrlHistoryContent(sdf = sdf, barcode = barcode)
                         else
                             OtherHistoryContent(sdf = sdf, barcode = barcode)
@@ -93,8 +94,15 @@ fun History(
                                 Text(text = "Edit")
                             }
                         }
-                        ShowEditBarcodeDialog(editOpen, barcode, db)
-                        ShowDeleteConfirmationDialog(confirmDeleteOpen, db, barcode)
+                        if (editOpen.value) {
+                            EditBarcodeDialog(
+                                savedBarcode = barcode,
+                                onRequestClose = { editOpen.value = false },
+                                db = db,
+                                ioCoroutineScope = ioCoroutineScope
+                            )
+                        }
+                        showDeleteConfirmDialog(confirmDeleteOpen, ioCoroutineScope, db, barcode)
                     }
                 }
             }
@@ -103,34 +111,19 @@ fun History(
 }
 
 @Composable
-private fun ShowEditBarcodeDialog(
-    editOpen: MutableState<Boolean>,
-    barcode: SavedBarcode,
-    db: BarcodesDb
-) {
-    if (editOpen.value) {
-        EditBarcodeDialog(
-            savedBarcode = barcode,
-            onRequestClose = { editOpen.value = false },
-            db = db
-        )
-    }
-}
-
-@Composable
-private fun ShowDeleteConfirmationDialog(
+private fun showDeleteConfirmDialog(
     confirmDeleteOpen: MutableState<Boolean>,
+    ioCoroutineScope: CoroutineScope,
     db: BarcodesDb,
     barcode: SavedBarcode
 ) {
-    val coroutineScope= CoroutineScope(Dispatchers.IO)
     if (confirmDeleteOpen.value) {
         AlertDialog(
             title = { Text(text = "Delete") },
             text = { Text(text = "Do you really want to delete this entry?") },
             confirmButton = {
                 TextButton(onClick = {
-                    coroutineScope.launch {
+                    ioCoroutineScope.launch {
                         db.savedBarcodeDao().delete(barcode)
                     }
                     confirmDeleteOpen.value = false
@@ -148,3 +141,4 @@ private fun ShowDeleteConfirmationDialog(
             onDismissRequest = { confirmDeleteOpen.value = false })
     }
 }
+
