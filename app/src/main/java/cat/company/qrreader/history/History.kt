@@ -102,7 +102,7 @@ fun History(
                                 ioCoroutineScope = ioCoroutineScope
                             )
                         }
-                        showDeleteConfirmDialog(confirmDeleteOpen, ioCoroutineScope, db, barcode)
+                        ShowDeleteConfirmDialog(confirmDeleteOpen, ioCoroutineScope, db, barcode)
                     }
                 }
             }
@@ -111,7 +111,7 @@ fun History(
 }
 
 @Composable
-private fun showDeleteConfirmDialog(
+private fun ShowDeleteConfirmDialog(
     confirmDeleteOpen: MutableState<Boolean>,
     ioCoroutineScope: CoroutineScope,
     db: BarcodesDb,
