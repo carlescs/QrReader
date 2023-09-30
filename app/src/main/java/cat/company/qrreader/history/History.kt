@@ -72,8 +72,8 @@ fun History(
                             clipboardManager.setText(AnnotatedString(barcode.barcode))
                             coroutineScope.launch { snackbarHostState.showSnackbar("Copied!") }
                         },
-                    shape = RoundedCornerShape(5.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                 ) {
                     Column(modifier = Modifier.padding(15.dp)) {
                         if (barcode.type == Barcode.TYPE_URL)
