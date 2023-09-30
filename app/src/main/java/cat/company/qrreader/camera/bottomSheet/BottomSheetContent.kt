@@ -37,7 +37,7 @@ fun BottomSheetContent(
         val clipboardManager:ClipboardManager= LocalClipboardManager.current
         val coroutineScope= rememberCoroutineScope()
         if (lastBarcode != null) {
-            LazyColumn(modifier = Modifier.fillMaxHeight()) {
+            LazyColumn(modifier = Modifier.fillMaxHeight().padding(horizontal = 16.dp)) {
                 items(
                     items = lastBarcode,
                     key={ it.hashCode() },
@@ -51,7 +51,7 @@ fun BottomSheetContent(
                                         clipboardManager.setText(AnnotatedString(barcode.displayValue!!))
                                     coroutineScope.launch { snackbarHostState.showSnackbar("Copied!") }
                                 },
-                            shape = RoundedCornerShape(5.dp),
+                            shape = RoundedCornerShape(12.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
                         ) {
                             Column(modifier = Modifier.padding(15.dp)) {
