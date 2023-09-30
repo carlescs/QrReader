@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -47,18 +48,19 @@ fun History(
     viewModel: HistoryViewModel = HistoryViewModel(db = db)
 ) {
     viewModel.loadBarcodes()
-    val state by viewModel.savedBarcodes.collectAsState(initial = emptyList())
+    val state= rememberLazyListState()
+    val items by viewModel.savedBarcodes.collectAsState(initial = emptyList())
     val coroutineScope = rememberCoroutineScope()
 
-    if (state.isEmpty()) {
+    if (items.isEmpty()) {
         Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
             Text(text = "No saved barcodes!", modifier = Modifier.align(CenterHorizontally))
         }
     } else {
         val clipboardManager: ClipboardManager = LocalClipboardManager.current
         val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(items = state) { barcode ->
+        LazyColumn(modifier = Modifier.fillMaxSize(), state= state) {
+            items(items = items) { barcode ->
                 val editOpen=remember{ mutableStateOf(false) }
                 val confirmDeleteOpen = remember{ mutableStateOf(false) }
                 Card(
