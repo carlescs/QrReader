@@ -26,6 +26,7 @@ stages:
         jdkArchitectureOption: 'x64'
         jdkSourceOption: 'PreInstalled'
     - task: Gradle@2
+      displayName: 'Run unit tests'
       inputs:
         gradleWrapperFile: 'gradlew'
         tasks: 'testRelease'
