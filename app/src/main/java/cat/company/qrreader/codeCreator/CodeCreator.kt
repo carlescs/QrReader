@@ -29,9 +29,15 @@ fun CodeCreator() {
         TextField(
             value = text.value, onValueChange = {
                 text.value = it
-                val bos= ByteArrayOutputStream()
-                QRCode(it).render().writeImage(bos)
-                image.value = BitmapFactory.decodeByteArray(bos.toByteArray(), 0, bos.toByteArray().size)
+                if(text.value.isEmpty()) {
+                    image.value = null
+                }
+                else {
+                    val bos = ByteArrayOutputStream()
+                    QRCode(it).render().writeImage(bos)
+                    image.value =
+                        BitmapFactory.decodeByteArray(bos.toByteArray(), 0, bos.toByteArray().size)
+                }
             },
             modifier = Modifier.fillMaxWidth(), singleLine = true
         )
