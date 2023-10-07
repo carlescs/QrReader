@@ -29,6 +29,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -46,8 +47,7 @@ import cat.company.qrreader.camera.QrCamera
 import cat.company.qrreader.codeCreator.CodeCreator
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.drawer.DrawerContent
-import cat.company.qrreader.events.EventBus
-import cat.company.qrreader.events.SimpleEvent
+import cat.company.qrreader.events.SharedEvents
 import cat.company.qrreader.history.History
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -142,13 +142,18 @@ private fun TopAppBar(
         },
         actions = {
             if (currentRoute.value?.destination?.route.equals("codeCreator")) {
+                val disabled= remember { mutableStateOf(false) }
                 IconButton(onClick = {
-                    coroutineScope.launch {
-                        EventBus.publish(
-                            SimpleEvent("share")
-                        )
+                    if(!disabled.value) {
+                        disabled.value = true
+                        try {
+                            SharedEvents.onShareClick?.invoke()
+                        }
+                        finally {
+                            disabled.value= false
+                        }
                     }
-                }) {
+                }, enabled = !disabled.value) {
                     Icon(Icons.Filled.Share, contentDescription = "Share")
                 }
             }

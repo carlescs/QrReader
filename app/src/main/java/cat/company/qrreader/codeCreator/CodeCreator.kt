@@ -6,7 +6,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.provider.MediaStore.Images.Media
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -21,9 +20,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
-import cat.company.qrreader.events.SimpleEventHandler
+import cat.company.qrreader.events.SharedEvents
 import io.github.g0dkar.qrcode.QRCode
 import java.io.ByteArrayOutputStream
 
@@ -35,16 +33,15 @@ fun CodeCreator() {
         .padding(10.dp)) {
         val text = remember { mutableStateOf("") }
         val image: MutableState<Bitmap?> = remember { mutableStateOf(null) }
-        val context= LocalContext.current
-        SimpleEventHandler().subscribeSimpleEvent(LocalLifecycleOwner.current) {
-            when (it.message) {
-                "share" -> {
-                    if(image.value != null) {
-                        shareImage(context, image)
-                    }
-                    else {
-                        Toast.makeText(context, "No image to share", Toast.LENGTH_SHORT).show()
-                    }
+        val context = LocalContext.current
+        val sharing=remember{ mutableStateOf(false) }
+        SharedEvents.onShareClick = {
+            if(!sharing.value) {
+                try {
+                    sharing.value = true
+                    shareImage(context, image)
+                } finally {
+                    sharing.value = false
                 }
             }
         }
