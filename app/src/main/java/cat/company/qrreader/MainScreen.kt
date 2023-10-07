@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -23,6 +25,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -32,7 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -41,7 +46,10 @@ import cat.company.qrreader.camera.QrCamera
 import cat.company.qrreader.codeCreator.CodeCreator
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.drawer.DrawerContent
+import cat.company.qrreader.events.EventBus
+import cat.company.qrreader.events.SimpleEvent
 import cat.company.qrreader.history.History
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @ExperimentalGetImage
@@ -72,58 +80,17 @@ fun MainScreen(db: BarcodesDb) {
             Scaffold(
                 snackbarHost = { SnackbarHost(snackBarHostState) },
                 topBar = {
-                    CenterAlignedTopAppBar(
-                        title = { Text(stringResource(id = R.string.app_name)) },
-                        navigationIcon =
-                        {
-                            if (showBackButton) {
-                                IconButton(onClick = { navController.navigateUp() }) {
-                                    Icon(
-                                        imageVector = Icons.Filled.ArrowBack,
-                                        contentDescription = "Back"
-                                    )
-                                }
-                            } else {
-                                IconButton(onClick = {
-                                    coroutineScope.launch { sidebarState.open() }
-                                }) {
-                                    Icon(
-                                        // internal hamburger menu
-                                        Icons.Rounded.Menu,
-                                        contentDescription = "MenuButton"
-                                    )
-                                }
-                            }
-                        }
+                    TopAppBar(
+                        showBackButton,
+                        navController,
+                        coroutineScope,
+                        sidebarState,
+                        currentRoute
                     )
                 },
                 floatingActionButton = {
 
-                    if (currentRoute.value?.destination?.route.equals("history"))
-                        FloatingActionButton(
-                            onClick = {
-                                navController.navigate("camera") {
-                                    // Pop up to the start destination of the graph to
-                                    // avoid building up a large stack of destinations
-                                    // on the back stack as users select items
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    // Avoid multiple copies of the same destination when
-                                    // reselecting the same item
-                                    launchSingleTop = true
-                                    // Restore state when reselecting a previously selected item
-                                    restoreState = true
-                                }
-                            },
-                            containerColor = MaterialTheme.colorScheme.secondary,
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_baseline_qr_code_scanner_24),
-                                contentDescription = stringResource(id = R.string.scan_qr_code)
-                            )
-                        }
+                    FloatingActionButton(currentRoute, navController)
                 }
             ) {
                 Box(
@@ -140,5 +107,85 @@ fun MainScreen(db: BarcodesDb) {
             }
         }
     }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun TopAppBar(
+    showBackButton: Boolean,
+    navController: NavHostController,
+    coroutineScope: CoroutineScope,
+    sidebarState: DrawerState,
+    currentRoute: State<NavBackStackEntry?>
+) {
+    CenterAlignedTopAppBar(
+        title = { Text(stringResource(id = R.string.app_name)) },
+        navigationIcon =
+        {
+            if (showBackButton) {
+                IconButton(onClick = { navController.navigateUp() }) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
+            } else {
+                IconButton(onClick = {
+                    coroutineScope.launch { sidebarState.open() }
+                }) {
+                    Icon(
+                        // internal hamburger menu
+                        Icons.Rounded.Menu,
+                        contentDescription = "MenuButton"
+                    )
+                }
+            }
+        },
+        actions = {
+            if (currentRoute.value?.destination?.route.equals("codeCreator")) {
+                IconButton(onClick = {
+                    coroutineScope.launch {
+                        EventBus.publish(
+                            SimpleEvent("share")
+                        )
+                    }
+                }) {
+                    Icon(Icons.Filled.Share, contentDescription = "Share")
+                }
+            }
+        }
+    )
+}
+
+@Composable
+private fun FloatingActionButton(
+    currentRoute: State<NavBackStackEntry?>,
+    navController: NavHostController
+) {
+    if (currentRoute.value?.destination?.route.equals("history"))
+        FloatingActionButton(
+            onClick = {
+                navController.navigate("camera") {
+                    // Pop up to the start destination of the graph to
+                    // avoid building up a large stack of destinations
+                    // on the back stack as users select items
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    // Avoid multiple copies of the same destination when
+                    // reselecting the same item
+                    launchSingleTop = true
+                    // Restore state when reselecting a previously selected item
+                    restoreState = true
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.secondary,
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_baseline_qr_code_scanner_24),
+                contentDescription = stringResource(id = R.string.scan_qr_code)
+            )
+        }
 }
 
