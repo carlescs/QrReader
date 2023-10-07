@@ -89,7 +89,6 @@ fun MainScreen(db: BarcodesDb) {
                     )
                 },
                 floatingActionButton = {
-
                     FloatingActionButton(currentRoute, navController)
                 }
             ) {
