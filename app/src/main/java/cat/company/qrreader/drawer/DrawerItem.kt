@@ -31,7 +31,7 @@ val items = arrayListOf(
                 contentDescription = "Code creator"
             )
         },
-        label = "CodeCreator",
+        label = "Code Creator",
         route = "codeCreator"
     ),
 )
