@@ -28,15 +28,17 @@ import java.io.ByteArrayOutputStream
 
 @Composable
 fun CodeCreator() {
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(horizontal = 16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+    ) {
         val text = remember { mutableStateOf("") }
         val image: MutableState<Bitmap?> = remember { mutableStateOf(null) }
         val context = LocalContext.current
-        val sharing=remember{ mutableStateOf(false) }
+        val sharing = remember { mutableStateOf(false) }
         SharedEvents.onShareClick = {
-            if(!sharing.value) {
+            if (!sharing.value) {
                 try {
                     sharing.value = true
                     shareImage(context, image)
@@ -48,10 +50,9 @@ fun CodeCreator() {
         TextField(
             value = text.value, onValueChange = {
                 text.value = it
-                if(text.value.isEmpty()) {
+                if (text.value.isEmpty()) {
                     image.value = null
-                }
-                else {
+                } else {
                     val bos = ByteArrayOutputStream()
                     QRCode(it).render().writeImage(bos)
                     image.value =
@@ -60,10 +61,12 @@ fun CodeCreator() {
             },
             modifier = Modifier.fillMaxWidth(), singleLine = true
         )
-        if(image.value != null)
-            Image(image.value!!.asImageBitmap(), contentDescription = null, modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight())
+        if (image.value != null)
+            Image(
+                image.value!!.asImageBitmap(), contentDescription = null, modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+            )
     }
 }
 

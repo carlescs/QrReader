@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import kotlinx.coroutines.CoroutineScope
@@ -30,15 +31,13 @@ fun DrawerContent(
                 icon = it.icon,
                 label = { Text(text = it.label) },
                 onClick = {
-                    if (currentRoute != null)
-                        navController.navigate(it.route) {
-                            popUpTo(currentRoute) {
-                                saveState = true
-                                inclusive = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
+                    navController.navigate(it.route){
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
                         }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                     coroutineScope.launch { sidebarState.close() }
                 },
                 selected = currentRoute.equals(it.route),
