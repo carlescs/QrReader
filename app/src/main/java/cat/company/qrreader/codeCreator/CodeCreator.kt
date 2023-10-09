@@ -76,9 +76,9 @@ private fun shareImage(
     val values = ContentValues()
     values.put(Media.TITLE, "QrCode")
     values.put(Media.MIME_TYPE, "image/jpeg")
-    val uri = context.contentResolver.insert(Media.EXTERNAL_CONTENT_URI, values)
-    val outputStream = context.contentResolver.openOutputStream(uri!!)
-    image.value!!.compress(Bitmap.CompressFormat.JPEG, 100, outputStream!!)
+    val uri = context.contentResolver.insert(Media.EXTERNAL_CONTENT_URI, values) ?: return
+    val outputStream = context.contentResolver.openOutputStream(uri) ?: return
+    image.value?.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
     outputStream.close()
     share.putExtra(Intent.EXTRA_STREAM, uri)
     context.startActivity(Intent.createChooser(share, "Share Image"))
