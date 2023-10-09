@@ -41,7 +41,7 @@ fun CodeCreator() {
             if (!sharing.value) {
                 try {
                     sharing.value = true
-                    shareImage(context, image)
+                    shareImage(context, image.value)
                 } finally {
                     sharing.value = false
                 }
@@ -72,8 +72,9 @@ fun CodeCreator() {
 
 private fun shareImage(
     context: Context,
-    image: MutableState<Bitmap?>
+    bitmap: Bitmap?
 ) {
+    if(bitmap == null) return
     val share = Intent(Intent.ACTION_SEND)
     share.type = "image/jpeg"
     val values = ContentValues()
@@ -81,7 +82,7 @@ private fun shareImage(
     values.put(Media.MIME_TYPE, "image/jpeg")
     val uri = context.contentResolver.insert(Media.EXTERNAL_CONTENT_URI, values) ?: return
     val outputStream = context.contentResolver.openOutputStream(uri) ?: return
-    image.value?.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
     outputStream.close()
     share.putExtra(Intent.EXTRA_STREAM, uri)
     context.startActivity(Intent.createChooser(share, "Share Image"))
