@@ -30,7 +30,7 @@ import java.io.ByteArrayOutputStream
 fun CodeCreator() {
     Column(modifier = Modifier
         .fillMaxSize()
-        .padding(10.dp)) {
+        .padding(horizontal = 16.dp)) {
         val text = remember { mutableStateOf("") }
         val image: MutableState<Bitmap?> = remember { mutableStateOf(null) }
         val context = LocalContext.current

@@ -12,8 +12,8 @@ android {
         applicationId "cat.company.qrreader"
         minSdk 21
         targetSdk 34
-        versionCode 64
-        versionName '2.5.2'
+        versionCode 65
+        versionName '2.6.0'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
