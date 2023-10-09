@@ -63,9 +63,8 @@ fun CameraPreview(notifyBarcode:((List<Barcode>?)->Unit)?) {
                 }
                 val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
                 val barcodeAnalyser = BarcodeAnalyzer { barcodes ->
-                    val target = previewView.outputTransform
-
-                    val coordinateTransform = CoordinateTransform(barcodes.source, target!!)
+                    val target = previewView.outputTransform ?: return@BarcodeAnalyzer
+                    val coordinateTransform = CoordinateTransform(barcodes.source, target)
                     previewView.overlay.clear()
                     barcodes.barcodes.forEach {
                         previewView.overlay.add(QrCodeDrawable(it,coordinateTransform))

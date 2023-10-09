@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -21,6 +22,7 @@ fun DrawerContent(
     sidebarState: DrawerState
 ) {
     ModalDrawerSheet {
+        val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
         Text(text = "QrReader", modifier = Modifier.padding(10.dp))
         Spacer(modifier = Modifier.height(12.dp))
         items.forEach {
@@ -28,7 +30,6 @@ fun DrawerContent(
                 icon = it.icon,
                 label = { Text(text = it.label) },
                 onClick = {
-                    val currentRoute = navController.currentDestination?.route
                     if (currentRoute != null)
                         navController.navigate(it.route) {
                             popUpTo(currentRoute) {
@@ -40,7 +41,7 @@ fun DrawerContent(
                         }
                     coroutineScope.launch { sidebarState.close() }
                 },
-                selected = navController.currentDestination?.route.equals(it.route),
+                selected = currentRoute.equals(it.route),
                 modifier = Modifier.padding(horizontal = 10.dp)
             )
         }
