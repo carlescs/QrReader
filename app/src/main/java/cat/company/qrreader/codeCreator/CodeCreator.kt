@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -62,7 +66,20 @@ fun CodeCreator() {
                     SharedEvents.onShareIsDisabled?.invoke(false)
                 }
             },
-            modifier = Modifier.fillMaxWidth(), singleLine = true
+            modifier = Modifier.fillMaxWidth(), singleLine = true,
+            trailingIcon = {
+                if (text.value.isNotEmpty())
+                    IconButton(onClick = {
+                        text.value = ""
+                        image.value = null
+                        SharedEvents.onShareIsDisabled?.invoke(true)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Clear,
+                            contentDescription = "Clear"
+                        )
+                    }
+            }
         )
         if (image.value != null)
             Image(
