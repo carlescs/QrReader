@@ -1,7 +1,7 @@
 package cat.company.qrreader.drawer
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
@@ -27,7 +27,7 @@ val items = arrayListOf(
     BottomIcon(
         icon = {
             Icon(
-                imageVector = Icons.Filled.Star,
+                imageVector = Icons.Filled.Build,
                 contentDescription = "Code creator"
             )
         },
