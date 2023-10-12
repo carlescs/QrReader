@@ -8,22 +8,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DrawerState
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -31,7 +28,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -46,11 +42,9 @@ import androidx.navigation.compose.rememberNavController
 import cat.company.qrreader.camera.QrCamera
 import cat.company.qrreader.codeCreator.CodeCreator
 import cat.company.qrreader.db.BarcodesDb
-import cat.company.qrreader.drawer.DrawerContent
+import cat.company.qrreader.drawer.items
 import cat.company.qrreader.events.SharedEvents
 import cat.company.qrreader.history.History
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 @ExperimentalGetImage
 @Composable
@@ -60,9 +54,7 @@ fun MainScreen(db: BarcodesDb) {
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        val coroutineScope = rememberCoroutineScope()
         val navController = rememberNavController()
-        val sidebarState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val snackBarHostState = remember { SnackbarHostState() }
         val currentRoute = navController
             .currentBackStackEntryFlow
@@ -71,37 +63,54 @@ fun MainScreen(db: BarcodesDb) {
 
         val showBackButton by remember(currentBackStackEntry) {
             derivedStateOf {
-                navController.previousBackStackEntry != null && currentBackStackEntry?.destination?.route.equals("camera")
+                navController.previousBackStackEntry != null && currentBackStackEntry?.destination?.route.equals(
+                    "camera"
+                )
             }
         }
-        ModalNavigationDrawer(drawerContent = {
-            DrawerContent(navController, coroutineScope, sidebarState)
-        }, drawerState = sidebarState, gesturesEnabled = sidebarState.isOpen) {
-            Scaffold(
-                snackbarHost = { SnackbarHost(snackBarHostState) },
-                topBar = {
-                    TopAppBar(
-                        showBackButton,
-                        navController,
-                        coroutineScope,
-                        sidebarState,
-                        currentRoute
-                    )
-                },
-                floatingActionButton = {
-                    FloatingActionButton(currentRoute, navController)
-                }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(it)
-                ) {
-                    NavHost(navController = navController, startDestination = "history") {
-                        composable("camera") { QrCamera(db, snackBarHostState) }
-                        composable("history") { History(db, snackBarHostState) }
-                        composable("codeCreator"){ CodeCreator() }
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackBarHostState) },
+            topBar = {
+                TopAppBar(
+                    showBackButton,
+                    navController,
+                    currentRoute
+                )
+            },
+            bottomBar = {
+                val activeRoute=navController.currentBackStackEntryFlow.collectAsState(initial=navController.currentBackStackEntry)
+                NavigationBar{
+                    items.forEach { item ->
+                        NavigationBarItem(
+                            icon = item.icon,
+                            label = { Text(item.label) },
+                            selected = activeRoute.value?.destination?.route == item.route,
+                            onClick = {
+                                navController.navigate(item.route){
+                                    popUpTo(navController.graph.findStartDestination().id){
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        )
                     }
+                }
+            },
+            floatingActionButton = {
+                FloatingActionButton(currentRoute, navController)
+            }
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(it)
+            ) {
+                NavHost(navController = navController, startDestination = "history") {
+                    composable("camera") { QrCamera(db, snackBarHostState) }
+                    composable("history") { History(db, snackBarHostState) }
+                    composable("codeCreator") { CodeCreator() }
                 }
             }
         }
@@ -113,8 +122,6 @@ fun MainScreen(db: BarcodesDb) {
 private fun TopAppBar(
     showBackButton: Boolean,
     navController: NavHostController,
-    coroutineScope: CoroutineScope,
-    sidebarState: DrawerState,
     currentRoute: State<NavBackStackEntry?>
 ) {
     val shareDisabled=remember { mutableStateOf(false) }
@@ -130,16 +137,6 @@ private fun TopAppBar(
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Back"
-                    )
-                }
-            } else {
-                IconButton(onClick = {
-                    coroutineScope.launch { sidebarState.open() }
-                }) {
-                    Icon(
-                        // internal hamburger menu
-                        Icons.Rounded.Menu,
-                        contentDescription = "MenuButton"
                     )
                 }
             }

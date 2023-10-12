@@ -7,14 +7,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
 import cat.company.qrreader.R
 
-class DrawerItem(
+class BottomIcon(
     val icon: @Composable () -> Unit,
     val label: String,
     val route: String
 )
 
 val items = arrayListOf(
-    DrawerItem(
+    BottomIcon(
         icon = {
             Icon(
                 painter = painterResource(id = R.drawable.ic_baseline_history_24),
@@ -24,7 +24,7 @@ val items = arrayListOf(
         label = "History",
         route = "history"
     ),
-    DrawerItem(
+    BottomIcon(
         icon = {
             Icon(
                 imageVector = Icons.Filled.Star,
