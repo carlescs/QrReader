@@ -22,6 +22,8 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -41,6 +43,7 @@ fun CodeCreator() {
         val image: MutableState<Bitmap?> = remember { mutableStateOf(null) }
         val context = LocalContext.current
         val sharing = remember { mutableStateOf(false) }
+        val focusRequester=remember{FocusRequester()}
         SharedEvents.onShareIsDisabled?.invoke(text.value.isEmpty())
         SharedEvents.onShareClick = {
             if (!sharing.value) {
@@ -66,13 +69,14 @@ fun CodeCreator() {
                     SharedEvents.onShareIsDisabled?.invoke(false)
                 }
             },
-            modifier = Modifier.fillMaxWidth(), singleLine = true,
+            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester), singleLine = true,
             trailingIcon = {
                 if (text.value.isNotEmpty())
                     IconButton(onClick = {
                         text.value = ""
                         image.value = null
                         SharedEvents.onShareIsDisabled?.invoke(true)
+                        focusRequester.requestFocus()
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Clear,
