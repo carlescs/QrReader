@@ -79,22 +79,24 @@ fun MainScreen(db: BarcodesDb) {
             },
             bottomBar = {
                 val activeRoute=navController.currentBackStackEntryFlow.collectAsState(initial=navController.currentBackStackEntry)
-                NavigationBar{
-                    items.forEach { item ->
-                        NavigationBarItem(
-                            icon = item.icon,
-                            label = { Text(item.label) },
-                            selected = activeRoute.value?.destination?.route == item.route,
-                            onClick = {
-                                navController.navigate(item.route){
-                                    popUpTo(navController.graph.findStartDestination().id){
-                                        saveState = true
+                if(activeRoute.value?.destination?.route !="camera") {
+                    NavigationBar{
+                        items.forEach { item ->
+                            NavigationBarItem(
+                                icon = item.icon,
+                                label = { Text(item.label) },
+                                selected = activeRoute.value?.destination?.route == item.route,
+                                onClick = {
+                                    navController.navigate(item.route){
+                                        popUpTo(navController.graph.findStartDestination().id){
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             },
