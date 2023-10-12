@@ -117,6 +117,10 @@ private fun TopAppBar(
     sidebarState: DrawerState,
     currentRoute: State<NavBackStackEntry?>
 ) {
+    val shareDisabled=remember { mutableStateOf(false) }
+    SharedEvents.onShareIsDisabled= {
+        shareDisabled.value = it
+    }
     CenterAlignedTopAppBar(
         title = { Text(stringResource(id = R.string.app_name)) },
         navigationIcon =
@@ -142,18 +146,17 @@ private fun TopAppBar(
         },
         actions = {
             if (currentRoute.value?.destination?.route.equals("codeCreator")) {
-                val disabled= remember { mutableStateOf(false) }
                 IconButton(onClick = {
-                    if(!disabled.value) {
-                        disabled.value = true
+                    if(!shareDisabled.value) {
+                        shareDisabled.value = true
                         try {
                             SharedEvents.onShareClick?.invoke()
                         }
                         finally {
-                            disabled.value= false
+                            shareDisabled.value= false
                         }
                     }
-                }, enabled = !disabled.value) {
+                }, enabled = !shareDisabled.value) {
                     Icon(Icons.Filled.Share, contentDescription = "Share")
                 }
             }
@@ -177,9 +180,9 @@ private fun FloatingActionButton(
                         saveState = true
                     }
                     // Avoid multiple copies of the same destination when
-                    // reselecting the same item
+                    // re-selecting the same item
                     launchSingleTop = true
-                    // Restore state when reselecting a previously selected item
+                    // Restore state when re-selecting a previously selected item
                     restoreState = true
                 }
             },

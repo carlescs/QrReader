@@ -37,6 +37,7 @@ fun CodeCreator() {
         val image: MutableState<Bitmap?> = remember { mutableStateOf(null) }
         val context = LocalContext.current
         val sharing = remember { mutableStateOf(false) }
+        SharedEvents.onShareIsDisabled?.invoke(text.value.isEmpty())
         SharedEvents.onShareClick = {
             if (!sharing.value) {
                 try {
@@ -52,11 +53,13 @@ fun CodeCreator() {
                 text.value = it
                 if (text.value.isEmpty()) {
                     image.value = null
+                    SharedEvents.onShareIsDisabled?.invoke(true)
                 } else {
                     val bos = ByteArrayOutputStream()
                     QRCode(it).render().writeImage(bos)
                     image.value =
                         BitmapFactory.decodeByteArray(bos.toByteArray(), 0, bos.toByteArray().size)
+                    SharedEvents.onShareIsDisabled?.invoke(false)
                 }
             },
             modifier = Modifier.fillMaxWidth(), singleLine = true
