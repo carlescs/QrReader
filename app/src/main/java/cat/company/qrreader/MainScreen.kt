@@ -135,6 +135,10 @@ private fun TopAppBar(
     SharedEvents.onShareIsDisabled= {
         shareDisabled.value = it
     }
+    val printDisabled=remember { mutableStateOf(false) }
+    SharedEvents.onPrintIsDisabled= {
+        printDisabled.value = it
+    }
     CenterAlignedTopAppBar(
         title = { Text(stringResource(id = R.string.app_name)) },
         navigationIcon =
@@ -183,7 +187,7 @@ private fun TopAppBar(
                         },
                         onClick = {
                             SharedEvents.onPrintClick?.invoke()
-                        })
+                        }, enabled = !printDisabled.value)
                 }
             }
         },
