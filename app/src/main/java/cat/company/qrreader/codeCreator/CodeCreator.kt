@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.provider.MediaStore.Images.Media
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.print.PrintHelper
 import cat.company.qrreader.events.SharedEvents
 import io.github.g0dkar.qrcode.QRCode
 import java.io.ByteArrayOutputStream
@@ -55,18 +57,31 @@ fun CodeCreator() {
                 }
             }
         }
+        SharedEvents.onPrintIsDisabled?.invoke(text.value.isEmpty())
+        SharedEvents.onPrintClick = {
+            if (!sharing.value) {
+                try {
+                    sharing.value = true
+                    printImage(context, image.value)
+                } finally {
+                    sharing.value = false
+                }
+            }
+        }
         TextField(
             value = text.value, onValueChange = {
                 text.value = it
                 if (text.value.isEmpty()) {
                     image.value = null
                     SharedEvents.onShareIsDisabled?.invoke(true)
+                    SharedEvents.onPrintIsDisabled?.invoke(true)
                 } else {
                     val bos = ByteArrayOutputStream()
                     QRCode(it).render().writeImage(bos)
                     image.value =
                         BitmapFactory.decodeByteArray(bos.toByteArray(), 0, bos.toByteArray().size)
                     SharedEvents.onShareIsDisabled?.invoke(false)
+                    SharedEvents.onPrintIsDisabled?.invoke(false)
                 }
             },
             modifier = Modifier.fillMaxWidth().focusRequester(focusRequester), singleLine = true,
@@ -101,13 +116,28 @@ private fun shareImage(
     if(bitmap == null) return
     val share = Intent(Intent.ACTION_SEND)
     share.type = "image/jpeg"
+    val uri= generateUriFromBitmap(context, bitmap) ?: return
+    share.putExtra(Intent.EXTRA_STREAM, uri)
+    context.startActivity(Intent.createChooser(share, "Share Image"))
+}
+
+private fun printImage(context: Context,bitmap: Bitmap?){
+    if(bitmap == null) return
+    val uri= generateUriFromBitmap(context, bitmap) ?: return
+    PrintHelper(context).apply {
+        scaleMode = PrintHelper.SCALE_MODE_FIT
+    }.also {
+        it.printBitmap("QrCode", uri)
+    }
+}
+
+private fun generateUriFromBitmap(context: Context, bitmap: Bitmap): Uri? {
     val values = ContentValues()
     values.put(Media.TITLE, "QrCode")
     values.put(Media.MIME_TYPE, "image/jpeg")
-    val uri = context.contentResolver.insert(Media.EXTERNAL_CONTENT_URI, values) ?: return
-    val outputStream = context.contentResolver.openOutputStream(uri) ?: return
+    val uri = context.contentResolver.insert(Media.EXTERNAL_CONTENT_URI, values) ?: return null
+    val outputStream = context.contentResolver.openOutputStream(uri) ?: return null
     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
     outputStream.close()
-    share.putExtra(Intent.EXTRA_STREAM, uri)
-    context.startActivity(Intent.createChooser(share, "Share Image"))
+    return uri
 }

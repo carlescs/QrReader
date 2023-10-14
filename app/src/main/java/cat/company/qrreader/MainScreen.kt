@@ -7,8 +7,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -28,6 +32,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -144,22 +149,44 @@ private fun TopAppBar(
             }
         },
         actions = {
+            var menuExpanded by remember { mutableStateOf(false) }
             if (currentRoute.value?.destination?.route.equals("codeCreator")) {
                 IconButton(onClick = {
-                    if(!shareDisabled.value) {
+                    if (!shareDisabled.value) {
                         shareDisabled.value = true
                         try {
                             SharedEvents.onShareClick?.invoke()
-                        }
-                        finally {
-                            shareDisabled.value= false
+                        } finally {
+                            shareDisabled.value = false
                         }
                     }
                 }, enabled = !shareDisabled.value) {
                     Icon(Icons.Filled.Share, contentDescription = "Share")
                 }
+                IconButton(onClick = { menuExpanded = !menuExpanded }) {
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = "More",
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(text = "Print") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Filled.Info,
+                                contentDescription = null
+                            )
+                        },
+                        onClick = {
+                            SharedEvents.onPrintClick?.invoke()
+                        })
+                }
             }
-        }
+        },
     )
 }
 
