@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -181,8 +180,8 @@ private fun TopAppBar(
                         text = { Text(text = "Print") },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Filled.Info,
-                                contentDescription = null
+                                painter = painterResource(id = R.drawable.baseline_print_24),
+                                contentDescription = "Print"
                             )
                         },
                         onClick = {
