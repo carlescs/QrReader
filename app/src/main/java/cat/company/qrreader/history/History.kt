@@ -1,26 +1,19 @@
 package cat.company.qrreader.history
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,115 +23,68 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.db.BarcodesDb
-import cat.company.qrreader.db.entities.SavedBarcode
-import com.google.mlkit.vision.barcode.common.Barcode
+import cat.company.qrreader.events.SharedEvents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun History(
     db: BarcodesDb,
     snackbarHostState: SnackbarHostState,
     viewModel: HistoryViewModel = HistoryViewModel(db = db)
 ) {
-    viewModel.loadBarcodes()
-    val lazyListState = rememberLazyListState()
-    val items by viewModel.savedBarcodes.collectAsState(initial = emptyList())
-    val coroutineScope = rememberCoroutineScope()
-    val ioCoroutineScope= CoroutineScope(Dispatchers.IO)
-
-    if (items.isEmpty()) {
-        Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
-            Text(text = "No saved barcodes!", modifier = Modifier.align(CenterHorizontally))
+    val drawerState = remember { mutableStateOf(DrawerValue.Closed) }
+    val selectedTagId=remember{ mutableStateOf<Int?>(null) }
+    SharedEvents.openSideBar = {
+        when (drawerState.value) {
+            DrawerValue.Closed -> drawerState.value = DrawerValue.Open
+            else -> drawerState.value = DrawerValue.Closed
         }
-    } else {
-        val clipboardManager: ClipboardManager = LocalClipboardManager.current
-        val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
-        LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp), state= lazyListState) {
-            items(items = items) { barcode ->
-                val editOpen=remember{ mutableStateOf(false) }
-                val confirmDeleteOpen = remember{ mutableStateOf(false) }
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp)
-                        .clickable {
-                            clipboardManager.setText(AnnotatedString(barcode.barcode))
-                            coroutineScope.launch { snackbarHostState.showSnackbar("Copied!") }
-                        },
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                ) {
-                    Column(modifier = Modifier.padding(15.dp)) {
-                        if (barcode.type == Barcode.TYPE_URL)
-                            UrlHistoryContent(sdf = sdf, barcode = barcode)
-                        else
-                            OtherHistoryContent(sdf = sdf, barcode = barcode)
+    }
+    ModalNavigationDrawer(
+        drawerState = DrawerState(drawerState.value),
+        drawerContent = {
+            HistoryModalDrawerContent(db, selectedTagId.value) {
+                selectedTagId.value = it?.id
+                drawerState.value = DrawerValue.Closed
+            }
+        }) {
+        viewModel.loadBarcodesByTagId(selectedTagId.value)
+        val lazyListState = rememberLazyListState()
+        val items by viewModel.savedBarcodes.collectAsState(initial = emptyList())
+        val coroutineScope = rememberCoroutineScope()
+        val ioCoroutineScope = CoroutineScope(Dispatchers.IO)
 
-                        Spacer(modifier = Modifier.height(20.dp))
-                        Row {
-                            TextButton(onClick = {
-                                confirmDeleteOpen.value = true
-                            }) {
-                                Text(text = "Delete")
-                            }
-                            TextButton(onClick = {
-                                editOpen.value = true
-                            }) {
-                                Text(text = "Edit")
-                            }
-                        }
-                        if (editOpen.value) {
-                            EditBarcodeDialog(
-                                savedBarcode = barcode,
-                                onRequestClose = { editOpen.value = false },
-                                db = db,
-                                ioCoroutineScope = ioCoroutineScope
-                            )
-                        }
-                        ShowDeleteConfirmDialog(confirmDeleteOpen, ioCoroutineScope, db, barcode)
-                    }
+        if (items.isEmpty()) {
+            Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
+                Text(text = "No saved barcodes!", modifier = Modifier.align(CenterHorizontally))
+            }
+        } else {
+            val clipboardManager: ClipboardManager = LocalClipboardManager.current
+            val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp), state = lazyListState
+            ) {
+                items(items = items) { barcode ->
+                    BarcodeCard(
+                        clipboardManager,
+                        barcode,
+                        coroutineScope,
+                        snackbarHostState,
+                        sdf,
+                        db,
+                        ioCoroutineScope
+                    )
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ShowDeleteConfirmDialog(
-    confirmDeleteOpen: MutableState<Boolean>,
-    ioCoroutineScope: CoroutineScope,
-    db: BarcodesDb,
-    barcode: SavedBarcode
-) {
-    if (confirmDeleteOpen.value) {
-        AlertDialog(
-            title = { Text(text = "Delete") },
-            text = { Text(text = "Do you really want to delete this entry?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    ioCoroutineScope.launch {
-                        db.savedBarcodeDao().delete(barcode)
-                    }
-                    confirmDeleteOpen.value = false
-                }) {
-                    Text(text = "Ok")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    confirmDeleteOpen.value = false
-                }) {
-                    Text(text = "Cancel")
-                }
-            },
-            onDismissRequest = { confirmDeleteOpen.value = false })
     }
 }
 

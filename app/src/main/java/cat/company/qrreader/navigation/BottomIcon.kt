@@ -1,4 +1,4 @@
-package cat.company.qrreader.drawer
+package cat.company.qrreader.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build

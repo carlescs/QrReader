@@ -2,7 +2,7 @@ package cat.company.qrreader.db.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.*
+import java.util.Date
 
 @Entity(tableName = "saved_barcodes")
 data class SavedBarcode(
@@ -12,5 +12,5 @@ data class SavedBarcode(
     val format: Int,
     var title: String?=null,
     var description: String?=null,
-    val barcode: String
+    val barcode: String,
 )

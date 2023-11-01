@@ -1,4 +1,4 @@
-package cat.company.qrreader.history
+package cat.company.qrreader.history.content
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -16,6 +16,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.camera.bottomSheet.Title
 import cat.company.qrreader.db.entities.SavedBarcode
+import cat.company.qrreader.history.getTitle
 import com.google.mlkit.vision.barcode.common.Barcode
 import java.text.SimpleDateFormat
 

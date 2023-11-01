@@ -2,14 +2,14 @@ package cat.company.qrreader.history
 
 import androidx.lifecycle.ViewModel
 import cat.company.qrreader.db.BarcodesDb
-import cat.company.qrreader.db.entities.SavedBarcode
+import cat.company.qrreader.db.entities.compound.SavedBarcodeWithTags
 import kotlinx.coroutines.flow.Flow
 
 class HistoryViewModel(val db: BarcodesDb) : ViewModel() {
 
-    lateinit var savedBarcodes: Flow<List<SavedBarcode>>
+    lateinit var savedBarcodes: Flow<List<SavedBarcodeWithTags>>
 
-    fun loadBarcodes() {
-        savedBarcodes = db.savedBarcodeDao().getAll()
+    fun loadBarcodesByTagId(tagId: Int?) {
+        savedBarcodes = db.savedBarcodeDao().getSavedBarcodesWithTagsByTagId(tagId)
     }
 }

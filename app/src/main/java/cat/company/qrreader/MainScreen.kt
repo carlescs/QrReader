@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -46,7 +47,7 @@ import androidx.navigation.compose.rememberNavController
 import cat.company.qrreader.camera.QrCamera
 import cat.company.qrreader.codeCreator.CodeCreator
 import cat.company.qrreader.db.BarcodesDb
-import cat.company.qrreader.drawer.items
+import cat.company.qrreader.navigation.items
 import cat.company.qrreader.events.SharedEvents
 import cat.company.qrreader.history.History
 
@@ -150,6 +151,13 @@ private fun TopAppBar(
                     )
                 }
             }
+            if (!showBackButton && currentRoute.value?.destination?.route.equals("history"))
+                IconButton(onClick = { SharedEvents.openSideBar?.invoke() }) {
+                    Icon(
+                        imageVector = Icons.Filled.Menu,
+                        contentDescription = "More",
+                    )
+                }
         },
         actions = {
             var menuExpanded by remember { mutableStateOf(false) }
