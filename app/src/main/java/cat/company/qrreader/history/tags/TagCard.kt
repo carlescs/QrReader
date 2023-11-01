@@ -1,6 +1,7 @@
 package cat.company.qrreader.history.tags
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -52,7 +53,7 @@ fun TagCard(
         shape = RoundedCornerShape(16.dp),
         border = if (selectedTagId == it.id) BorderStroke(
             3.dp,
-            Color.Black
+            if(isSystemInDarkTheme()) Color.White else Color.Black
         ) else null,
         onClick = {
             selectTag(it)
