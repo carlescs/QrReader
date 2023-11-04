@@ -101,3 +101,21 @@ stages:
               action: 'SingleBundle'
               bundleFile: '$(System.DefaultWorkingDirectory)/app/build/outputs/bundle/release/app-release.aab'
               track: 'alpha'
+- stage: promote
+  displayName: 'Promote to Release track'
+  condition: and(succeeded(),eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  jobs:
+    - deployment: promote
+      pool:
+        vmImage: 'windows-latest'
+        environmen: PlayStore
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+              - task: GooglePlayPromote@3
+                inputs:
+                  serviceConnection: 'Google Play'
+                  packageName: 'cat.company.qrreader'
+                  sourceTrack: 'alpha'
+                  destinationTrack: 'production'
