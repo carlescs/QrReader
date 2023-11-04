@@ -108,14 +108,14 @@ stages:
     - deployment: promote
       pool:
         vmImage: 'windows-latest'
-        environment: PlayStore
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-              - task: GooglePlayPromote@3
-                inputs:
-                  serviceConnection: 'Google Play'
-                  packageName: 'cat.company.qrreader'
-                  sourceTrack: 'alpha'
-                  destinationTrack: 'production'
+      environment: PlayStore
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - task: GooglePlayPromote@3
+              inputs:
+                serviceConnection: 'Google Play'
+                packageName: 'cat.company.qrreader'
+                sourceTrack: 'alpha'
+                destinationTrack: 'production'
