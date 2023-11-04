@@ -20,7 +20,7 @@ import cat.company.qrreader.utils.Utils
 fun Tag(it: Tag) {
     val color = Utils.parseColor(it.color)
     Card(
-        modifier = Modifier.padding(5.dp)
+        modifier = Modifier
             .wrapContentHeight()
             .wrapContentWidth()
             .padding(5.dp),
@@ -30,8 +30,9 @@ fun Tag(it: Tag) {
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Text(
+            modifier = Modifier.padding(5.dp),
             text = it.name,
-            fontSize = 11.sp,
+            fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             color = when {
                 color == null || color.luminance() > 0.5f -> Color.Black
