@@ -24,6 +24,7 @@ fun Tag(it: Tag) {
             .wrapContentHeight()
             .wrapContentWidth()
             .padding(5.dp),
+
         colors = if (color != null) CardDefaults.cardColors(
             containerColor = color
         ) else CardDefaults.cardColors(),
@@ -32,7 +33,7 @@ fun Tag(it: Tag) {
         Text(
             modifier = Modifier.padding(5.dp),
             text = it.name,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = when {
                 color == null || color.luminance() > 0.5f -> Color.Black

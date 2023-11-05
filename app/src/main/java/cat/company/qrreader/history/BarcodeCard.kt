@@ -3,14 +3,12 @@ package cat.company.qrreader.history
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -24,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -61,7 +60,6 @@ fun BarcodeCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(15.dp)) {
-            val menuOpen = remember { mutableStateOf(false) }
             Row {
                 Column(modifier = Modifier.weight(1f)) {
                     if (barcode.barcode.type == Barcode.TYPE_URL)
@@ -69,38 +67,36 @@ fun BarcodeCard(
                     else
                         OtherHistoryContent(sdf = sdf, barcode = barcode.barcode)
                 }
-                Column {
-                    IconButton(onClick = { menuOpen.value = true }) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = "More")
-                    }
-                    DropdownMenu(
-                        expanded = menuOpen.value,
-                        onDismissRequest = { menuOpen.value = false }) {
-                        val tags = db.tagDao().getAll().collectAsState(initial = emptyList())
-                        tags.value.forEach {
-                            DropdownMenuItem(text = { Text(text = it.name) },
-                                leadingIcon = {
-                                    if(barcode.tags.contains(it))
-                                        Icon(imageVector = Icons.Filled.Check, contentDescription = "Check")
-                                },
-                                onClick = {
-                                    ioCoroutineScope.launch {
-                                        db.savedBarcodeDao().switchTag(barcode, it)
-                                        menuOpen.value = false
-                                    }
-                                })
-                        }
-                    }
-                }
             }
         }
 
-        Row(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+        Row(modifier = Modifier.padding(5.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            val menuOpen = remember { mutableStateOf(false) }
             barcode.tags.forEach {
                 Tag(it)
             }
+            IconButton(onClick = { menuOpen.value = true }) {
+                Icon(Icons.Filled.Add, contentDescription = "More")
+            }
+            DropdownMenu(
+                expanded = menuOpen.value,
+                onDismissRequest = { menuOpen.value = false }) {
+                val tags = db.tagDao().getAll().collectAsState(initial = emptyList())
+                tags.value.forEach {
+                    DropdownMenuItem(text = { Text(text = it.name) },
+                        leadingIcon = {
+                            if(barcode.tags.contains(it))
+                                Icon(imageVector = Icons.Filled.Check, contentDescription = "Check")
+                        },
+                        onClick = {
+                            ioCoroutineScope.launch {
+                                db.savedBarcodeDao().switchTag(barcode, it)
+                                menuOpen.value = false
+                            }
+                        })
+                }
+            }
         }
-        Spacer(modifier = Modifier.height(20.dp))
         Row {
             TextButton(onClick = {
                 confirmDeleteOpen.value = true
