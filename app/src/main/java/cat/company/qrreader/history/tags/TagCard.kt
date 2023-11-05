@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.db.entities.Tag
@@ -59,49 +58,58 @@ fun TagCard(
             selectTag(it)
         }
     ) {
-        val deleteDialogOpen=remember{mutableStateOf(false)}
-        val editTag=remember{ mutableStateOf<Tag?>(null) }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = it.name,
-                modifier = Modifier
-                    .padding(16.dp)
-                    .weight(1f),
-                color = if (color==null || color.luminance() > 0.5f) Color.Black
-                else Color.White,
-                fontWeight = FontWeight.Bold
+        TagCardContent(it, color, ioCoroutine, selectedTagId, selectTag, viewModel)
+    }
+}
+
+@Composable
+private fun TagCardContent(
+    it: Tag,
+    color: Color?,
+    ioCoroutine: CoroutineScope,
+    selectedTagId: Int?,
+    selectTag: (Tag?) -> Unit,
+    viewModel: TagsViewModel
+) {
+    val deleteDialogOpen = remember { mutableStateOf(false) }
+    val editTag = remember { mutableStateOf<Tag?>(null) }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = it.name,
+            modifier = Modifier
+                .padding(16.dp)
+                .weight(1f),
+            color = Utils.colorBasedOnBackground(color),
+            fontWeight = FontWeight.Bold
+        )
+        IconButton(onClick = { editTag.value = it }, modifier = Modifier.wrapContentSize()) {
+            Icon(
+                imageVector = Icons.Filled.Edit,
+                contentDescription = "Edit tag",
+                tint = Utils.colorBasedOnBackground(color)
             )
-            IconButton(onClick = { editTag.value=it  }) {
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = "Edit tag",
-                    tint = if (color==null || color.luminance() > 0.5f) Color.Black
-                    else Color.White
-                )
-            }
-            IconButton(onClick = {
-                deleteDialogOpen.value=true
-            }, modifier = Modifier.wrapContentSize()) {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = "Delete tag",
-                    tint = if (color==null || color.luminance() > 0.5f) Color.Black
-                    else Color.White
-                )
+        }
+        IconButton(onClick = {
+            deleteDialogOpen.value = true
+        }, modifier = Modifier.wrapContentSize()) {
+            Icon(
+                imageVector = Icons.Filled.Delete,
+                contentDescription = "Delete tag",
+                tint = Utils.colorBasedOnBackground(color)
+            )
+        }
+    }
+    if (deleteDialogOpen.value) {
+        DeleteConfirmDialog(confirmDeleteOpen = deleteDialogOpen, item = it) {
+            ioCoroutine.launch {
+                if (selectedTagId == it.id) selectTag(null) // Clear filter
+                viewModel.deleteTag(it)
             }
         }
-        if(deleteDialogOpen.value){
-            DeleteConfirmDialog(confirmDeleteOpen = deleteDialogOpen, item = it){
-                ioCoroutine.launch {
-                    if (selectedTagId == it.id) selectTag(null) // Clear filter
-                    viewModel.deleteTag(it)
-                }
-            }
-        }
-        if(editTag.value!=null){
-            AddTagDialog(tag = editTag.value, db = viewModel.db, ioCoroutineScope = ioCoroutine) {
-                editTag.value = null
-            }
+    }
+    if (editTag.value != null) {
+        AddTagDialog(tag = editTag.value, db = viewModel.db, ioCoroutineScope = ioCoroutine) {
+            editTag.value = null
         }
     }
 }

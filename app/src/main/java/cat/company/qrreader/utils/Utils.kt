@@ -1,6 +1,7 @@
 package cat.company.qrreader.utils
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 
 class Utils {
@@ -17,5 +18,9 @@ class Utils {
             return "#${Integer.toHexString(color.toArgb())}"
         }
 
+        fun colorBasedOnBackground(color: Color?): Color {
+            return if (color == null || color.luminance() > 0.5f) Color.Black
+            else Color.White
+        }
     }
 }
