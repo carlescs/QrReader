@@ -12,8 +12,8 @@ android {
         applicationId "cat.company.qrreader"
         minSdk 21
         targetSdk 34
-        versionCode 101
-        versionName '3.0.6'
+        versionCode 102
+        versionName '3.1.0'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -40,7 +40,7 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.5.2'
+        kotlinCompilerExtensionVersion "$compose_ui_version"
     }
     packagingOptions {
         resources {
@@ -82,13 +82,11 @@ dependencies {
 
     implementation 'com.google.accompanist:accompanist-permissions:0.28.0'
 
-    def room_version = "2.5.2"
+    def room_version = '2.6.0'
 
     implementation "androidx.room:room-runtime:$room_version"
     annotationProcessor "androidx.room:room-compiler:$room_version"
 
-    // To use Kotlin annotation processing tool (kapt)
-    //kapt "androidx.room:room-compiler:$room_version"
     // To use Kotlin Symbol Processing (KSP)
     ksp "androidx.room:room-compiler:$room_version"
 
