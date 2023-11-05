@@ -119,3 +119,4 @@ stages:
                 packageName: 'cat.company.qrreader'
                 sourceTrack: 'alpha'
                 destinationTrack: 'production'
+                сleanTheSourceTrack: false
