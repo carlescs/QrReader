@@ -12,8 +12,8 @@ android {
         applicationId "cat.company.qrreader"
         minSdk 21
         targetSdk 34
-        versionCode 102
-        versionName '3.1.0'
+        versionCode 103
+        versionName '3.1.1'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -62,7 +62,7 @@ dependencies {
 
     implementation 'com.godaddy.android.colorpicker:compose-color-picker-android:0.7.0'
 
-    def nav_version = "2.7.4"
+    def nav_version = "2.7.5"
 
     implementation "androidx.navigation:navigation-compose:$nav_version"
 
