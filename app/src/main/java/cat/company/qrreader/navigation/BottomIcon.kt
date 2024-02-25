@@ -7,6 +7,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
 import cat.company.qrreader.R
 
+/**
+ * Bottom navigation icon
+ */
 class BottomIcon(
     val icon: @Composable () -> Unit,
     val label: String,

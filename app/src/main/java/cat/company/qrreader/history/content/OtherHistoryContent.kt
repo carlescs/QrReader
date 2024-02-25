@@ -20,6 +20,9 @@ import cat.company.qrreader.history.getTitle
 import com.google.mlkit.vision.barcode.common.Barcode
 import java.text.SimpleDateFormat
 
+/**
+ * Content for the other history
+ */
 @Composable
 fun OtherHistoryContent(sdf:SimpleDateFormat, barcode:SavedBarcode){
     val uriHandler = LocalUriHandler.current

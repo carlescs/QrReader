@@ -19,6 +19,9 @@ import cat.company.qrreader.db.entities.Tag
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
+/**
+ * List of tags
+ */
 @Composable
 fun TagsList(db: BarcodesDb, viewModel: TagsViewModel = TagsViewModel(db), selectedTagId: Int?, selectTag: (Tag?) -> Unit) {
     viewModel.loadTags()

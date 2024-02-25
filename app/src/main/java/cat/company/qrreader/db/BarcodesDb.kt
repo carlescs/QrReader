@@ -10,6 +10,9 @@ import cat.company.qrreader.db.entities.BarcodeTagCrossRef
 import cat.company.qrreader.db.entities.Tag
 import cat.company.qrreader.db.entities.SavedBarcode
 
+/**
+ * Database for the barcodes
+ */
 @Database(entities = [SavedBarcode::class, Tag::class, BarcodeTagCrossRef::class], version = 4, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class BarcodesDb :RoomDatabase(){

@@ -39,6 +39,9 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import kotlinx.coroutines.launch
 
+/**
+ * Display the camera preview and the bottom sheet
+ */
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @ExperimentalGetImage
 @ExperimentalMaterial3Api

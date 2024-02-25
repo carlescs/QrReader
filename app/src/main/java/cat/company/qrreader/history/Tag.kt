@@ -16,6 +16,9 @@ import androidx.compose.ui.unit.sp
 import cat.company.qrreader.db.entities.Tag
 import cat.company.qrreader.utils.Utils
 
+/**
+ * Tag composable
+ */
 @Composable
 fun Tag(it: Tag) {
     val color = Utils.parseColor(it.color)

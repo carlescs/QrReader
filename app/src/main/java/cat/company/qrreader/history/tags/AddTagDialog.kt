@@ -30,6 +30,9 @@ import cat.company.qrreader.utils.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+/**
+ * Dialog for adding a new tag or editing an existing one
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTagDialog(

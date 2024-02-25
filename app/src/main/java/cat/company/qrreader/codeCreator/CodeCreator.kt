@@ -33,7 +33,10 @@ import cat.company.qrreader.events.SharedEvents
 import io.github.g0dkar.qrcode.QRCode
 import java.io.ByteArrayOutputStream
 
+/**
+ * Create a QR code from a text
 
+ */
 @Composable
 fun CodeCreator() {
     Column(

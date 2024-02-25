@@ -4,6 +4,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.Date
 
+/**
+ * Entity for the saved barcode
+ */
 @Entity(tableName = "saved_barcodes")
 data class SavedBarcode(
     @PrimaryKey(autoGenerate = true) val id:Int=0,

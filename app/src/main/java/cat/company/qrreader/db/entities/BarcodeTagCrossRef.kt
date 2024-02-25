@@ -2,6 +2,9 @@ package cat.company.qrreader.db.entities
 
 import androidx.room.Entity
 
+/**
+ * Entity for the barcode tag cross reference
+ */
 @Entity(tableName = "barcode_tag_cross_ref",
     primaryKeys = ["barcodeId", "tagId"],
     foreignKeys = [

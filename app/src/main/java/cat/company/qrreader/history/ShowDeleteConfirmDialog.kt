@@ -6,6 +6,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 
+/**
+ * Dialog for confirming the deletion of an entry
+ */
 @Composable
 fun <T> DeleteConfirmDialog(
     confirmDeleteOpen: MutableState<Boolean>,

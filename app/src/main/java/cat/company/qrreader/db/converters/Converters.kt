@@ -3,6 +3,9 @@ package cat.company.qrreader.db.converters
 import androidx.room.TypeConverter
 import java.util.*
 
+/**
+ * Converters for the database
+ */
 class Converters {
     @TypeConverter
     fun timestampToDate(dateLong: Long?): Date? {

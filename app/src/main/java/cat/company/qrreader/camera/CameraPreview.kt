@@ -23,6 +23,9 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+/**
+ * Camera preview
+ */
 @Composable
 @ExperimentalGetImage
 @TransformExperimental

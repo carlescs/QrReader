@@ -7,6 +7,9 @@ import cat.company.qrreader.db.entities.BarcodeTagCrossRef
 import cat.company.qrreader.db.entities.SavedBarcode
 import cat.company.qrreader.db.entities.Tag
 
+/**
+ * Compound class for the saved barcode with its tags
+ */
 data class SavedBarcodeWithTags(
     @Embedded
     val barcode: SavedBarcode,

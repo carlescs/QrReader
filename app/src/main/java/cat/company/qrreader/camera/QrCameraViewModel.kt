@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
+/**
+ * ViewModel for the camera
+ */
 class QrCameraViewModel: ViewModel() {
     private val _uiState= MutableStateFlow(BarcodeState())
     val uiState: StateFlow<BarcodeState> = _uiState.asStateFlow()
@@ -16,6 +19,9 @@ class QrCameraViewModel: ViewModel() {
     }
 }
 
+/**
+ * State for the barcode
+ */
 data class BarcodeState(
     var lastBarcode: List<Barcode>?=null
 )

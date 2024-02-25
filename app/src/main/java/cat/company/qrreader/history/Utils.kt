@@ -3,6 +3,9 @@ package cat.company.qrreader.history
 import cat.company.qrreader.db.entities.SavedBarcode
 import com.google.mlkit.vision.barcode.common.Barcode
 
+/**
+ * Get the title of a barcode
+ */
 fun getTitle(barcode: SavedBarcode): String {
     var title = when (barcode.type) {
         Barcode.TYPE_URL -> "URL"

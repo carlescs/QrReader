@@ -7,6 +7,9 @@ import cat.company.qrreader.db.entities.Tag
 import cat.company.qrreader.db.entities.compound.SavedBarcodeWithTags
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Dao for the saved barcodes
+ */
 @Dao
 abstract class SavedBarcodeDao {
     @Query("SELECT * FROM saved_barcodes")

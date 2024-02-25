@@ -1,5 +1,8 @@
 package cat.company.qrreader.events
 
+/**
+ * Shared events for the app
+ */
 class SharedEvents {
     companion object SharedEvents {
         var openSideBar: (() -> Unit)? = null

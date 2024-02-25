@@ -11,6 +11,10 @@ import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.db.Migrations
 import cat.company.qrreader.ui.theme.QrReaderTheme
 
+/**
+ * Main activity
+
+ */
 @ExperimentalGetImage
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)

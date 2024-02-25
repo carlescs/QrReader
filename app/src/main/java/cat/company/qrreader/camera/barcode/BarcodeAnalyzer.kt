@@ -12,6 +12,9 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.TimeUnit
 
+/**
+ * Analyzer for barcode detection
+ */
 @ExperimentalGetImage
 @TransformExperimental
 class BarcodeAnalyzer(

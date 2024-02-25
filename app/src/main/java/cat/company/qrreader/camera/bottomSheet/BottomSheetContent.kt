@@ -23,6 +23,9 @@ import cat.company.qrreader.db.BarcodesDb
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.launch
 
+/**
+ * Content of the bottom sheet
+ */
 @Composable
 fun BottomSheetContent(
     lastBarcode: List<Barcode>?,

@@ -51,6 +51,9 @@ import cat.company.qrreader.navigation.items
 import cat.company.qrreader.events.SharedEvents
 import cat.company.qrreader.history.History
 
+/**
+ * Main screen
+ */
 @ExperimentalGetImage
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)

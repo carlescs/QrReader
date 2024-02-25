@@ -15,6 +15,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
+/**
+ * Light color scheme
+ */
 private val lightColors = lightColorScheme(
     primary = md_theme_light_primary,
     onPrimary = md_theme_light_onPrimary,
@@ -47,7 +50,9 @@ private val lightColors = lightColorScheme(
     scrim = md_theme_light_scrim,
 )
 
-
+/**
+ * Dark color scheme
+ */
 private val darkColors = darkColorScheme(
     primary = md_theme_dark_primary,
     onPrimary = md_theme_dark_onPrimary,
@@ -80,6 +85,9 @@ private val darkColors = darkColorScheme(
     scrim = md_theme_dark_scrim,
 )
 
+/**
+ * QrReader theme
+ */
 @Composable
 fun QrReaderTheme(isDarkTheme: Boolean = isSystemInDarkTheme(), isDynamicColor:Boolean=true, content: @Composable () -> Unit) {
     val dynamicColor = isDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S

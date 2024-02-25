@@ -8,6 +8,9 @@ import androidx.room.Update
 import cat.company.qrreader.db.entities.Tag
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Dao for the tags
+ */
 @Dao
 interface TagDao {
 

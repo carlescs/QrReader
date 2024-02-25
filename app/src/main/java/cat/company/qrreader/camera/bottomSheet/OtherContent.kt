@@ -23,6 +23,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * Display the content of a barcode that is not a URL, email, phone, sms or contact
+
+ */
 @Composable
 fun OtherContent(barcode: Barcode, db: BarcodesDb){
     val uriHandler = LocalUriHandler.current

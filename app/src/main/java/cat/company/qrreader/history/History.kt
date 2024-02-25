@@ -31,6 +31,9 @@ import kotlinx.coroutines.Dispatchers
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+/**
+ * History screen
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun History(

@@ -25,6 +25,9 @@ import cat.company.qrreader.history.tags.TagsList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
+/**
+ * Content of the history modal drawer
+ */
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun HistoryModalDrawerContent(db: BarcodesDb, selectedTagId:Int?, selectTag: (Tag?) -> Unit) {

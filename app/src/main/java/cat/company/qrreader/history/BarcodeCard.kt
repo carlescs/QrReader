@@ -36,6 +36,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 
+/**
+ * Card for displaying a barcode
+ */
 @Composable
 fun BarcodeCard(
     clipboardManager: ClipboardManager,

@@ -25,6 +25,9 @@ import cat.company.qrreader.utils.Utils
 import com.godaddy.android.colorpicker.ClassicColorPicker
 import com.godaddy.android.colorpicker.HsvColor
 
+/**
+ * Dialog for picking a color
+ */
 @Composable
 fun ColorPickerDialog(colorDialogVisible: MutableState<Boolean>, color:String, selectColor:(color:String)->Unit) {
     val selectedColor=remember{ mutableStateOf(HsvColor.from(

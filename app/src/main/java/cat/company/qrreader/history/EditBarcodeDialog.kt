@@ -26,6 +26,9 @@ import cat.company.qrreader.db.entities.SavedBarcode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+/**
+ * Dialog for editing a barcode
+ */
 @Composable
 fun EditBarcodeDialog(
     savedBarcode: SavedBarcode,

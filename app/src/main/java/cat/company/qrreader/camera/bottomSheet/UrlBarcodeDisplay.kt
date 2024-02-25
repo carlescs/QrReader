@@ -23,6 +23,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * Display the content of a barcode that is a URL
+ */
 @Composable
 fun UrlBarcodeDisplay(barcode: Barcode,db:BarcodesDb) {
     val uriHandler = LocalUriHandler.current

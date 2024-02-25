@@ -3,6 +3,9 @@ package cat.company.qrreader.db
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+/**
+ * Migrations for the database
+ */
 class Migrations {
     companion object{
         val MIGRATION_1_2 = object : Migration(1, 2) {

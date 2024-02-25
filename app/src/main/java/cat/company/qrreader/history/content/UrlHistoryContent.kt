@@ -19,6 +19,9 @@ import cat.company.qrreader.db.entities.SavedBarcode
 import cat.company.qrreader.history.getTitle
 import java.text.SimpleDateFormat
 
+/**
+ * Content for the url history
+ */
 @Composable
 fun UrlHistoryContent(sdf:SimpleDateFormat, barcode:SavedBarcode) {
     val uriHandler = LocalUriHandler.current

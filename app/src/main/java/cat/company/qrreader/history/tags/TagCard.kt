@@ -31,6 +31,9 @@ import cat.company.qrreader.utils.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+/**
+ * Card for displaying a tag
+ */
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun TagCard(

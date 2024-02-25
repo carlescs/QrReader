@@ -8,6 +8,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import com.google.mlkit.vision.barcode.common.Barcode
 
+/**
+ * Display the contact information from a barcode
+ */
 @Composable
 fun ContactBarcodeDisplay(barcode: Barcode) {
     Title(title = "Contact")
