@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.MediaStore.Images.Media
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -25,8 +27,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.print.PrintHelper
 import cat.company.qrreader.events.SharedEvents
@@ -87,7 +91,10 @@ fun CodeCreator() {
                     SharedEvents.onPrintIsDisabled?.invoke(false)
                 }
             },
-            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester), singleLine = true,
+            label = { Text("Enter text to encode") },
+            modifier = Modifier.fillMaxWidth()
+                .padding(vertical=8.dp)
+                .focusRequester(focusRequester), singleLine = true,
             trailingIcon = {
                 if (text.value.isNotEmpty())
                     IconButton(onClick = {
@@ -103,12 +110,19 @@ fun CodeCreator() {
                     }
             }
         )
-        if (image.value != null)
-            Image(
-                image.value!!.asImageBitmap(), contentDescription = null, modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .background(Color.White)
+        ) {
+            if (image.value != null)
+                Image(
+                    image.value!!.asImageBitmap(), contentDescription = null, modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                )
+        }
     }
 }
 
@@ -143,4 +157,9 @@ private fun generateUriFromBitmap(context: Context, bitmap: Bitmap): Uri? {
     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
     outputStream.close()
     return uri
+}
+@Composable
+@Preview
+fun CodeCreatorPreview() {
+    CodeCreator()
 }
