@@ -114,6 +114,7 @@ fun CodeCreator() {
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
+                .padding(16.dp)
                 .background(Color.White)
         ) {
             if (image.value != null)
