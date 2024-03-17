@@ -34,7 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.print.PrintHelper
 import cat.company.qrreader.events.SharedEvents
-import io.github.g0dkar.qrcode.QRCode
+import qrcode.QRCode
 import java.io.ByteArrayOutputStream
 
 /**
@@ -114,12 +114,12 @@ fun CodeCreator() {
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .padding(16.dp)
                 .background(Color.White)
         ) {
             if (image.value != null)
                 Image(
                     image.value!!.asImageBitmap(), contentDescription = null, modifier = Modifier
+                        .padding(16.dp)
                         .fillMaxWidth()
                         .fillMaxHeight()
                 )

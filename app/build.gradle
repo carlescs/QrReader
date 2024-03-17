@@ -69,7 +69,7 @@ dependencies {
     // Barcode model
     implementation 'com.google.mlkit:barcode-scanning:17.2.0'
 
-    implementation 'io.github.g0dkar:qrcode-kotlin-android:3.3.0'
+    implementation 'io.github.g0dkar:qrcode-kotlin-android:4.1.1'
 
     // CameraX core library using the camera2 implementation
     def camerax_version = "1.4.0-alpha04"
@@ -80,7 +80,7 @@ dependencies {
     implementation "androidx.camera:camera-view:${camerax_version}"
     implementation "androidx.camera:camera-mlkit-vision:${camerax_version}"
 
-    implementation 'com.google.accompanist:accompanist-permissions:0.28.0'
+    implementation 'com.google.accompanist:accompanist-permissions:0.34.0'
 
     def room_version = '2.6.1'
 
