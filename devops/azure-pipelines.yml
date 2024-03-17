@@ -44,7 +44,6 @@ stages:
         versionSpec: '17'
         jdkArchitectureOption: 'x64'
         jdkSourceOption: 'PreInstalled'
-    - task: AdvancedSecurity-Dependency-Scanning@1
     - task: Gradle@2
       inputs:
         gradleWrapperFile: 'gradlew'
