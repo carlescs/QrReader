@@ -111,7 +111,7 @@ private fun TagCardContent(
         }
     }
     if (editTag.value != null) {
-        AddTagDialog(tag = editTag.value, db = viewModel.db, ioCoroutineScope = ioCoroutine) {
+        AddTagDialog(tag = editTag.value, db = viewModel.db) {
             editTag.value = null
         }
     }

@@ -22,8 +22,6 @@ import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.db.entities.Tag
 import cat.company.qrreader.history.tags.AddTagDialog
 import cat.company.qrreader.history.tags.TagsList
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 
 /**
  * Content of the history modal drawer
@@ -38,7 +36,6 @@ fun HistoryModalDrawerContent(db: BarcodesDb, selectedTagId:Int?, selectTag: (Ta
                 .fillMaxHeight()
                 .wrapContentWidth()
         ) {
-            val ioCoroutineScope = CoroutineScope(Dispatchers.IO)
             val dialogState=remember{ mutableStateOf(false) }
             TopAppBar(title = { Text(text = "Tags") },
                 actions = {
@@ -55,7 +52,7 @@ fun HistoryModalDrawerContent(db: BarcodesDb, selectedTagId:Int?, selectTag: (Ta
                 selectTag(it)
             }
             if(dialogState.value) {
-                AddTagDialog(tag = null, db = db, ioCoroutineScope) {
+                AddTagDialog(tag = null, db = db) {
                     dialogState.value = false
                 }
             }

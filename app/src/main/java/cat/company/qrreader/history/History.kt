@@ -18,7 +18,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipboardManager
@@ -26,8 +25,6 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.events.SharedEvents
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -60,8 +57,6 @@ fun History(
         viewModel.loadBarcodesByTagId(selectedTagId.value)
         val lazyListState = rememberLazyListState()
         val items by viewModel.savedBarcodes.collectAsState(initial = emptyList())
-        val coroutineScope = rememberCoroutineScope()
-        val ioCoroutineScope = CoroutineScope(Dispatchers.IO)
 
         if (items.isEmpty()) {
             Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
@@ -79,11 +74,9 @@ fun History(
                     BarcodeCard(
                         clipboardManager,
                         barcode,
-                        coroutineScope,
                         snackbarHostState,
                         sdf,
-                        db,
-                        ioCoroutineScope
+                        db
                     )
                 }
             }

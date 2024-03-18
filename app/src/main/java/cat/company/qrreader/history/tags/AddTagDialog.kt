@@ -28,6 +28,7 @@ import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.db.entities.Tag
 import cat.company.qrreader.utils.Utils
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
@@ -38,13 +39,13 @@ import kotlinx.coroutines.launch
 fun AddTagDialog(
     tag: Tag? = null,
     db: BarcodesDb,
-    ioCoroutineScope: CoroutineScope,
     onRequestDismiss: () -> Unit
 ) {
     var tagName by remember { mutableStateOf(TextFieldValue(tag?.name?:"")) }
     var color by remember { mutableStateOf(tag?.color?:"") }
     var tagNameTouched by remember { mutableStateOf(false) }
     val colorDialogVisible=remember{ mutableStateOf(false) }
+    val ioCoroutineScope = CoroutineScope(Dispatchers.IO)
     Dialog(onDismissRequest = { onRequestDismiss() }) {
         Surface(
             shape = RoundedCornerShape(16.dp),

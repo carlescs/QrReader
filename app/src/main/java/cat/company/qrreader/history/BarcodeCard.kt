@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipboardManager
@@ -33,6 +34,7 @@ import cat.company.qrreader.history.content.OtherHistoryContent
 import cat.company.qrreader.history.content.UrlHistoryContent
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 
@@ -43,14 +45,14 @@ import java.text.SimpleDateFormat
 fun BarcodeCard(
     clipboardManager: ClipboardManager,
     barcode: SavedBarcodeWithTags,
-    coroutineScope: CoroutineScope,
     snackBarHostState: SnackbarHostState,
     sdf: SimpleDateFormat,
-    db: BarcodesDb,
-    ioCoroutineScope: CoroutineScope
+    db: BarcodesDb
 ) {
     val editOpen = remember { mutableStateOf(false) }
     val confirmDeleteOpen = remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val ioCoroutineScope = CoroutineScope(Dispatchers.IO)
     Card(
         modifier = Modifier
             .fillMaxWidth()
