@@ -11,7 +11,7 @@ trigger:
       - feature/*
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'ubuntu-latest'
 
 stages:
 - stage: test
@@ -33,8 +33,7 @@ stages:
         publishJUnitResults: true
         testResultsFiles: '**/TEST-*.xml'
         javaHomeOption: 'JDKVersion'
-        sonarQubeRunAnalysis: true
-        sqGradlePluginVersionChoice: 'build'
+        sonarQubeRunAnalysis: false
         spotBugsAnalysis: false
 - stage: build
   displayName: Build
@@ -67,8 +66,8 @@ stages:
         publishJUnitResults: true
         testResultsFiles: '**/TEST-*.xml'
         javaHomeOption: 'JDKVersion'
-        sqGradlePluginVersionChoice: 'specify'
-        sonarQubeGradlePluginVersion: '5.0.0.4638'
+        sonarQubeRunAnalysis: true
+        sqGradlePluginVersionChoice: 'build'
         spotBugsAnalysis: false
     - task: CopyFiles@2
       displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
