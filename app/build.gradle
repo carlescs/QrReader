@@ -2,6 +2,14 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'com.google.devtools.ksp'
+    id 'org.sonarqube'
+}
+
+sonar {
+    properties{
+        property "sonar.projectKey", "carles-cs_QrReader"
+        property "sonar.projectName", "QrReader"
+    }
 }
 
 android {
@@ -12,8 +20,8 @@ android {
         applicationId "cat.company.qrreader"
         minSdk 21
         targetSdk 34
-        versionCode 191
-        versionName '3.2.3'
+        versionCode 193
+        versionName '3.2.5'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
