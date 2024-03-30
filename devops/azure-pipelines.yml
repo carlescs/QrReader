@@ -31,8 +31,11 @@ stages:
         gradleWrapperFile: 'gradlew'
         tasks: 'testRelease'
         publishJUnitResults: true
+        testResultsFiles: '**/TEST-*.xml'
         javaHomeOption: 'JDKVersion'
-        sonarQubeRunAnalysis: false
+        sonarQubeRunAnalysis: true
+        sqGradlePluginVersionChoice: 'build'
+        spotBugsAnalysis: false
 - stage: build
   displayName: Build
   jobs:
