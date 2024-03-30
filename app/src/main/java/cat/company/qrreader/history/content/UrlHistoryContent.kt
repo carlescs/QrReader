@@ -3,7 +3,7 @@ package cat.company.qrreader.history.content
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.ClickableText
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -41,7 +41,7 @@ fun UrlHistoryContent(sdf:SimpleDateFormat, barcode:SavedBarcode) {
     })
     if(barcode.description!=null&&barcode.description!!.trim()!="") {
         Spacer(modifier = Modifier.height(5.dp))
-        Divider()
+        HorizontalDivider()
         Text(text = barcode.description!!)
     }
 }

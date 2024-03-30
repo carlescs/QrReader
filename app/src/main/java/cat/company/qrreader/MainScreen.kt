@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
@@ -47,9 +47,9 @@ import androidx.navigation.compose.rememberNavController
 import cat.company.qrreader.camera.QrCamera
 import cat.company.qrreader.codeCreator.CodeCreator
 import cat.company.qrreader.db.BarcodesDb
-import cat.company.qrreader.navigation.items
 import cat.company.qrreader.events.SharedEvents
 import cat.company.qrreader.history.History
+import cat.company.qrreader.navigation.items
 
 /**
  * Main screen
@@ -149,7 +149,7 @@ private fun TopAppBar(
             if (showBackButton) {
                 IconButton(onClick = { navController.navigateUp() }) {
                     Icon(
-                        imageVector = Icons.Filled.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back"
                     )
                 }
