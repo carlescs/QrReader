@@ -11,7 +11,7 @@ trigger:
       - feature/*
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'windows-latest'
 
 stages:
 - stage: test
