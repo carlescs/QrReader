@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,7 +33,6 @@ import kotlinx.coroutines.launch
 /**
  * Dialog for adding a new tag or editing an existing one
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTagDialog(
     tag: Tag? = null,
@@ -101,20 +99,7 @@ fun AddTagDialog(
                             Text(text = "Cancel")
                         }
                         TextButton(onClick = {
-                            if(tag==null)
-                            ioCoroutineScope.launch {
-                                db.runInTransaction {
-                                    db.tagDao()
-                                        .insertAll(Tag(name = tagName.text, color = color))
-                                }
-                            }
-                            else
-                                ioCoroutineScope.launch {
-                                    db.runInTransaction {
-                                        db.tagDao()
-                                            .updateItem(Tag(id = tag.id, name = tagName.text, color = color))
-                                    }
-                                }
+                            saveTag(tag, ioCoroutineScope, db, tagName, color)
                             onRequestDismiss()
                         }, enabled = tagName.text.isNotBlank()) {
                             Text(text = "Save")
@@ -130,5 +115,31 @@ fun AddTagDialog(
             }
         }
     }
+}
+
+/**
+ * Save tag to the database
+ */
+private fun saveTag(
+    tag: Tag?,
+    ioCoroutineScope: CoroutineScope,
+    db: BarcodesDb,
+    tagName: TextFieldValue,
+    color: String
+) {
+    if (tag == null)
+        ioCoroutineScope.launch {
+            db.runInTransaction {
+                db.tagDao()
+                    .insertAll(Tag(name = tagName.text, color = color))
+            }
+        }
+    else
+        ioCoroutineScope.launch {
+            db.runInTransaction {
+                db.tagDao()
+                    .updateItem(Tag(id = tag.id, name = tagName.text, color = color))
+            }
+        }
 }
 
