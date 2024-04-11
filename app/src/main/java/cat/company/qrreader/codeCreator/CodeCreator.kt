@@ -55,25 +55,11 @@ fun CodeCreator() {
         val focusRequester=remember{FocusRequester()}
         SharedEvents.onShareIsDisabled?.invoke(text.value.isEmpty())
         SharedEvents.onShareClick = {
-            if (!sharing.value) {
-                try {
-                    sharing.value = true
-                    shareImage(context, image.value)
-                } finally {
-                    sharing.value = false
-                }
-            }
+            share(sharing, context, image)
         }
         SharedEvents.onPrintIsDisabled?.invoke(text.value.isEmpty())
         SharedEvents.onPrintClick = {
-            if (!sharing.value) {
-                try {
-                    sharing.value = true
-                    printImage(context, image.value)
-                } finally {
-                    sharing.value = false
-                }
-            }
+            print(sharing, context, image)
         }
         TextField(
             value = text.value, onValueChange = {
@@ -96,18 +82,7 @@ fun CodeCreator() {
                 .padding(vertical=8.dp)
                 .focusRequester(focusRequester), singleLine = true,
             trailingIcon = {
-                if (text.value.isNotEmpty())
-                    IconButton(onClick = {
-                        text.value = ""
-                        image.value = null
-                        SharedEvents.onShareIsDisabled?.invoke(true)
-                        focusRequester.requestFocus()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Clear,
-                            contentDescription = "Clear"
-                        )
-                    }
+                TextFieldTrailingIcon(text, image, focusRequester)
             }
         )
         Column(
@@ -127,26 +102,65 @@ fun CodeCreator() {
     }
 }
 
-private fun shareImage(
+private fun print(
+    sharing: MutableState<Boolean>,
     context: Context,
-    bitmap: Bitmap?
+    image: MutableState<Bitmap?>
 ) {
-    if(bitmap == null) return
-    val share = Intent(Intent.ACTION_SEND)
-    share.type = "image/jpeg"
-    val uri= generateUriFromBitmap(context, bitmap) ?: return
-    share.putExtra(Intent.EXTRA_STREAM, uri)
-    context.startActivity(Intent.createChooser(share, "Share Image"))
+    if (!sharing.value) {
+        try {
+            sharing.value = true
+            val bitmap: Bitmap = image.value ?: return
+            val uri= generateUriFromBitmap(context, bitmap) ?: return
+            PrintHelper(context).apply {
+                scaleMode = PrintHelper.SCALE_MODE_FIT
+            }.also {
+                it.printBitmap("QrCode", uri)
+            }
+        } finally {
+            sharing.value = false
+        }
+    }
 }
 
-private fun printImage(context: Context,bitmap: Bitmap?){
-    if(bitmap == null) return
-    val uri= generateUriFromBitmap(context, bitmap) ?: return
-    PrintHelper(context).apply {
-        scaleMode = PrintHelper.SCALE_MODE_FIT
-    }.also {
-        it.printBitmap("QrCode", uri)
+private fun share(
+    sharing: MutableState<Boolean>,
+    context: Context,
+    image: MutableState<Bitmap?>
+) {
+    if (!sharing.value) {
+        try {
+            sharing.value = true
+            val bitmap: Bitmap = image.value ?: return
+            val share = Intent(Intent.ACTION_SEND)
+            share.type = "image/jpeg"
+            val uri= generateUriFromBitmap(context, bitmap) ?: return
+            share.putExtra(Intent.EXTRA_STREAM, uri)
+            context.startActivity(Intent.createChooser(share, "Share Image"))
+        } finally {
+            sharing.value = false
+        }
     }
+}
+
+@Composable
+private fun TextFieldTrailingIcon(
+    text: MutableState<String>,
+    image: MutableState<Bitmap?>,
+    focusRequester: FocusRequester
+) {
+    if (text.value.isNotEmpty())
+        IconButton(onClick = {
+            text.value = ""
+            image.value = null
+            SharedEvents.onShareIsDisabled?.invoke(true)
+            focusRequester.requestFocus()
+        }) {
+            Icon(
+                imageVector = Icons.Filled.Clear,
+                contentDescription = "Clear"
+            )
+        }
 }
 
 private fun generateUriFromBitmap(context: Context, bitmap: Bitmap): Uri? {
