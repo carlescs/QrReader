@@ -48,7 +48,7 @@ stages:
         versionSpec: '17'
         jdkArchitectureOption: 'x64'
         jdkSourceOption: 'PreInstalled'
-    - task: SonarCloudPrepare@1
+    - task: SonarCloudPrepare@2
       inputs:
         SonarCloud: 'Sonar'
         organization: 'carles-cs'
