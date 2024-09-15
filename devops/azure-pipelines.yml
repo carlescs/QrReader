@@ -25,7 +25,7 @@ stages:
         versionSpec: '17'
         jdkArchitectureOption: 'x64'
         jdkSourceOption: 'PreInstalled'
-    - task: Gradle@2
+    - task: Gradle@3
       displayName: 'Run unit tests'
       inputs:
         gradleWrapperFile: 'gradlew'
@@ -59,7 +59,7 @@ stages:
           # sonar.exclusions=**/*.bin
           sonar.projectKey=carles-cs_QrReader
           sonar.projectName=QrReader
-    - task: Gradle@2
+    - task: Gradle@3
       inputs:
         gradleWrapperFile: 'gradlew'
         tasks: 'bundleRelease'
@@ -104,7 +104,7 @@ stages:
       runOnce:
         deploy:
           steps:
-          - task: DownloadPipelineArtifact@0
+          - task: DownloadPipelineArtifact@1
             inputs:
               artifactName: 'drop-signed'
               targetPath: $(System.DefaultWorkingDirectory)
