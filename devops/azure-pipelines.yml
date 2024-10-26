@@ -9,6 +9,9 @@ trigger:
     include:
       - master
 
+variables:
+  isMaster: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
+
 pool:
   vmImage: 'ubuntu-latest'
 
@@ -93,7 +96,7 @@ stages:
         publishLocation: 'pipeline'
 - stage: release
   displayName: 'Release to AppStore'
-  condition: succeeded()
+  condition: and(succeeded(), eq(variables.isMaster, true))
   jobs: 
   - deployment: deploy
     pool:
@@ -116,7 +119,7 @@ stages:
               track: 'alpha'
 - stage: promote
   displayName: 'Promote to Release track'
-  condition: and(succeeded(),eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  condition: and(succeeded(), eq(variables.isMaster, true))
   jobs:
     - deployment: promote
       pool:
