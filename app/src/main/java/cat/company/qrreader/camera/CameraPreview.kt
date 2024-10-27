@@ -11,12 +11,16 @@ import androidx.camera.view.PreviewView
 import androidx.camera.view.TransformExperimental
 import androidx.camera.view.transform.CoordinateTransform
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import cat.company.qrreader.camera.barcode.BarcodeAnalyzer
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -62,7 +66,7 @@ fun CameraPreview(notifyBarcode:((List<Barcode>?)->Unit)?) {
             }
             cameraProviderFuture.addListener({
                 preview = Preview.Builder().build().also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
+                    it.surfaceProvider = previewView.surfaceProvider
                 }
                 val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
                 val barcodeAnalyser = BarcodeAnalyzer { barcodes ->

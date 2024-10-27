@@ -1,8 +1,8 @@
 package cat.company.qrreader.camera.bottomSheet
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -38,7 +38,7 @@ fun OtherContent(barcode: Barcode, db: BarcodesDb){
         Barcode.FORMAT_EAN_8,
         Barcode.FORMAT_UPC_A,
         Barcode.FORMAT_UPC_E -> {
-            ClickableText(text = buildAnnotatedString {
+            Text(text = buildAnnotatedString {
                 this.withStyle(
                     SpanStyle(
                         color = Color.Blue,
@@ -47,7 +47,7 @@ fun OtherContent(barcode: Barcode, db: BarcodesDb){
                 ) {
                     append(barcode.displayValue ?: "No")
                 }
-            }, onClick = {
+            }, modifier = Modifier.clickable {
                 if (barcode.displayValue != null)
                     uriHandler.openUri("https://www.google.com/search?q=${barcode.displayValue!!}&tbm=shop")
             })

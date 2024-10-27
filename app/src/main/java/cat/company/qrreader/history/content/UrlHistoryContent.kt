@@ -1,8 +1,8 @@
 package cat.company.qrreader.history.content
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,7 +27,7 @@ fun UrlHistoryContent(sdf:SimpleDateFormat, barcode:SavedBarcode) {
     val uriHandler = LocalUriHandler.current
     Title(title = getTitle(barcode))
     Text(text = sdf.format(barcode.date))
-    ClickableText(text = buildAnnotatedString {
+    Text(text = buildAnnotatedString {
         this.withStyle(
             SpanStyle(
                 color = Color.Blue,
@@ -36,7 +36,7 @@ fun UrlHistoryContent(sdf:SimpleDateFormat, barcode:SavedBarcode) {
         ) {
             append(barcode.barcode)
         }
-    }, onClick = {
+    }, modifier = Modifier.clickable {
         uriHandler.openUri(barcode.barcode)
     })
     if(barcode.description!=null&&barcode.description!!.trim()!="") {
