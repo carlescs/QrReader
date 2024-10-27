@@ -1,8 +1,8 @@
 package cat.company.qrreader.history.content
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +33,7 @@ fun OtherHistoryContent(sdf:SimpleDateFormat, barcode:SavedBarcode){
         Barcode.FORMAT_EAN_8,
         Barcode.FORMAT_UPC_A,
         Barcode.FORMAT_UPC_E -> {
-            ClickableText(text = buildAnnotatedString {
+            Text(text = buildAnnotatedString {
                 this.withStyle(
                     SpanStyle(
                         color = Color.Blue,
@@ -42,7 +42,7 @@ fun OtherHistoryContent(sdf:SimpleDateFormat, barcode:SavedBarcode){
                 ) {
                     append(barcode.barcode)
                 }
-            }, onClick = {
+            }, modifier = Modifier.clickable {
                 uriHandler.openUri("https://www.google.com/search?q=${barcode.barcode}&tbm=shop")
             })
         }

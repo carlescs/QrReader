@@ -1,8 +1,8 @@
 package cat.company.qrreader.camera.bottomSheet
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,10 +29,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun UrlBarcodeDisplay(barcode: Barcode,db:BarcodesDb) {
     val uriHandler = LocalUriHandler.current
-    val coroutineScope= CoroutineScope(Dispatchers.IO)
-    val saved = remember{mutableStateOf(false)}
+    val coroutineScope = CoroutineScope(Dispatchers.IO)
+    val saved = remember { mutableStateOf(false) }
     Title(title = "URL")
-    ClickableText(text = buildAnnotatedString {
+    Text(text = buildAnnotatedString {
         this.withStyle(
             SpanStyle(
                 color = Color.Blue,
@@ -41,16 +41,23 @@ fun UrlBarcodeDisplay(barcode: Barcode,db:BarcodesDb) {
         ) {
             append(barcode.displayValue ?: "No")
         }
-    }, onClick = {
+    }, modifier = Modifier.clickable {
         if (barcode.displayValue != null)
             uriHandler.openUri(barcode.displayValue!!)
     })
     Spacer(modifier = Modifier.height(20.dp))
-      TextButton(onClick = {
-            coroutineScope.launch { db.savedBarcodeDao().insertAll(SavedBarcode(type = barcode.valueType, barcode = barcode.displayValue!!, format = barcode.format)) }
-            saved.value=true
-        }, enabled = !saved.value) {
-          Text(text = if (!saved.value) "Save" else "Saved")
-      }
+    TextButton(onClick = {
+        coroutineScope.launch {
+            db.savedBarcodeDao().insertAll(
+                SavedBarcode(
+                    type = barcode.valueType,
+                    barcode = barcode.displayValue!!,
+                    format = barcode.format
+                )
+            )
+        }
+        saved.value = true
+    }, enabled = !saved.value) {
+        Text(text = if (!saved.value) "Save" else "Saved")
+    }
 }
-
