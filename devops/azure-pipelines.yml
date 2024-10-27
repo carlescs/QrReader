@@ -50,11 +50,11 @@ stages:
         versionSpec: '17'
         jdkArchitectureOption: 'x64'
         jdkSourceOption: 'PreInstalled'
-    - task: SonarCloudPrepare@2
+    - task: SonarCloudPrepare@3
       inputs:
         SonarCloud: 'Sonar'
         organization: 'carles-cs'
-        scannerMode: 'Other'
+        scannerMode: 'other'
         extraProperties: |
           # Additional properties that will be passed to the scanner, 
           # Put one key=value per line, example:
