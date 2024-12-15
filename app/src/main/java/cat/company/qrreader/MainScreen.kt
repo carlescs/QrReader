@@ -44,6 +44,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
 import cat.company.qrreader.camera.QrCamera
 import cat.company.qrreader.codeCreator.CodeCreator
 import cat.company.qrreader.db.BarcodesDb
@@ -118,9 +119,15 @@ fun MainScreen(db: BarcodesDb) {
                     .padding(it)
             ) {
                 NavHost(navController = navController, startDestination = "history") {
-                    composable("camera") { QrCamera(db, snackBarHostState) }
+                    composable(
+                        route = "camera",
+                        deepLinks = listOf(navDeepLink { uriPattern = "qrreader://camera" })
+                        ) { QrCamera(db, snackBarHostState) }
                     composable("history") { History(db, snackBarHostState) }
-                    composable("codeCreator") { CodeCreator() }
+                    composable(
+                        route="codeCreator",
+                        deepLinks = listOf(navDeepLink { uriPattern = "qrreader://codeCreator" })
+                    ) { CodeCreator() }
                 }
             }
         }

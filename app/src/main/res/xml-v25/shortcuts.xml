@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="camera"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_qr_code_scanner_24"
+        android:shortcutShortLabel="@string/scan_qr_code"
+        android:shortcutLongLabel="@string/scan_qr_code"
+        android:shortcutDisabledMessage="@string/shortcut_disabled_message">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="cat.company.qrreader"
+            android:targetClass="cat.company.qrreader.MainActivity"
+            android:data="qrreader://camera" />
+        <!-- If your shortcut is associated with multiple intents, include them
+             here. The last intent in the list determines what the user sees when
+             they launch this shortcut. -->
+        <categories android:name="android.shortcut.camera" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="codeCreator"
+        android:enabled="true"
+        android:icon="@drawable/baseline_build_24"
+        android:shortcutShortLabel="@string/code_creator"
+        android:shortcutLongLabel="@string/code_creator"
+        android:shortcutDisabledMessage="@string/shortcut_disabled_message">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="cat.company.qrreader"
+            android:targetClass="cat.company.qrreader.MainActivity"
+            android:data="qrreader://codeCreator" />
+        <categories android:name="android.shortcut.codeCreator" />
+    </shortcut>
+</shortcuts>

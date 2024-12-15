@@ -5,7 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.camera.core.ExperimentalGetImage
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.room.Room
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.db.Migrations
