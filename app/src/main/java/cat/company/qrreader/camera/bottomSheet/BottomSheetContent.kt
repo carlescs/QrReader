@@ -1,5 +1,6 @@
 package cat.company.qrreader.camera.bottomSheet
 
+import android.content.ClipData
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
@@ -15,9 +16,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ClipboardManager
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.Clipboard
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.db.BarcodesDb
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -37,9 +38,10 @@ fun BottomSheetContent(
             .padding(15.dp)
             .defaultMinSize(minHeight = 250.dp)
     ) {
-        val clipboardManager:ClipboardManager= LocalClipboardManager.current
+        val clipboard:Clipboard= LocalClipboard.current
         val coroutineScope= rememberCoroutineScope()
         if (lastBarcode != null) {
+
             LazyColumn(modifier = Modifier.fillMaxHeight().padding(horizontal = 16.dp)) {
                 items(
                     items = lastBarcode,
@@ -50,8 +52,16 @@ fun BottomSheetContent(
                                 .fillMaxWidth()
                                 .padding(10.dp)
                                 .clickable {
-                                    if (barcode.displayValue != null)
-                                        clipboardManager.setText(AnnotatedString(barcode.displayValue!!))
+                                    if (barcode.displayValue != null) {
+                                        coroutineScope.launch {
+                                            clipboard.setClipEntry(ClipEntry(
+                                                ClipData.newPlainText(
+                                                    "Barcode",
+                                                    barcode.displayValue
+                                                )
+                                            ))
+                                        }
+                                    }
                                     coroutineScope.launch { snackbarHostState.showSnackbar("Copied!") }
                                 },
                             shape = RoundedCornerShape(12.dp),

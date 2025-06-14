@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'com.google.devtools.ksp'
     id 'org.sonarqube'
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 sonar {
@@ -14,12 +15,12 @@ sonar {
 
 android {
     namespace 'cat.company.qrreader'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         applicationId "cat.company.qrreader"
         minSdk 21
-        targetSdk 35
+        targetSdk 36
         versionCode 211
         versionName '3.4.3'
 
