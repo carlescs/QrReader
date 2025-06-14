@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -20,8 +19,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ClipboardManager
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.Clipboard
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.events.SharedEvents
@@ -31,7 +30,6 @@ import java.util.Locale
 /**
  * History screen
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun History(
     db: BarcodesDb,
@@ -63,7 +61,7 @@ fun History(
                 Text(text = "No saved barcodes!", modifier = Modifier.align(CenterHorizontally))
             }
         } else {
-            val clipboardManager: ClipboardManager = LocalClipboardManager.current
+            val clipboard: Clipboard = LocalClipboard.current
             val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
             LazyColumn(
                 modifier = Modifier
@@ -72,7 +70,7 @@ fun History(
             ) {
                 items(items = items) { barcode ->
                     BarcodeCard(
-                        clipboardManager,
+                        clipboard,
                         barcode,
                         snackbarHostState,
                         sdf,

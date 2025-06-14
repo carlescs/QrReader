@@ -1,5 +1,6 @@
 package cat.company.qrreader.history
 
+import android.content.ClipData
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,8 +26,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ClipboardManager
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.db.entities.compound.SavedBarcodeWithTags
@@ -43,7 +44,7 @@ import java.text.SimpleDateFormat
  */
 @Composable
 fun BarcodeCard(
-    clipboardManager: ClipboardManager,
+    clipboardManager: Clipboard,
     barcode: SavedBarcodeWithTags,
     snackBarHostState: SnackbarHostState,
     sdf: SimpleDateFormat,
@@ -58,8 +59,10 @@ fun BarcodeCard(
             .fillMaxWidth()
             .padding(10.dp)
             .clickable {
-                clipboardManager.setText(AnnotatedString(barcode.barcode.barcode))
-                coroutineScope.launch { snackBarHostState.showSnackbar("Copied!") }
+                coroutineScope.launch {
+                    clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText("barcode", barcode.barcode.barcode)))
+                    snackBarHostState.showSnackbar("Copied!")
+                }
             },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
