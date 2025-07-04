@@ -21,8 +21,8 @@ android {
         applicationId "cat.company.qrreader"
         minSdk 21
         targetSdk 36
-        versionCode 212
-        versionName '3.4.4'
+        versionCode 213
+        versionName '3.4.5'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -78,7 +78,7 @@ dependencies {
     // Barcode model
     implementation 'com.google.mlkit:barcode-scanning:17.3.0'
 
-    implementation 'io.github.g0dkar:qrcode-kotlin-android:4.1.1'
+    implementation 'io.github.g0dkar:qrcode-kotlin-android:4.5.0'
 
     // CameraX core library using the camera2 implementation
     def camerax_version = "1.4.2"
@@ -89,7 +89,7 @@ dependencies {
     implementation "androidx.camera:camera-view:${camerax_version}"
     implementation "androidx.camera:camera-mlkit-vision:${camerax_version}"
 
-    implementation 'com.google.accompanist:accompanist-permissions:0.34.0'
+    implementation 'com.google.accompanist:accompanist-permissions:0.37.3'
 
     def room_version = '2.7.2'
 
