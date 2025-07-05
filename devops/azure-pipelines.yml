@@ -24,7 +24,7 @@ stages:
     steps:
     - task: JavaToolInstaller@0
       inputs:
-        versionSpec: '17'
+        versionSpec: '21'
         jdkArchitectureOption: 'x64'
         jdkSourceOption: 'PreInstalled'
     - task: Gradle@3
@@ -47,7 +47,7 @@ stages:
       fetchDepth: 0
     - task: JavaToolInstaller@0
       inputs:
-        versionSpec: '17'
+        versionSpec: '21'
         jdkArchitectureOption: 'x64'
         jdkSourceOption: 'PreInstalled'
     - task: SonarCloudPrepare@3

@@ -3,7 +3,7 @@ buildscript {
         compose_ui_version = '1.8.3'
     }
     dependencies {
-        classpath "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:2.1.21-2.0.1"
+        classpath "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:2.2.0-2.0.2"
     }
     repositories {
         google()
