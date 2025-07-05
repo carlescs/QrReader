@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.room.Room
@@ -29,6 +30,7 @@ class MainActivity : ComponentActivity() {
                 Migrations.MIGRATION_3_4
             )
             .build()
+        enableEdgeToEdge()
         setContent {
             QrReaderTheme {
                 // A surface container using the 'background' color from the theme
