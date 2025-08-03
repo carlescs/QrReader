@@ -15,14 +15,13 @@ sonar {
 
 android {
     namespace 'cat.company.qrreader'
-    compileSdk libs.versions.compileSdk.get().toInteger()
 
     defaultConfig {
         applicationId "cat.company.qrreader"
         minSdk libs.versions.minSdk.get().toInteger()
         targetSdk libs.versions.targetSdk.get().toInteger()
-        versionCode 217
-        versionName '3.7.1'
+        versionCode 218
+        versionName '3.7.2'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
