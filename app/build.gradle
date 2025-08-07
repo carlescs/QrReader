@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.sonarqube)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
 }
 
 sonar {
@@ -20,8 +21,8 @@ android {
         applicationId "cat.company.qrreader"
         minSdk libs.versions.minSdk.get().toInteger()
         targetSdk libs.versions.targetSdk.get().toInteger()
-        versionCode 218
-        versionName '3.7.2'
+        versionCode 219
+        versionName '3.8.0'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -76,6 +77,9 @@ dependencies {
 
     implementation libs.bundles.room
     annotationProcessor libs.androidx.room.compiler
+
+    // Firebase Analytics
+    implementation libs.firebase.analytics
 
     // To use Kotlin Symbol Processing (KSP)
     ksp libs.androidx.room.compiler

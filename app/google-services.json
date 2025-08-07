@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "906234841576",
+    "project_id": "qrreader-1d127",
+    "storage_bucket": "qrreader-1d127.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:906234841576:android:1e08ab7692ee39b67b7c5d",
+        "android_client_info": {
+          "package_name": "cat.company.qrreader"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCC1aNW3MbqCFxtBik9AqXV6qDNwYCfpBw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
