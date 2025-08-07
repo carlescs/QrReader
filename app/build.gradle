@@ -16,6 +16,7 @@ sonar {
 
 android {
     namespace 'cat.company.qrreader'
+    compileSdkVersion libs.versions.targetSdk.get().toInteger()
 
     defaultConfig {
         applicationId "cat.company.qrreader"
