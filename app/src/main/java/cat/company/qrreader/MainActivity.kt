@@ -11,6 +11,7 @@ import androidx.room.Room
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.db.Migrations
 import cat.company.qrreader.ui.theme.QrReaderTheme
+import com.google.firebase.analytics.FirebaseAnalytics
 
 /**
  * Main activity
@@ -18,10 +19,13 @@ import cat.company.qrreader.ui.theme.QrReaderTheme
  */
 @ExperimentalGetImage
 class MainActivity : ComponentActivity() {
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        firebaseAnalytics = FirebaseAnalytics.getInstance(this)
+
         val db = Room
             .databaseBuilder(applicationContext, BarcodesDb::class.java, "barcodes_db")
             .addMigrations(
@@ -34,7 +38,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             QrReaderTheme {
                 // A surface container using the 'background' color from the theme
-                MainScreen(db)
+                MainScreen(db, firebaseAnalytics)
             }
         }
     }

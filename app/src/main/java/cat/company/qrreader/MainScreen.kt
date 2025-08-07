@@ -1,5 +1,6 @@
 package cat.company.qrreader
 
+import android.os.Bundle
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -51,6 +52,7 @@ import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.events.SharedEvents
 import cat.company.qrreader.history.History
 import cat.company.qrreader.navigation.items
+import com.google.firebase.analytics.FirebaseAnalytics
 
 /**
  * Main screen
@@ -58,12 +60,18 @@ import cat.company.qrreader.navigation.items
 @ExperimentalGetImage
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun MainScreen(db: BarcodesDb) {
+fun MainScreen(db: BarcodesDb, firebaseAnalytics: FirebaseAnalytics) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         val navController = rememberNavController()
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            val params = Bundle()
+            params.putString(FirebaseAnalytics.Param.SCREEN_NAME, destination.label as String?)
+            params.putString(FirebaseAnalytics.Param.SCREEN_CLASS, destination.label as String?)
+            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, params)
+        }
         val snackBarHostState = remember { SnackbarHostState() }
         val currentRoute = navController
             .currentBackStackEntryFlow
