@@ -68,8 +68,14 @@ fun MainScreen(db: BarcodesDb, firebaseAnalytics: FirebaseAnalytics) {
         val navController = rememberNavController()
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val params = Bundle()
-            params.putString(FirebaseAnalytics.Param.SCREEN_NAME, destination.label as String?)
-            params.putString(FirebaseAnalytics.Param.SCREEN_CLASS, destination.label as String?)
+            val screenName = when (destination.route) {
+                "history" -> "History"
+                "camera" -> "Camera"
+                "codeCreator" -> "Code Creator"
+                else -> destination.route ?: "Unknown"
+            }
+            params.putString(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
+            params.putString(FirebaseAnalytics.Param.SCREEN_CLASS, screenName)
             firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, params)
         }
         val snackBarHostState = remember { SnackbarHostState() }
@@ -130,12 +136,18 @@ fun MainScreen(db: BarcodesDb, firebaseAnalytics: FirebaseAnalytics) {
                     composable(
                         route = "camera",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://camera" })
-                        ) { QrCamera(db, snackBarHostState) }
-                    composable("history") { History(db, snackBarHostState) }
+                    ) {
+                        QrCamera(db, snackBarHostState)
+                    }
+                    composable("history") {
+                        History(db, snackBarHostState)
+                    }
                     composable(
                         route="codeCreator",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://codeCreator" })
-                    ) { CodeCreator() }
+                    ) {
+                        CodeCreator()
+                    }
                 }
             }
         }
@@ -250,4 +262,3 @@ private fun FloatingActionButton(
             )
         }
 }
-
