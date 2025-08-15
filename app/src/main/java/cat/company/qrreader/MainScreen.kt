@@ -136,17 +136,17 @@ fun MainScreen(db: BarcodesDb, firebaseAnalytics: FirebaseAnalytics) {
                     composable(
                         route = "camera",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://camera" })
-                    ) {
-                        QrCamera(db, snackBarHostState)
+                    ) { 
+                        QrCamera(db, snackBarHostState) 
                     }
-                    composable("history") {
-                        History(db, snackBarHostState)
+                    composable("history") { 
+                        History(db, snackBarHostState) 
                     }
                     composable(
                         route="codeCreator",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://codeCreator" })
-                    ) {
-                        CodeCreator()
+                    ) { 
+                        CodeCreator() 
                     }
                 }
             }

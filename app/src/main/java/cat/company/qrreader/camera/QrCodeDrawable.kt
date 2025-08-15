@@ -30,7 +30,7 @@ import kotlin.math.roundToInt
 class QrCodeDrawable(private val barcode: Barcode, private val coordinateTransform: CoordinateTransform) : Drawable() {
     private val boundingRectPaint = Paint().apply {
         style = Paint.Style.STROKE
-        color = Color.rgb(255,128,0)
+        color = getColorForBarcodeFormat(barcode.format)
         strokeWidth = 15F
         alpha = 200
     }
@@ -49,6 +49,22 @@ class QrCodeDrawable(private val barcode: Barcode, private val coordinateTransfo
 
     private val contentPadding = 25
     private var textWidth = contentTextPaint.measureText(barcode.displayValue).toInt()
+
+    companion object {
+        // Map barcode formats to colors
+        @JvmStatic
+        internal fun getColorForBarcodeFormat(format: Int): Int {
+            return when (format) {
+                Barcode.FORMAT_QR_CODE -> Color.GREEN
+                Barcode.FORMAT_EAN_13, Barcode.FORMAT_EAN_8 -> Color.BLUE
+                Barcode.FORMAT_CODE_128, Barcode.FORMAT_CODE_39 -> Color.RED
+                Barcode.FORMAT_PDF417 -> Color.MAGENTA
+                Barcode.FORMAT_AZTEC -> Color.CYAN
+                Barcode.FORMAT_DATA_MATRIX -> Color.YELLOW
+                else -> Color.rgb(255,128,0) // Default orange
+            }
+        }
+    }
 
     override fun draw(canvas: Canvas) {
         val rect = barcode.boundingBox!!
