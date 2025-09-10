@@ -4,8 +4,8 @@ minSdk = "21"
 targetSdk = "36"
 
 # Plugins
-agp = "8.12.2"
-kotlin = "2.2.10"
+agp = "8.13.0"
+kotlin = "2.2.20"
 ksp = "2.2.0-2.0.2"
 sonarqube = "6.3.1.5724"
 
