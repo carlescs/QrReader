@@ -24,21 +24,21 @@ abstract class SavedBarcodeDao {
     abstract fun getSavedBarcodesWithTagsByTagId(tagId: Int?): Flow<List<SavedBarcodeWithTags>>
 
     @Insert
-    abstract fun insertAll(vararg savedBarcodes: SavedBarcode)
+    abstract suspend fun insertAll(vararg savedBarcodes: SavedBarcode)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract fun insertBarcodeTag(barcodeTag:BarcodeTagCrossRef)
+    abstract suspend fun insertBarcodeTag(barcodeTag:BarcodeTagCrossRef)
 
     @Delete
-    abstract fun removeBarcodeTag(barcodeTag:BarcodeTagCrossRef)
+    abstract suspend fun removeBarcodeTag(barcodeTag:BarcodeTagCrossRef)
 
     @Update
-    abstract fun updateItem(savedBarcode:SavedBarcode)
+    abstract suspend fun updateItem(savedBarcode:SavedBarcode)
     @Delete
-    abstract fun delete(barcode:SavedBarcode)
+    abstract suspend fun delete(barcode:SavedBarcode)
 
-    @Update()
-    fun switchTag(barcode: SavedBarcodeWithTags, tag: Tag){
+    @Transaction
+    open suspend fun switchTag(barcode: SavedBarcodeWithTags, tag: Tag){
         if(barcode.tags.contains(tag))
             removeBarcodeTag(BarcodeTagCrossRef(barcode.barcode.id, tag.id))
         else

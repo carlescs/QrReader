@@ -13,6 +13,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,7 +53,9 @@ fun History(
                 drawerState.value = DrawerValue.Closed
             }
         }) {
-        viewModel.loadBarcodesByTagId(selectedTagId.value)
+        LaunchedEffect(selectedTagId.value) {
+            viewModel.loadBarcodesByTagId(selectedTagId.value)
+        }
         val lazyListState = rememberLazyListState()
         val items by viewModel.savedBarcodes.collectAsState(initial = emptyList())
 

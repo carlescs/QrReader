@@ -66,11 +66,9 @@ fun EditBarcodeDialog(
                         }
                         TextButton(onClick = {
                             ioCoroutineScope.launch {
-                                db.runInTransaction {
-                                    savedBarcode.title = text.text
-                                    savedBarcode.description=description.text
-                                    db.savedBarcodeDao().updateItem(savedBarcode)
-                                }
+                                savedBarcode.title = text.text
+                                savedBarcode.description = description.text
+                                db.savedBarcodeDao().updateItem(savedBarcode)
                             }
                             onRequestClose()
                         }) {
