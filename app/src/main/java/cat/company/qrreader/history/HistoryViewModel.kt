@@ -3,16 +3,26 @@ package cat.company.qrreader.history
 import androidx.lifecycle.ViewModel
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.db.entities.compound.SavedBarcodeWithTags
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 
 /**
  * ViewModel for the history
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModel(val db: BarcodesDb) : ViewModel() {
 
-    lateinit var savedBarcodes: Flow<List<SavedBarcodeWithTags>>
+    private val _selectedTagId = MutableStateFlow<Int?>(null)
+    val selectedTagId = _selectedTagId.asStateFlow()
 
-    fun loadBarcodesByTagId(tagId: Int?) {
-        savedBarcodes = db.savedBarcodeDao().getSavedBarcodesWithTagsByTagId(tagId)
+    val savedBarcodes: Flow<List<SavedBarcodeWithTags>> = _selectedTagId.flatMapLatest { tagId ->
+        db.savedBarcodeDao().getSavedBarcodesWithTagsByTagId(tagId)
+    }
+
+    fun onTagSelected(tagId: Int?) {
+        _selectedTagId.value = tagId
     }
 }

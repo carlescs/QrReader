@@ -13,7 +13,6 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.events.SharedEvents
 import java.text.SimpleDateFormat
@@ -38,7 +38,8 @@ fun History(
     viewModel: HistoryViewModel = HistoryViewModel(db = db)
 ) {
     val drawerState = remember { mutableStateOf(DrawerValue.Closed) }
-    val selectedTagId=remember{ mutableStateOf<Int?>(null) }
+    val selectedTagId by viewModel.selectedTagId.collectAsStateWithLifecycle()
+
     SharedEvents.openSideBar = {
         when (drawerState.value) {
             DrawerValue.Closed -> drawerState.value = DrawerValue.Open
@@ -48,14 +49,11 @@ fun History(
     ModalNavigationDrawer(
         drawerState = DrawerState(drawerState.value),
         drawerContent = {
-            HistoryModalDrawerContent(db, selectedTagId.value) {
-                selectedTagId.value = it?.id
+            HistoryModalDrawerContent(db, selectedTagId) {
+                viewModel.onTagSelected(it?.id)
                 drawerState.value = DrawerValue.Closed
             }
         }) {
-        LaunchedEffect(selectedTagId.value) {
-            viewModel.loadBarcodesByTagId(selectedTagId.value)
-        }
         val lazyListState = rememberLazyListState()
         val items by viewModel.savedBarcodes.collectAsState(initial = emptyList())
 
