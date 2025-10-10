@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.events.SharedEvents
 import java.text.SimpleDateFormat
@@ -35,7 +36,7 @@ import java.util.Locale
 fun History(
     db: BarcodesDb,
     snackbarHostState: SnackbarHostState,
-    viewModel: HistoryViewModel = HistoryViewModel(db = db)
+    viewModel: HistoryViewModel = viewModel(factory = HistoryViewModelFactory(db))
 ) {
     val drawerState = remember { mutableStateOf(DrawerValue.Closed) }
     val selectedTagId by viewModel.selectedTagId.collectAsStateWithLifecycle()

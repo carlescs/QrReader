@@ -22,8 +22,8 @@ android {
         applicationId = "cat.company.qrreader"
         minSdk = libs.versions.minSdk.get().toInteger()
         targetSdk = libs.versions.targetSdk.get().toInteger()
-        versionCode = 228
-        versionName = '3.10.1'
+        versionCode = 229
+        versionName = '3.10.2'
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

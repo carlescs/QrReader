@@ -1,6 +1,7 @@
 package cat.company.qrreader.history
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.db.entities.compound.SavedBarcodeWithTags
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,5 +25,15 @@ class HistoryViewModel(val db: BarcodesDb) : ViewModel() {
 
     fun onTagSelected(tagId: Int?) {
         _selectedTagId.value = tagId
+    }
+}
+
+class HistoryViewModelFactory(private val db: BarcodesDb) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(HistoryViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return HistoryViewModel(db) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
