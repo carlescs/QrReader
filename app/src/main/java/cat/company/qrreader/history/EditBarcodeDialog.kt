@@ -69,8 +69,8 @@ fun EditBarcodeDialog(
                                 savedBarcode.title = text.text
                                 savedBarcode.description = description.text
                                 db.savedBarcodeDao().updateItem(savedBarcode)
+                                onRequestClose()
                             }
-                            onRequestClose()
                         }) {
                             Text(text = "Save")
                         }

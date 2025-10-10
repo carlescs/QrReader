@@ -13,7 +13,6 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,7 +55,7 @@ fun History(
             }
         }) {
         val lazyListState = rememberLazyListState()
-        val items by viewModel.savedBarcodes.collectAsState(initial = emptyList())
+        val items by viewModel.savedBarcodes.collectAsStateWithLifecycle(initialValue = emptyList())
 
         if (items.isEmpty()) {
             Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
