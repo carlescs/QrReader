@@ -21,10 +21,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.db.entities.SavedBarcode
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 /**
  * Dialog for editing a barcode
@@ -32,9 +29,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun EditBarcodeDialog(
     savedBarcode: SavedBarcode,
-    db: BarcodesDb,
-    onRequestClose: () -> Unit,
-    ioCoroutineScope: CoroutineScope
+    viewModel: HistoryViewModel,
+    onRequestClose: () -> Unit
 ) {
     var text by remember { mutableStateOf(TextFieldValue(savedBarcode.title?:"")) }
     var description by remember { mutableStateOf(TextFieldValue(savedBarcode.description?:"")) }
@@ -65,12 +61,9 @@ fun EditBarcodeDialog(
                             Text(text = "Cancel")
                         }
                         TextButton(onClick = {
-                            ioCoroutineScope.launch {
-                                savedBarcode.title = text.text
-                                savedBarcode.description = description.text
-                                db.savedBarcodeDao().updateItem(savedBarcode)
-                                onRequestClose()
-                            }
+                            val updatedBarcode = savedBarcode.copy(title = text.text, description = description.text)
+                            viewModel.updateBarcode(updatedBarcode)
+                            onRequestClose()
                         }) {
                             Text(text = "Save")
                         }

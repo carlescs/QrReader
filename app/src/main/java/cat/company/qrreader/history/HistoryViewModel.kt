@@ -1,14 +1,19 @@
 package cat.company.qrreader.history
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import cat.company.qrreader.db.BarcodesDb
+import cat.company.qrreader.db.entities.SavedBarcode
 import cat.company.qrreader.db.entities.compound.SavedBarcodeWithTags
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.launch
+import androidx.lifecycle.viewModelScope
 
 /**
  * ViewModel for the history
@@ -25,6 +30,13 @@ class HistoryViewModel(val db: BarcodesDb) : ViewModel() {
 
     fun onTagSelected(tagId: Int?) {
         _selectedTagId.value = tagId
+    }
+
+    fun updateBarcode(barcode: SavedBarcode) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val rows = db.savedBarcodeDao().updateItem(barcode)
+            Log.d("HistoryViewModel", "updateBarcode id=${barcode.id} rows=$rows")
+        }
     }
 }
 

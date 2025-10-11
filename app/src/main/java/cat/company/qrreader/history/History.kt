@@ -69,17 +69,17 @@ fun History(
                     .fillMaxSize()
                     .padding(horizontal = 16.dp), state = lazyListState
             ) {
-                items(items = items) { barcode ->
+                items(items = items, key = { it.barcode.id }) { barcode ->
                     BarcodeCard(
                         clipboard,
                         barcode,
                         snackbarHostState,
                         sdf,
-                        db
+                        db,
+                        viewModel
                     )
                 }
             }
         }
     }
 }
-

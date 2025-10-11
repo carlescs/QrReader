@@ -48,7 +48,8 @@ fun BarcodeCard(
     barcode: SavedBarcodeWithTags,
     snackBarHostState: SnackbarHostState,
     sdf: SimpleDateFormat,
-    db: BarcodesDb
+    db: BarcodesDb,
+    viewModel: HistoryViewModel
 ) {
     val editOpen = remember { mutableStateOf(false) }
     val confirmDeleteOpen = remember { mutableStateOf(false) }
@@ -120,9 +121,8 @@ fun BarcodeCard(
         if (editOpen.value) {
             EditBarcodeDialog(
                 savedBarcode = barcode.barcode,
-                onRequestClose = { editOpen.value = false },
-                db = db,
-                ioCoroutineScope = ioCoroutineScope
+                viewModel = viewModel,
+                onRequestClose = { editOpen.value = false }
             )
         }
         if (confirmDeleteOpen.value) {
@@ -138,4 +138,3 @@ fun BarcodeCard(
         }
     }
 }
-

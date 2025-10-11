@@ -33,7 +33,8 @@ abstract class SavedBarcodeDao {
     abstract suspend fun removeBarcodeTag(barcodeTag:BarcodeTagCrossRef)
 
     @Update
-    abstract suspend fun updateItem(savedBarcode:SavedBarcode)
+    abstract suspend fun updateItem(savedBarcode:SavedBarcode): Int
+
     @Delete
     abstract suspend fun delete(barcode:SavedBarcode)
 
