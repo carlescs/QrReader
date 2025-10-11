@@ -101,7 +101,7 @@ stages:
   - deployment: deploy
     pool:
       vmImage: 'windows-latest'
-    environment: PlayStore
+    environment: PlayStore-Alpha
     strategy:
       runOnce:
         deploy:
