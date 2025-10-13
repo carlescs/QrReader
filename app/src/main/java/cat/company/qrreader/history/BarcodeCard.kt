@@ -65,8 +65,9 @@ fun BarcodeCard(
                     snackBarHostState.showSnackbar("Copied!")
                 }
             },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(),
+        shape = RoundedCornerShape(10.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
     ) {
         Column(modifier = Modifier.padding(15.dp)) {
             Row {
