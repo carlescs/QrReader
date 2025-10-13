@@ -58,7 +58,7 @@ fun BarcodeCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp)
+            .padding(5.dp)
             .clickable {
                 coroutineScope.launch {
                     clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText("barcode", barcode.barcode.barcode)))
@@ -69,7 +69,7 @@ fun BarcodeCard(
         shape = RoundedCornerShape(10.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
     ) {
-        Column(modifier = Modifier.padding(15.dp)) {
+        Column(modifier = Modifier.padding(10.dp)) {
             Row {
                 Column(modifier = Modifier.weight(1f)) {
                     if (barcode.barcode.type == Barcode.TYPE_URL)
