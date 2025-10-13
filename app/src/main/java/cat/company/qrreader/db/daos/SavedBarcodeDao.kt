@@ -20,8 +20,25 @@ abstract class SavedBarcodeDao {
     abstract fun getSavedBarcodesWithTags(): Flow<List<SavedBarcodeWithTags>>
 
     @Transaction
-    @Query("SELECT * FROM saved_barcodes WHERE :tagId is null or EXISTS (SELECT tagId FROM barcode_tag_cross_ref WHERE tagId = :tagId and barcodeId = saved_barcodes.id)")
-    abstract fun getSavedBarcodesWithTagsByTagId(tagId: Int?): Flow<List<SavedBarcodeWithTags>>
+    @Query(
+        """
+        SELECT * FROM saved_barcodes
+        WHERE (:tagId IS NULL OR EXISTS (
+            SELECT 1 FROM barcode_tag_cross_ref
+            WHERE tagId = :tagId AND barcodeId = saved_barcodes.id
+        ))
+        AND (
+            :query IS NULL OR :query = '' OR
+            COALESCE(title, '') LIKE '%' || :query || '%' COLLATE NOCASE OR
+            COALESCE(description, '') LIKE '%' || :query || '%' COLLATE NOCASE OR
+            barcode LIKE '%' || :query || '%' COLLATE NOCASE
+        )
+        """
+    )
+    abstract fun getSavedBarcodesWithTagsByTagIdAndQuery(
+        tagId: Int?,
+        query: String?
+    ): Flow<List<SavedBarcodeWithTags>>
 
     @Insert
     abstract suspend fun insertAll(vararg savedBarcodes: SavedBarcode)
