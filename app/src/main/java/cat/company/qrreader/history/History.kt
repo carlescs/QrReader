@@ -105,7 +105,7 @@ fun History(
                 onExpandedChange = onActiveChange,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 6.dp),
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
                 shape = SearchBarDefaults.inputFieldShape,
                 colors = searchBarColors,
                 tonalElevation = SearchBarDefaults.TonalElevation,
