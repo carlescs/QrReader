@@ -2,6 +2,7 @@ package cat.company.qrreader.history
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -75,6 +76,9 @@ fun History(
         Column(modifier = Modifier.fillMaxSize()) {
             val onActiveChange: (Boolean) -> Unit = { expanded -> searchActive = expanded }
             val searchBarColors = SearchBarDefaults.colors()
+            val clipboard: Clipboard = LocalClipboard.current
+            val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
+
             SearchBar(
                 inputField = {
                     SearchBarDefaults.InputField(
@@ -100,37 +104,65 @@ fun History(
                 expanded = searchActive,
                 onExpandedChange = onActiveChange,
                 modifier = Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(bottom = 6.dp),
                 shape = SearchBarDefaults.inputFieldShape,
                 colors = searchBarColors,
                 tonalElevation = SearchBarDefaults.TonalElevation,
                 shadowElevation = SearchBarDefaults.ShadowElevation,
-                windowInsets = SearchBarDefaults.windowInsets,
-                content = { /* no suggestions */ },
+                windowInsets = WindowInsets(0.dp),
+                content = {
+                    // Show search suggestions/results
+                    if (items.isEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = CenterHorizontally
+                        ) {
+                            Text(text = if (query.isBlank()) "Start typing to search" else "No results")
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                        ) {
+                            items(items = items, key = { it.barcode.id }) { barcode ->
+                                SimpleBarcodeCard(
+                                    barcode,
+                                    sdf,
+                                    onDismissSearch = { searchActive = false }
+                                )
+                            }
+                        }
+                    }
+                },
             )
 
-            if (items.isEmpty()) {
-                Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
-                    val msg = if (query.isBlank()) "No saved barcodes!" else "No results"
-                    Text(text = msg, modifier = Modifier.align(CenterHorizontally))
-                }
-            } else {
-                val clipboard: Clipboard = LocalClipboard.current
-                val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp), state = lazyListState
-                ) {
-                    items(items = items, key = { it.barcode.id }) { barcode ->
-                        BarcodeCard(
-                            clipboard,
-                            barcode,
-                            snackbarHostState,
-                            sdf,
-                            db,
-                            viewModel
-                        )
+            // Show results below search bar when not in search mode
+            if (!searchActive) {
+                if (items.isEmpty()) {
+                    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
+                        val msg = if (query.isBlank()) "No saved barcodes!" else "No results"
+                        Text(text = msg, modifier = Modifier.align(CenterHorizontally))
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp), state = lazyListState
+                    ) {
+                        items(items = items, key = { it.barcode.id }) { barcode ->
+                            BarcodeCard(
+                                clipboard,
+                                barcode,
+                                snackbarHostState,
+                                sdf,
+                                db,
+                                viewModel
+                            )
+                        }
                     }
                 }
             }
