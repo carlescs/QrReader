@@ -1,5 +1,6 @@
 [versions]
 # Android
+kotlinxCoroutinesTest = "1.10.2"
 minSdk = "23"
 targetSdk = "36"
 
@@ -7,7 +8,7 @@ targetSdk = "36"
 agp = "8.13.0"
 kotlin = "2.2.20"
 ksp = "2.2.20-2.0.3"
-sonarqube = "6.3.1.5724"
+sonarqube = "7.0.0.6105"
 
 # AndroidX
 coreKtx = "1.17.0"
@@ -84,6 +85,7 @@ androidx-room-paging = { group = "androidx.room", name = "room-paging", version.
 # Third-party libraries
 colorpicker-compose = { group = "com.godaddy.android.colorpicker", name = "compose-color-picker-android", version.ref = "colorPicker" }
 google-mlkit-barcode = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "barcode" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 qrcode-kotlin = { group = "io.github.g0dkar", name = "qrcode-kotlin-android", version.ref = "qrcode" }
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
 

@@ -1,15 +1,19 @@
 package cat.company.qrreader.history
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DrawerState
@@ -79,6 +83,7 @@ fun History(
             val clipboard: Clipboard = LocalClipboard.current
             val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
 
+            // Integrated SearchBar: when expanded, leading icon becomes a back/cancel icon (animated)
             SearchBar(
                 inputField = {
                     SearchBarDefaults.InputField(
@@ -89,7 +94,26 @@ fun History(
                         onExpandedChange = onActiveChange,
                         placeholder = { Text("Search barcodes, titles, descriptions") },
                         leadingIcon = {
-                            Icon(imageVector = Icons.Filled.Search, contentDescription = null)
+                            // Keep consistent size for the leading icon's touch target to avoid layout jumps.
+                            IconButton(
+                                onClick = {
+                                    if (searchActive) {
+                                        viewModel.onQueryChange("")
+                                        searchActive = false
+                                    } else {
+                                        onActiveChange(true)
+                                    }
+                                },
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                Crossfade(targetState = searchActive, animationSpec = tween(durationMillis = 180)) { expanded ->
+                                    if (expanded) {
+                                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Cancel search")
+                                    } else {
+                                        Icon(imageVector = Icons.Filled.Search, contentDescription = "Open search")
+                                    }
+                                }
+                            }
                         },
                         trailingIcon = {
                             if (query.isNotEmpty()) {
