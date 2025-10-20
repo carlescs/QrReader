@@ -36,13 +36,14 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import java.text.SimpleDateFormat
+import java.util.Locale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.events.SharedEvents
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 /**
  * History screen
@@ -92,7 +93,7 @@ fun History(
                         onSearch = { /*query*/ _ -> searchActive = false },
                         expanded = searchActive,
                         onExpandedChange = onActiveChange,
-                        placeholder = { Text("Search barcodes, titles, descriptions") },
+                        placeholder = { Text("Search barcodes, titles, descriptions", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         leadingIcon = {
                             // Keep consistent size for the leading icon's touch target to avoid layout jumps.
                             IconButton(
@@ -144,7 +145,7 @@ fun History(
                                 .padding(16.dp),
                             horizontalAlignment = CenterHorizontally
                         ) {
-                            Text(text = if (query.isBlank()) "Start typing to search" else "No results")
+                            Text(text = if (query.isBlank()) "Start typing to search" else "No results", maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     } else {
                         LazyColumn(
@@ -169,7 +170,7 @@ fun History(
                 if (items.isEmpty()) {
                     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
                         val msg = if (query.isBlank()) "No saved barcodes!" else "No results"
-                        Text(text = msg, modifier = Modifier.align(CenterHorizontally))
+                        Text(text = msg, modifier = Modifier.align(CenterHorizontally), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 } else {
                     LazyColumn(
