@@ -3,6 +3,8 @@
 kotlinxCoroutinesTest = "1.10.2"
 minSdk = "23"
 targetSdk = "36"
+versionCode = "241"
+versionName = "4.0.4"
 
 # Plugins
 agp = "8.13.0"
@@ -19,8 +21,8 @@ print = "1.1.0"
 navigation = "2.9.5"
 
 # Compose
-composeUi = "1.9.3"
-composeMaterial = "1.9.3"
+composeUi = "1.9.4"
+composeMaterial = "1.9.4"
 composeMaterial3 = "1.4.0"
 composeCompiler = "1.5.11"
 composeIconsExtended = "1.7.8"
@@ -29,7 +31,7 @@ composeIconsExtended = "1.7.8"
 camerax = "1.5.1"
 
 # Room
-room = "2.8.2"
+room = "2.8.3"
 
 # Third-party
 colorPicker = "0.7.0"
