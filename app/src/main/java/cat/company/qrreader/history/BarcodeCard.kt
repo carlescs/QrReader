@@ -91,11 +91,12 @@ fun BarcodeCard(
 
         Row(modifier = Modifier.padding(5.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             val menuOpen = remember { mutableStateOf(false) }
-            barcode.tags.forEach {
-                Tag(it)
-            }
             IconButton(onClick = { menuOpen.value = true }) {
                 Icon(Icons.AutoMirrored.Filled.Label, contentDescription = "Manage tags")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            barcode.tags.forEach {
+                Tag(it)
             }
             DropdownMenu(
                 expanded = menuOpen.value,
