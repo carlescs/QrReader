@@ -3,7 +3,7 @@
 kotlinxCoroutinesTest = "1.10.2"
 minSdk = "23"
 targetSdk = "36"
-versionCode = 242
+versionCode = "242"
 versionName = "4.0.5"
 
 # Plugins
