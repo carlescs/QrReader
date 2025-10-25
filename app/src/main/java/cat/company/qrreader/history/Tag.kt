@@ -26,7 +26,7 @@ fun Tag(it: Tag) {
         modifier = Modifier
             .wrapContentHeight()
             .wrapContentWidth()
-            .padding(5.dp),
+            .padding(2.dp),
 
         colors = if (color != null) CardDefaults.cardColors(
             containerColor = color
@@ -34,7 +34,7 @@ fun Tag(it: Tag) {
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Text(
-            modifier = Modifier.padding(5.dp),
+            modifier = Modifier.padding(4.dp),
             text = it.name,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,

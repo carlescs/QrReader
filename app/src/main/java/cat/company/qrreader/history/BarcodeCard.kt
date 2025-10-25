@@ -94,7 +94,7 @@ fun BarcodeCard(
             IconButton(onClick = { menuOpen.value = true }) {
                 Icon(Icons.AutoMirrored.Filled.Label, contentDescription = "Manage tags")
             }
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(4.dp))
             barcode.tags.forEach {
                 Tag(it)
             }

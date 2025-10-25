@@ -3,14 +3,14 @@
 kotlinxCoroutinesTest = "1.10.2"
 minSdk = "23"
 targetSdk = "36"
-versionCode = "242"
-versionName = "4.0.5"
+versionCode = "243"
+versionName = "4.0.6"
 
 # Plugins
 agp = "8.13.0"
-kotlin = "2.2.20"
+kotlin = "2.2.21"
 ksp = "2.2.20-2.0.3"
-sonarqube = "7.0.0.6105"
+sonarqube = "7.0.1.6134"
 
 # AndroidX
 coreKtx = "1.17.0"
