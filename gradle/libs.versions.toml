@@ -3,11 +3,11 @@
 kotlinxCoroutinesTest = "1.10.2"
 minSdk = "23"
 targetSdk = "36"
-versionCode = "243"
-versionName = "4.0.6"
+versionCode = "244"
+versionName = "4.0.7"
 
 # Plugins
-agp = "8.13.0"
+agp = "8.13.1"
 kotlin = "2.2.21"
 ksp = "2.2.20-2.0.3"
 sonarqube = "7.0.1.6134"
@@ -18,7 +18,7 @@ lifecycleRuntimeKtx = "2.9.4"
 activityCompose = "1.11.0"
 lifecycleViewmodelCompose = "2.9.4"
 print = "1.1.0"
-navigation = "2.9.5"
+navigation = "2.9.6"
 
 # Compose
 composeUi = "1.9.4"
