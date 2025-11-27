@@ -3,26 +3,26 @@
 kotlinxCoroutinesTest = "1.10.2"
 minSdk = "23"
 targetSdk = "36"
-versionCode = "244"
-versionName = "4.0.7"
+versionCode = "245"
+versionName = "4.0.8"
 
 # Plugins
 agp = "8.13.1"
 kotlin = "2.2.21"
 ksp = "2.2.20-2.0.3"
-sonarqube = "7.0.1.6134"
+sonarqube = "7.1.0.6387"
 
 # AndroidX
 coreKtx = "1.17.0"
-lifecycleRuntimeKtx = "2.9.4"
-activityCompose = "1.11.0"
-lifecycleViewmodelCompose = "2.9.4"
+lifecycleRuntimeKtx = "2.10.0"
+activityCompose = "1.12.0"
+lifecycleViewmodelCompose = "2.10.0"
 print = "1.1.0"
 navigation = "2.9.6"
 
 # Compose
-composeUi = "1.9.4"
-composeMaterial = "1.9.4"
+composeUi = "1.9.5"
+composeMaterial = "1.9.5"
 composeMaterial3 = "1.4.0"
 composeCompiler = "1.5.11"
 composeIconsExtended = "1.7.8"
@@ -31,7 +31,7 @@ composeIconsExtended = "1.7.8"
 camerax = "1.5.1"
 
 # Room
-room = "2.8.3"
+room = "2.8.4"
 
 # Third-party
 colorPicker = "0.7.0"
