@@ -32,6 +32,8 @@ class HistoryViewModel(val db: BarcodesDb) : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
+    private val _hideTaggedWhenNoTagSelected = MutableStateFlow(false)
+
     // Debounce input to avoid querying DB on every keystroke
     @OptIn(FlowPreview::class)
     private val debouncedQuery = _searchQuery
@@ -40,10 +42,12 @@ class HistoryViewModel(val db: BarcodesDb) : ViewModel() {
         .distinctUntilChanged()
 
     val savedBarcodes: Flow<List<SavedBarcodeWithTags>> =
-        combine(_selectedTagId, debouncedQuery) { tagId, query -> tagId to query }
-            .flatMapLatest { (tagId, query) ->
+        combine(_selectedTagId, debouncedQuery, _hideTaggedWhenNoTagSelected) { tagId, query, hideTagged ->
+            Triple(tagId, query, hideTagged)
+        }
+            .flatMapLatest { (tagId, query, hideTagged) ->
                 val q = query.takeIf { it.isNotBlank() }
-                db.savedBarcodeDao().getSavedBarcodesWithTagsByTagIdAndQuery(tagId, q)
+                db.savedBarcodeDao().getSavedBarcodesWithTagsByTagIdAndQuery(tagId, q, hideTagged)
             }
 
     fun onTagSelected(tagId: Int?) {
@@ -52,6 +56,10 @@ class HistoryViewModel(val db: BarcodesDb) : ViewModel() {
 
     fun onQueryChange(query: String) {
         _searchQuery.value = query
+    }
+
+    fun setHideTaggedWhenNoTagSelected(hide: Boolean) {
+        _hideTaggedWhenNoTagSelected.value = hide
     }
 
     fun updateBarcode(barcode: SavedBarcode) {

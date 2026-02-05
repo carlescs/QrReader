@@ -33,11 +33,17 @@ abstract class SavedBarcodeDao {
             COALESCE(description, '') LIKE '%' || :query || '%' COLLATE NOCASE OR
             barcode LIKE '%' || :query || '%' COLLATE NOCASE
         )
+        AND (
+            :hideTaggedWhenNoTagSelected = 0 OR :tagId IS NOT NULL OR NOT EXISTS (
+                SELECT 1 FROM barcode_tag_cross_ref WHERE barcodeId = saved_barcodes.id
+            )
+        )
         """
     )
     abstract fun getSavedBarcodesWithTagsByTagIdAndQuery(
         tagId: Int?,
-        query: String?
+        query: String?,
+        hideTaggedWhenNoTagSelected: Boolean
     ): Flow<List<SavedBarcodeWithTags>>
 
     @Insert

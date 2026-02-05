@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
@@ -52,6 +53,7 @@ import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.events.SharedEvents
 import cat.company.qrreader.history.History
 import cat.company.qrreader.navigation.items
+import cat.company.qrreader.settings.SettingsScreen
 import com.google.firebase.analytics.FirebaseAnalytics
 
 /**
@@ -72,6 +74,7 @@ fun MainScreen(db: BarcodesDb, firebaseAnalytics: FirebaseAnalytics) {
                 "history" -> "History"
                 "camera" -> "Camera"
                 "codeCreator" -> "Code Creator"
+                "settings" -> "Settings"
                 else -> destination.route ?: "Unknown"
             }
             params.putString(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
@@ -86,9 +89,7 @@ fun MainScreen(db: BarcodesDb, firebaseAnalytics: FirebaseAnalytics) {
 
         val showBackButton by remember(currentBackStackEntry) {
             derivedStateOf {
-                navController.previousBackStackEntry != null && currentBackStackEntry?.destination?.route.equals(
-                    "camera"
-                )
+                navController.previousBackStackEntry != null
             }
         }
         Scaffold(
@@ -136,17 +137,20 @@ fun MainScreen(db: BarcodesDb, firebaseAnalytics: FirebaseAnalytics) {
                     composable(
                         route = "camera",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://camera" })
-                    ) { 
-                        QrCamera(db, snackBarHostState) 
+                    ) {
+                        QrCamera(db, snackBarHostState)
                     }
-                    composable("history") { 
-                        History(db, snackBarHostState) 
+                    composable("history") {
+                        History(db, snackBarHostState)
                     }
                     composable(
                         route="codeCreator",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://codeCreator" })
-                    ) { 
-                        CodeCreator() 
+                    ) {
+                        CodeCreator()
+                    }
+                    composable("settings") {
+                        SettingsScreen(context = navController.context)
                     }
                 }
             }
@@ -171,26 +175,34 @@ private fun TopAppBar(
     }
     CenterAlignedTopAppBar(
         title = { Text(stringResource(id = R.string.app_name)) },
-        navigationIcon =
-        {
-            if (showBackButton) {
-                IconButton(onClick = { navController.navigateUp() }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back"
-                    )
+        navigationIcon = {
+            when {
+                showBackButton -> {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+                currentRoute.value?.destination?.route == "history" -> {
+                    IconButton(onClick = { SharedEvents.openSideBar?.invoke() }) {
+                        Icon(
+                            imageVector = Icons.Filled.Menu,
+                            contentDescription = "More",
+                        )
+                    }
                 }
             }
-            if (!showBackButton && currentRoute.value?.destination?.route.equals("history"))
-                IconButton(onClick = { SharedEvents.openSideBar?.invoke() }) {
-                    Icon(
-                        imageVector = Icons.Filled.Menu,
-                        contentDescription = "More",
-                    )
-                }
         },
         actions = {
             var menuExpanded by remember { mutableStateOf(false) }
+            // Add settings icon visible when on history
+            if (currentRoute.value?.destination?.route.equals("history")) {
+                IconButton(onClick = { navController.navigate("settings") }) {
+                    Icon(imageVector = Icons.Filled.Settings, contentDescription = "Settings")
+                }
+            }
             if (currentRoute.value?.destination?.route.equals("codeCreator")) {
                 IconButton(onClick = {
                     if (!shareDisabled.value) {

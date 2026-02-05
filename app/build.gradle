@@ -87,6 +87,9 @@ dependencies {
 
     implementation libs.androidx.room.testing
 
+    // Jetpack DataStore (Preferences)
+    implementation libs.androidx.datastore.preferences
+
     testImplementation libs.junit
     testImplementation libs.kotlinx.coroutines.test
     androidTestImplementation libs.androidx.test.ext.junit

@@ -32,10 +32,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.text.SimpleDateFormat
@@ -44,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.events.SharedEvents
+import cat.company.qrreader.settings.SettingsRepository
 
 /**
  * History screen
@@ -76,6 +79,22 @@ fun History(
         val items by viewModel.savedBarcodes.collectAsStateWithLifecycle(initialValue = emptyList())
         val query by viewModel.searchQuery.collectAsStateWithLifecycle()
         var searchActive by rememberSaveable { mutableStateOf(false) }
+
+        // Read settings
+        val ctx = LocalContext.current
+        val settingsRepo = SettingsRepository(ctx)
+        val hideTagged by settingsRepo.hideTaggedWhenNoTagSelected.collectAsStateWithLifecycle(initialValue = false)
+
+        // Propagate setting into ViewModel so Room query can consider it
+        LaunchedEffect(hideTagged) {
+            viewModel.setHideTaggedWhenNoTagSelected(hideTagged)
+        }
+
+        // Apply client-side filter: if hideTagged is true and no tag selected, remove items that have any tags
+        // (still keep as fallback but now DB will already have filtered)
+        val visibleItems = if (hideTagged && selectedTagId == null) {
+            items.filter { it.tags.isEmpty() }
+        } else items
 
         // Top-level layout with search bar and results
         Column(modifier = Modifier.fillMaxSize()) {
@@ -167,7 +186,7 @@ fun History(
 
             // Show results below search bar when not in search mode
             if (!searchActive) {
-                if (items.isEmpty()) {
+                if (visibleItems.isEmpty()) {
                     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
                         val msg = if (query.isBlank()) "No saved barcodes!" else "No results"
                         Text(text = msg, modifier = Modifier.align(CenterHorizontally), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -178,7 +197,7 @@ fun History(
                             .fillMaxSize()
                             .padding(horizontal = 16.dp), state = lazyListState
                     ) {
-                        items(items = items, key = { it.barcode.id }) { barcode ->
+                        items(items = visibleItems, key = { it.barcode.id }) { barcode ->
                             BarcodeCard(
                                 clipboard,
                                 barcode,
