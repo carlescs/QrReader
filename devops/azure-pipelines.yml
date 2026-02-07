@@ -28,15 +28,24 @@ stages:
         jdkArchitectureOption: 'x64'
         jdkSourceOption: 'PreInstalled'
     - task: Gradle@3
-      displayName: 'Run unit tests'
+      displayName: 'Run unit tests and generate coverage report'
       inputs:
         gradleWrapperFile: 'gradlew'
-        tasks: 'app:test'
+        tasks: 'testDebugUnitTest jacocoTestReport'
+        options: '--no-configuration-cache --rerun-tasks'
         publishJUnitResults: true
         testResultsFiles: '**/TEST-*.xml'
         javaHomeOption: 'JDKVersion'
         sonarQubeRunAnalysis: false
         spotBugsAnalysis: false
+    - task: PublishCodeCoverageResults@2
+      displayName: 'Publish code coverage results'
+      inputs:
+        summaryFileLocation: 'app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml'
+        pathToSources: 'app/src/main/java'
+        codecoverageTool: 'JaCoCo'
+        failIfCoverageEmpty: false
+      condition: succeededOrFailed()
 - stage: build
   displayName: Build
   jobs:
@@ -61,13 +70,14 @@ stages:
           # sonar.exclusions=**/*.bin
           sonar.projectKey=carles-cs_QrReader
           sonar.projectName=QrReader
+          sonar.coverage.jacoco.xmlReportPaths=app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
     - task: Gradle@3
+      displayName: 'Build release bundle'
       inputs:
         gradleWrapperFile: 'gradlew'
         tasks: 'bundleRelease'
-        options: '--no-configuration-cache'
-        publishJUnitResults: true
-        testResultsFiles: '**/TEST-*.xml'
+        options: '--no-configuration-cache --rerun-tasks'
+        publishJUnitResults: false
         javaHomeOption: 'JDKVersion'
         sonarQubeRunAnalysis: true
         sqGradlePluginVersionChoice: 'build'

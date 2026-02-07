@@ -1,16 +1,18 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.sonarqube)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
+    id 'jacoco'
 }
 
 sonar {
     properties{
         property "sonar.projectKey", "carles-cs_QrReader"
         property "sonar.projectName", "QrReader"
+        property "sonar.androidLint.reportPaths", "${layout.buildDirectory.get().asFile}/reports/lint-results.xml"
+        property "sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml"
     }
 }
 
@@ -32,6 +34,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            testCoverageEnabled = true
+        }
         release {
             minifyEnabled = false
             proguardFiles = [getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro']
@@ -92,6 +97,8 @@ dependencies {
 
     testImplementation libs.junit
     testImplementation libs.kotlinx.coroutines.test
+    testImplementation libs.robolectric
+    testImplementation libs.androidx.test.core
     androidTestImplementation libs.androidx.test.ext.junit
     androidTestImplementation libs.androidx.espresso.core
     androidTestImplementation libs.androidx.compose.ui.test.junit4
@@ -104,4 +111,77 @@ configurations.configureEach {
         force "androidx.concurrent:concurrent-futures:1.2.0",
                 "androidx.concurrent:concurrent-futures-ktx:1.2.0"
     }
+}
+
+// JaCoCo configuration for code coverage
+jacoco {
+    toolVersion = libs.versions.jacoco.get()
+}
+
+// Force a stable JaCoCo exec location when the unit test task exists
+var unitTestTasks = tasks.withType(Test).matching { it.name == "testDebugUnitTest" }
+unitTestTasks.configureEach {
+    jacoco {
+        enabled = true
+        destinationFile = layout.buildDirectory.file("jacoco/testDebugUnitTest.exec").get().asFile
+        includeNoLocationClasses = true
+        excludes = ['jdk.internal.*']
+    }
+}
+
+tasks.register('jacocoTestReport', JacocoReport) {
+    dependsOn(unitTestTasks)
+    dependsOn("assembleDebug")
+    group = "Reporting"
+    description = "Generate Jacoco coverage reports."
+
+    reports {
+        xml.required = true
+        xml.outputLocation = layout.buildDirectory.file("reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+        html.required = true
+        csv.required = false
+    }
+
+    def fileFilter = [
+            '**/R.class',
+            '**/R$*.class',
+            '**/BuildConfig.*',
+            '**/Manifest*.*',
+            '**/*Test*.*',
+            'android/**/*.*',
+            '**/*$ViewInjector*.*',
+            '**/*$ViewBinder*.*',
+            '**/databinding/**/*.*',
+            '**/generated/**/*.*'
+    ]
+
+    def buildDir = layout.buildDirectory.get().asFile
+    def mainSrc = "${project.projectDir}/src/main/java"
+
+    sourceDirectories.setFrom(files([mainSrc]))
+
+    // Use a provider to lazily resolve class directories at execution time
+    classDirectories.setFrom(files().from({
+        def debugTree = fileTree(dir: "${buildDir}/tmp/kotlin-classes/debug", excludes: fileFilter)
+        def debugJavaTree = fileTree(dir: "${buildDir}/intermediates/javac/debug/classes", excludes: fileFilter)
+        def compileJarPath = file("${buildDir}/intermediates/compile_app_classes_jar/debug/bundleDebugClassesToCompileJar/classes.jar")
+        def runtimeJarPath = file("${buildDir}/intermediates/runtime_app_classes_jar/debug/bundleDebugClassesToRuntimeJar/classes.jar")
+
+        def allClasses = [debugTree, debugJavaTree]
+
+        if (compileJarPath.exists()) {
+            allClasses.add(zipTree(compileJarPath).matching { exclude fileFilter })
+        }
+        if (runtimeJarPath.exists()) {
+            allClasses.add(zipTree(runtimeJarPath).matching { exclude fileFilter })
+        }
+
+        return allClasses
+    }))
+
+    // Collect exec files from common AGP locations
+    executionData.setFrom(fileTree(dir: buildDir, includes: [
+            "jacoco/*.exec",
+            "outputs/unit_test_code_coverage/**/*.exec"
+    ]))
 }
