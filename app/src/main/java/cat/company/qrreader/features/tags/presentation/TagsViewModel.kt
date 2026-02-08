@@ -1,8 +1,8 @@
 ﻿package cat.company.qrreader.features.tags.presentation
 import androidx.lifecycle.ViewModel
 import cat.company.qrreader.domain.model.TagModel
-import cat.company.qrreader.domain.usecase.DeleteTagUseCase
-import cat.company.qrreader.domain.usecase.GetAllTagsUseCase
+import cat.company.qrreader.domain.usecase.tags.DeleteTagUseCase
+import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import cat.company.qrreader.domain.repository.TagRepository
 import kotlinx.coroutines.flow.Flow
 import org.koin.java.KoinJavaComponent.inject

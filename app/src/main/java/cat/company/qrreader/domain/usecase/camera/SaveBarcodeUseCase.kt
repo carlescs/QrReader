@@ -1,4 +1,4 @@
-package cat.company.qrreader.domain.usecase
+package cat.company.qrreader.domain.usecase.camera
 
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.domain.repository.BarcodeRepository

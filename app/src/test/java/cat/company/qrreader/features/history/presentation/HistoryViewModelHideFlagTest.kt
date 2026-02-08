@@ -4,9 +4,9 @@ import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.domain.model.BarcodeWithTagsModel
 import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.domain.repository.BarcodeRepository
-import cat.company.qrreader.domain.usecase.DeleteBarcodeUseCase
-import cat.company.qrreader.domain.usecase.GetBarcodesWithTagsUseCase
-import cat.company.qrreader.domain.usecase.UpdateBarcodeUseCase
+import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
+import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
+import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,10 +57,19 @@ class HistoryViewModelHideFlagTest {
         val getBarcodesWithTagsUseCase = GetBarcodesWithTagsUseCase(fakeRepository)
         val updateBarcodeUseCase = UpdateBarcodeUseCase(fakeRepository)
         val deleteBarcodeUseCase = DeleteBarcodeUseCase(fakeRepository)
+        val fakeSettingsRepo = object : cat.company.qrreader.domain.repository.SettingsRepository {
+            override val hideTaggedWhenNoTagSelected: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
+            override val searchAcrossAllTagsWhenFiltering: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
+        }
         val vm = HistoryViewModel(
             getBarcodesWithTagsUseCase,
             updateBarcodeUseCase,
-            deleteBarcodeUseCase
+            deleteBarcodeUseCase,
+            fakeSettingsRepo
         )
 
         // Collect savedBarcodes to trigger the Flow

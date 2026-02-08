@@ -4,9 +4,10 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.domain.model.BarcodeWithTagsModel
-import cat.company.qrreader.domain.usecase.DeleteBarcodeUseCase
-import cat.company.qrreader.domain.usecase.GetBarcodesWithTagsUseCase
-import cat.company.qrreader.domain.usecase.UpdateBarcodeUseCase
+import cat.company.qrreader.domain.repository.SettingsRepository
+import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
+import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
+import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +28,8 @@ import kotlinx.coroutines.FlowPreview
 class HistoryViewModel(
     private val getBarcodesWithTagsUseCase: GetBarcodesWithTagsUseCase,
     private val updateBarcodeUseCase: UpdateBarcodeUseCase,
-    private val deleteBarcodeUseCase: DeleteBarcodeUseCase
+    private val deleteBarcodeUseCase: DeleteBarcodeUseCase,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _selectedTagId = MutableStateFlow<Int?>(null)
@@ -46,12 +48,18 @@ class HistoryViewModel(
         .distinctUntilChanged()
 
     val savedBarcodes: Flow<List<BarcodeWithTagsModel>> =
-        combine(_selectedTagId, debouncedQuery, _hideTaggedWhenNoTagSelected) { tagId, query, hideTagged ->
-            Triple(tagId, query, hideTagged)
+        combine(
+            _selectedTagId,
+            debouncedQuery,
+            _hideTaggedWhenNoTagSelected,
+            settingsRepository.searchAcrossAllTagsWhenFiltering
+        ) { tagId, query, hideTagged, searchAcrossAll ->
+            Quad(tagId, query, hideTagged, searchAcrossAll)
         }
-            .flatMapLatest { (tagId, query, hideTagged) ->
+            .flatMapLatest { (tagId, query, hideTagged, searchAcrossAll) ->
                 val q = query.takeIf { it.isNotBlank() }
-                getBarcodesWithTagsUseCase(tagId, q, hideTagged)
+                val effectiveTagId = if (searchAcrossAll && q != null) null else tagId
+                getBarcodesWithTagsUseCase(effectiveTagId, q, hideTagged)
             }
 
     fun onTagSelected(tagId: Int?) {
@@ -78,5 +86,7 @@ class HistoryViewModel(
             deleteBarcodeUseCase(barcode)
         }
     }
-}
 
+    // small data holder for combine result
+    private data class Quad<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
+}

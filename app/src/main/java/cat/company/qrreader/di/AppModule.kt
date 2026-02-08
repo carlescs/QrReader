@@ -9,7 +9,12 @@ import cat.company.qrreader.db.Migrations
 import cat.company.qrreader.domain.repository.BarcodeRepository
 import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.repository.TagRepository
-import cat.company.qrreader.domain.usecase.*
+import cat.company.qrreader.domain.usecase.history.*
+import cat.company.qrreader.domain.usecase.tags.*
+import cat.company.qrreader.domain.usecase.settings.*
+import cat.company.qrreader.domain.usecase.camera.SaveBarcodeUseCase
+import cat.company.qrreader.domain.usecase.codecreator.GenerateQrCodeUseCase
+import cat.company.qrreader.domain.usecase.codecreator.SaveBitmapToMediaStoreUseCase
 import cat.company.qrreader.features.history.presentation.HistoryViewModel
 import cat.company.qrreader.features.tags.presentation.TagsViewModel
 import cat.company.qrreader.features.camera.presentation.QrCameraViewModel
@@ -55,16 +60,18 @@ val useCaseModule = module {
     factory { DeleteTagUseCase(get()) }
     factory { GetHideTaggedSettingUseCase(get()) }
     factory { SetHideTaggedSettingUseCase(get()) }
+    factory { GetSearchAcrossAllTagsUseCase(get()) }
+    factory { SetSearchAcrossAllTagsUseCase(get()) }
     factory { GenerateQrCodeUseCase() }
     factory { SaveBitmapToMediaStoreUseCase() }
 }
 
 val viewModelModule = module {
-    viewModel { HistoryViewModel(get(), get(), get()) }
+    viewModel { HistoryViewModel(get(), get(), get(), get()) }
     viewModel { TagsViewModel(get(), get()) }
     viewModel { QrCameraViewModel() }
-    viewModel { CodeCreatorViewModel(get()) }
-    viewModel { SettingsViewModel(get(), get()) }
+    viewModel { CodeCreatorViewModel(get<GenerateQrCodeUseCase>()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get()) }
 }
 
 // Combine all modules
@@ -74,4 +81,3 @@ val appModules = listOf(
     useCaseModule,
     viewModelModule
 )
-

@@ -2,8 +2,8 @@ package cat.company.qrreader.features.tags.presentation
 
 import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.domain.repository.TagRepository
-import cat.company.qrreader.domain.usecase.DeleteTagUseCase
-import cat.company.qrreader.domain.usecase.GetAllTagsUseCase
+import cat.company.qrreader.domain.usecase.tags.DeleteTagUseCase
+import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

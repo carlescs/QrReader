@@ -3,6 +3,7 @@ package cat.company.qrreader.utils
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.toColorInt
 
 /**
  * Utils class
@@ -15,8 +16,8 @@ class Utils {
          */
         fun parseColor(color: String): Color? {
             return try {
-                Color(android.graphics.Color.parseColor(color))
-            } catch (e: Exception) {
+                Color(color.toColorInt())
+            } catch (_: Exception) {
                 null
             }
         }

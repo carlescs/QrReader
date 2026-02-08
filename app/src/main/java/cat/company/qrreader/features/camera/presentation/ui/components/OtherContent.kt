@@ -17,7 +17,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.domain.model.BarcodeModel
-import cat.company.qrreader.domain.usecase.SaveBarcodeUseCase
+import cat.company.qrreader.domain.usecase.camera.SaveBarcodeUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

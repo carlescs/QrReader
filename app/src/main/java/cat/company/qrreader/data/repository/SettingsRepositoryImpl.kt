@@ -21,14 +21,23 @@ private val Context.dataStore by preferencesDataStore(
  */
 class SettingsRepositoryImpl(private val context: Context) : SettingsRepository {
     private val HIDE_TAGGED_KEY = booleanPreferencesKey("hide_tagged_when_no_tag_selected")
+    private val SEARCH_ACROSS_ALL_TAGS_KEY = booleanPreferencesKey("search_across_all_tags_when_filtering")
 
     override val hideTaggedWhenNoTagSelected: Flow<Boolean> =
         context.dataStore.data.map { prefs -> prefs[HIDE_TAGGED_KEY] ?: false }
+
+    override val searchAcrossAllTagsWhenFiltering: Flow<Boolean> =
+        context.dataStore.data.map { prefs -> prefs[SEARCH_ACROSS_ALL_TAGS_KEY] ?: false }
 
     override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[HIDE_TAGGED_KEY] = value
         }
     }
-}
 
+    override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[SEARCH_ACROSS_ALL_TAGS_KEY] = value
+        }
+    }
+}

@@ -30,7 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.print.PrintHelper
-import cat.company.qrreader.domain.usecase.SaveBitmapToMediaStoreUseCase
+import cat.company.qrreader.domain.usecase.codecreator.SaveBitmapToMediaStoreUseCase
 import cat.company.qrreader.events.SharedEvents
 import cat.company.qrreader.features.codeCreator.presentation.CodeCreatorViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -161,4 +161,3 @@ private fun printQrCode(
 fun CodeCreatorScreenPreview() {
     CodeCreatorScreen()
 }
-

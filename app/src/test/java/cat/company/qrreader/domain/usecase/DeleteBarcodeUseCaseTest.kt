@@ -1,0 +1,36 @@
+package cat.company.qrreader.domain.usecase
+
+import cat.company.qrreader.domain.model.BarcodeModel
+import cat.company.qrreader.domain.model.BarcodeWithTagsModel
+import cat.company.qrreader.domain.model.TagModel
+import cat.company.qrreader.domain.repository.BarcodeRepository
+import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import java.util.Date
+
+class DeleteBarcodeUseCaseTest {
+    @Test
+    fun `calls repository delete`() = runTest {
+        val barcode = BarcodeModel(id = 1, date = Date(), type = 1, format = 1, barcode = "abc")
+        var deleted: BarcodeModel? = null
+        val repo = object : BarcodeRepository {
+            override fun getAllBarcodes(): Flow<List<BarcodeModel>> = flowOf(emptyList())
+            override fun getBarcodesWithTags(): Flow<List<BarcodeWithTagsModel>> = flowOf(emptyList())
+            override fun getBarcodesWithTagsByFilter(tagId: Int?, query: String?, hideTaggedWhenNoTagSelected: Boolean): Flow<List<BarcodeWithTagsModel>> = flowOf(emptyList())
+            override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
+            override suspend fun updateBarcode(barcode: BarcodeModel): Int = 0
+            override suspend fun deleteBarcode(barcode: BarcodeModel) { deleted = barcode }
+            override suspend fun addTagToBarcode(barcodeId: Int, tagId: Int) {}
+            override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
+            override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
+        }
+
+        val uc = DeleteBarcodeUseCase(repo)
+        uc(barcode)
+        assertEquals(barcode, deleted)
+    }
+}

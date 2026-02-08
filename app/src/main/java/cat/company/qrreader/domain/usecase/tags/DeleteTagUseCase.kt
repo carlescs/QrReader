@@ -1,4 +1,4 @@
-package cat.company.qrreader.domain.usecase
+package cat.company.qrreader.domain.usecase.tags
 
 import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.domain.repository.TagRepository

@@ -37,13 +37,15 @@ import cat.company.qrreader.features.history.presentation.HistoryViewModel
 import cat.company.qrreader.features.history.presentation.ui.content.OtherHistoryContent
 import cat.company.qrreader.features.history.presentation.ui.content.UrlHistoryContent
 import cat.company.qrreader.features.tags.presentation.TagsViewModel
-import cat.company.qrreader.ui.components.common.DeleteConfirmDialog
+import org.koin.androidx.compose.koinViewModel
 import cat.company.qrreader.ui.components.common.Tag
+import cat.company.qrreader.ui.components.common.DeleteConfirmDialog
+import cat.company.qrreader.domain.usecase.history.SwitchBarcodeTagUseCase
+import org.koin.compose.koinInject
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
 
 /**
@@ -56,7 +58,8 @@ fun BarcodeCard(
     snackBarHostState: SnackbarHostState,
     sdf: SimpleDateFormat,
     historyViewModel: HistoryViewModel,
-    tagsViewModel: TagsViewModel = koinViewModel()
+    tagsViewModel: TagsViewModel = koinViewModel(),
+    switchBarcodeTagUseCase: SwitchBarcodeTagUseCase = koinInject()
 ) {
     val editOpen = remember { mutableStateOf(false) }
     val confirmDeleteOpen = remember { mutableStateOf(false) }
@@ -118,16 +121,14 @@ fun BarcodeCard(
                         },
                         onClick = {
                             ioCoroutineScope.launch {
-                                // Use use case through repository to switch tag
-                                cat.company.qrreader.domain.usecase.SwitchBarcodeTagUseCase(
-                                    org.koin.java.KoinJavaComponent.get(cat.company.qrreader.domain.repository.BarcodeRepository::class.java)
-                                ).invoke(barcode, tag)
+                                // Use injected use case to switch tag
+                                switchBarcodeTagUseCase.invoke(barcode, tag)
                                 menuOpen.value = false
                             }
                         })
-                }
-            }
-        }
+                 }
+             }
+         }
         Row {
             TextButton(onClick = {
                 confirmDeleteOpen.value = true
@@ -159,4 +160,3 @@ fun BarcodeCard(
         }
     }
 }
-

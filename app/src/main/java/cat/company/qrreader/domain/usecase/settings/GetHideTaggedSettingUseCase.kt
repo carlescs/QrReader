@@ -1,4 +1,4 @@
-package cat.company.qrreader.domain.usecase
+package cat.company.qrreader.domain.usecase.settings
 
 import cat.company.qrreader.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow

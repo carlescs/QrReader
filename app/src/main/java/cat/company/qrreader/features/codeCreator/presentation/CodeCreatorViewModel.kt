@@ -3,7 +3,7 @@ package cat.company.qrreader.features.codeCreator.presentation
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cat.company.qrreader.domain.usecase.GenerateQrCodeUseCase
+import cat.company.qrreader.domain.usecase.codecreator.GenerateQrCodeUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,4 +45,3 @@ class CodeCreatorViewModel(
         _isSharing.value = isSharing
     }
 }
-

@@ -3,9 +3,10 @@ package cat.company.qrreader.features.settings.presentation.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.ListItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -20,6 +21,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val hideTaggedState by viewModel.hideTaggedWhenNoTagSelected.collectAsState(initial = false)
+    val searchAcrossAllState by viewModel.searchAcrossAllTagsWhenFiltering.collectAsState(initial = false)
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         ListItem(
@@ -32,6 +34,16 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
             },
             colors = androidx.compose.material3.ListItemDefaults.colors()
         )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = "Search across all tags when filtering") },
+            supportingContent = { Text(text = "When enabled, typing in the search field will search across all tags even if a particular tag is selected.") },
+            trailingContent = {
+                Switch(checked = searchAcrossAllState, onCheckedChange = { newValue ->
+                    viewModel.setSearchAcrossAllTagsWhenFiltering(newValue)
+                })
+            },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
     }
 }
-

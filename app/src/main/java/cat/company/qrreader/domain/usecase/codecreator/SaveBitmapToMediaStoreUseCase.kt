@@ -1,4 +1,4 @@
-package cat.company.qrreader.domain.usecase
+package cat.company.qrreader.domain.usecase.codecreator
 
 import android.content.ContentValues
 import android.content.Context

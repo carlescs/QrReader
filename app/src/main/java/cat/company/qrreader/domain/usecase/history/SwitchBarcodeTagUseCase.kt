@@ -1,4 +1,4 @@
-package cat.company.qrreader.domain.usecase
+package cat.company.qrreader.domain.usecase.history
 
 import cat.company.qrreader.domain.model.BarcodeWithTagsModel
 import cat.company.qrreader.domain.model.TagModel
