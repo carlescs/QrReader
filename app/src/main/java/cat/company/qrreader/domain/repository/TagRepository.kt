@@ -1,0 +1,31 @@
+package cat.company.qrreader.domain.repository
+
+import cat.company.qrreader.domain.model.TagModel
+import kotlinx.coroutines.flow.Flow
+
+/**
+ * Repository interface for tag operations
+ */
+interface TagRepository {
+
+    /**
+     * Get all tags
+     */
+    fun getAllTags(): Flow<List<TagModel>>
+
+    /**
+     * Insert tags
+     */
+    fun insertTags(vararg tags: TagModel)
+
+    /**
+     * Update a tag
+     */
+    fun updateTag(tag: TagModel)
+
+    /**
+     * Delete a tag
+     */
+    fun deleteTag(tag: TagModel)
+}
+

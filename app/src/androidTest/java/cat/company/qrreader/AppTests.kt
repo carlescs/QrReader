@@ -26,7 +26,7 @@ class AppTests {
             context, BarcodesDb::class.java).build()
         composeTestRule.setContent {
             QrReaderTheme {
-                MainScreen(db = db, firebaseAnalytics = firebaseAnalytics)
+                MainScreen(firebaseAnalytics = firebaseAnalytics)
             }
         }
 

@@ -3,8 +3,8 @@
 kotlinxCoroutinesTest = "1.10.2"
 minSdk = "23"
 targetSdk = "36"
-versionCode = "249"
-versionName = "4.1.1"
+versionCode = "250"
+versionName = "5.0.0"
 
 # Plugins
 agp = "9.0.0"
@@ -52,6 +52,9 @@ robolectric = "4.16.1"
 
 # DataStore
 datastorePreferences = "1.2.0"
+
+# Koin
+koin = "4.1.1"
 
 [libraries]
 # AndroidX Core
@@ -102,6 +105,12 @@ firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics
 
 # DataStore
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastorePreferences" }
+
+# Koin
+koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
+koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }
+koin-test = { group = "io.insert-koin", name = "koin-test", version.ref = "koin" }
+koin-test-junit4 = { group = "io.insert-koin", name = "koin-test-junit4", version.ref = "koin" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

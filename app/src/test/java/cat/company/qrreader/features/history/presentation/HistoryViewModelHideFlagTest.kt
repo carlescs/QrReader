@@ -1,0 +1,89 @@
+package cat.company.qrreader.features.history.presentation
+
+import cat.company.qrreader.domain.model.BarcodeModel
+import cat.company.qrreader.domain.model.BarcodeWithTagsModel
+import cat.company.qrreader.domain.model.TagModel
+import cat.company.qrreader.domain.repository.BarcodeRepository
+import cat.company.qrreader.domain.usecase.DeleteBarcodeUseCase
+import cat.company.qrreader.domain.usecase.GetBarcodesWithTagsUseCase
+import cat.company.qrreader.domain.usecase.UpdateBarcodeUseCase
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class HistoryViewModelHideFlagTest {
+
+    private class FakeBarcodeRepository : BarcodeRepository {
+        private val resultFlow = MutableStateFlow<List<BarcodeWithTagsModel>>(emptyList())
+        var lastRequest: Triple<Int?, String?, Boolean?>? = null
+
+        override fun getAllBarcodes(): Flow<List<BarcodeModel>> = flowOf(emptyList())
+
+        override fun getBarcodesWithTags(): Flow<List<BarcodeWithTagsModel>> = resultFlow
+
+        override fun getBarcodesWithTagsByFilter(
+            tagId: Int?,
+            query: String?,
+            hideTaggedWhenNoTagSelected: Boolean
+        ): Flow<List<BarcodeWithTagsModel>> {
+            lastRequest = Triple(tagId, query, hideTaggedWhenNoTagSelected)
+            return resultFlow
+        }
+
+        override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
+
+        override suspend fun updateBarcode(barcode: BarcodeModel): Int = 0
+
+        override suspend fun deleteBarcode(barcode: BarcodeModel) {}
+
+        override suspend fun addTagToBarcode(barcodeId: Int, tagId: Int) {}
+
+        override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
+
+        override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun savedBarcodes_includes_hide_flag_in_dao_query() = runTest {
+        val fakeRepository = FakeBarcodeRepository()
+        val getBarcodesWithTagsUseCase = GetBarcodesWithTagsUseCase(fakeRepository)
+        val updateBarcodeUseCase = UpdateBarcodeUseCase(fakeRepository)
+        val deleteBarcodeUseCase = DeleteBarcodeUseCase(fakeRepository)
+        val vm = HistoryViewModel(
+            getBarcodesWithTagsUseCase,
+            updateBarcodeUseCase,
+            deleteBarcodeUseCase
+        )
+
+        // Collect savedBarcodes to trigger the Flow
+        val collected = mutableListOf<List<BarcodeWithTagsModel>>()
+        val job = launch { vm.savedBarcodes.collect { collected.add(it) } }
+
+        // Initially hide flag false
+        vm.onTagSelected(null)
+        vm.onQueryChange("")
+        advanceTimeBy(250)
+        runCurrent()
+        assertEquals(false, fakeRepository.lastRequest?.third ?: false)
+
+        // Now set hide flag true and ensure repository gets called with true
+        vm.setHideTaggedWhenNoTagSelected(true)
+        advanceTimeBy(50)
+        runCurrent()
+        // trigger the debounce time to ensure query fires
+        advanceTimeBy(250)
+        runCurrent()
+
+        assertEquals(true, fakeRepository.lastRequest?.third)
+
+        job.cancel()
+    }
+}

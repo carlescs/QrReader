@@ -1,5 +1,7 @@
 package cat.company.qrreader.camera
 
+import cat.company.qrreader.features.camera.presentation.BarcodeState
+import cat.company.qrreader.features.camera.presentation.QrCameraViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest

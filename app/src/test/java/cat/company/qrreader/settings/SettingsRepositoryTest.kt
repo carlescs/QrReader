@@ -2,6 +2,7 @@ package cat.company.qrreader.settings
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import cat.company.qrreader.data.repository.SettingsRepositoryImpl
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -30,14 +31,14 @@ import org.robolectric.annotation.LooperMode
 class SettingsRepositoryTest {
 
     private lateinit var context: Context
-    private lateinit var repository: SettingsRepository
+    private lateinit var repository: SettingsRepositoryImpl
 
     @Before
     fun setup() {
         // Use Robolectric's application context
         // Each test gets its own isolated temp directory automatically
         context = ApplicationProvider.getApplicationContext()
-        repository = SettingsRepository(context)
+        repository = SettingsRepositoryImpl(context)
     }
 
     @After

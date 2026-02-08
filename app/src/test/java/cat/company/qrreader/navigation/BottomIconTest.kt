@@ -1,5 +1,6 @@
 package cat.company.qrreader.navigation
 
+import cat.company.qrreader.ui.components.navigation.items
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test

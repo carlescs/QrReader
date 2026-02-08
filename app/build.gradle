@@ -95,10 +95,16 @@ dependencies {
     // Jetpack DataStore (Preferences)
     implementation libs.androidx.datastore.preferences
 
+    // Koin for dependency injection
+    implementation libs.koin.android
+    implementation libs.koin.androidx.compose
+
     testImplementation libs.junit
     testImplementation libs.kotlinx.coroutines.test
     testImplementation libs.robolectric
     testImplementation libs.androidx.test.core
+    testImplementation libs.koin.test
+    testImplementation libs.koin.test.junit4
     androidTestImplementation libs.androidx.test.ext.junit
     androidTestImplementation libs.androidx.espresso.core
     androidTestImplementation libs.androidx.compose.ui.test.junit4

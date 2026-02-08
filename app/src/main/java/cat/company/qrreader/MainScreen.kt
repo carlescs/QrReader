@@ -47,13 +47,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
-import cat.company.qrreader.camera.QrCamera
-import cat.company.qrreader.codeCreator.CodeCreator
-import cat.company.qrreader.db.BarcodesDb
+import cat.company.qrreader.features.camera.presentation.ui.QrCameraScreen
+import cat.company.qrreader.features.codeCreator.presentation.ui.CodeCreatorScreen
 import cat.company.qrreader.events.SharedEvents
-import cat.company.qrreader.history.History
-import cat.company.qrreader.navigation.items
-import cat.company.qrreader.settings.SettingsScreen
+import cat.company.qrreader.features.history.presentation.ui.History
+import cat.company.qrreader.ui.components.navigation.items
+import cat.company.qrreader.features.settings.presentation.ui.SettingsScreen
 import com.google.firebase.analytics.FirebaseAnalytics
 
 /**
@@ -62,7 +61,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 @ExperimentalGetImage
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun MainScreen(db: BarcodesDb, firebaseAnalytics: FirebaseAnalytics) {
+fun MainScreen(firebaseAnalytics: FirebaseAnalytics) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -138,19 +137,19 @@ fun MainScreen(db: BarcodesDb, firebaseAnalytics: FirebaseAnalytics) {
                         route = "camera",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://camera" })
                     ) {
-                        QrCamera(db, snackBarHostState)
+                        QrCameraScreen(snackBarHostState)
                     }
                     composable("history") {
-                        History(db, snackBarHostState)
+                        History(snackBarHostState)
                     }
                     composable(
                         route="codeCreator",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://codeCreator" })
                     ) {
-                        CodeCreator()
+                        CodeCreatorScreen()
                     }
                     composable("settings") {
-                        SettingsScreen(context = navController.context)
+                        SettingsScreen()
                     }
                 }
             }
