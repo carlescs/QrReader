@@ -15,7 +15,7 @@ class GetBarcodesWithTagsUseCase(private val barcodeRepository: BarcodeRepositor
         hideTaggedWhenNoTagSelected: Boolean
     ): Flow<List<BarcodeWithTagsModel>> {
         return barcodeRepository.getBarcodesWithTagsByFilter(
-            tagId = tagId,
+            tagId = if (query != null && query.trim() == "") tagId else null,
             query = query,
             hideTaggedWhenNoTagSelected = hideTaggedWhenNoTagSelected
         )
