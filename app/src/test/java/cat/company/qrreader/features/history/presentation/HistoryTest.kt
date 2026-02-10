@@ -280,10 +280,10 @@ class HistoryTest {
         val updateBarcodeUseCase = UpdateBarcodeUseCase(fakeRepository)
         val deleteBarcodeUseCase = DeleteBarcodeUseCase(fakeRepository)
         val fakeSettingsRepo = object : cat.company.qrreader.domain.repository.SettingsRepository {
-            override val hideTaggedWhenNoTagSelected: kotlinx.coroutines.flow.Flow<Boolean>
+            override val hideTaggedWhenNoTagSelected: Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
-            override val searchAcrossAllTagsWhenFiltering: kotlinx.coroutines.flow.Flow<Boolean>
+            override val searchAcrossAllTagsWhenFiltering: Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
         }
@@ -305,7 +305,8 @@ class HistoryTest {
 
         // Verify repository received correct parameters
         assertNotNull(fakeRepository.lastRequest)
-        assertEquals(1, fakeRepository.lastRequest?.first) // tagId
+        // When query is non-blank, the use case sets tagId to null
+        assertEquals(null, fakeRepository.lastRequest?.first) // tagId
         assertEquals("test", fakeRepository.lastRequest?.second) // query
         assertEquals(true, fakeRepository.lastRequest?.third) // hideTaggedWhenNoTagSelected
     }
@@ -319,10 +320,10 @@ class HistoryTest {
         val updateBarcodeUseCase = UpdateBarcodeUseCase(fakeRepository)
         val deleteBarcodeUseCase = DeleteBarcodeUseCase(fakeRepository)
         val fakeSettingsRepo = object : cat.company.qrreader.domain.repository.SettingsRepository {
-            override val hideTaggedWhenNoTagSelected: kotlinx.coroutines.flow.Flow<Boolean>
+            override val hideTaggedWhenNoTagSelected: Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
-            override val searchAcrossAllTagsWhenFiltering: kotlinx.coroutines.flow.Flow<Boolean>
+            override val searchAcrossAllTagsWhenFiltering: Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
         }
@@ -349,10 +350,10 @@ class HistoryTest {
         val updateBarcodeUseCase = UpdateBarcodeUseCase(fakeRepository)
         val deleteBarcodeUseCase = DeleteBarcodeUseCase(fakeRepository)
         val fakeSettingsRepo = object : cat.company.qrreader.domain.repository.SettingsRepository {
-            override val hideTaggedWhenNoTagSelected: kotlinx.coroutines.flow.Flow<Boolean>
+            override val hideTaggedWhenNoTagSelected: Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
-            override val searchAcrossAllTagsWhenFiltering: kotlinx.coroutines.flow.Flow<Boolean>
+            override val searchAcrossAllTagsWhenFiltering: Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
         }

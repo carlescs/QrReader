@@ -28,13 +28,16 @@ abstract class SavedBarcodeDao {
             WHERE tagId = :tagId AND barcodeId = saved_barcodes.id
         ))
         AND (
-            :query IS NULL OR :query = '' OR
-            COALESCE(title, '') LIKE '%' || :query || '%' COLLATE NOCASE OR
-            COALESCE(description, '') LIKE '%' || :query || '%' COLLATE NOCASE OR
-            barcode LIKE '%' || :query || '%' COLLATE NOCASE
+            :query IS NULL OR TRIM(:query) = '' OR
+            COALESCE(title, '') LIKE '%' || TRIM(:query) || '%' COLLATE NOCASE OR
+            COALESCE(description, '') LIKE '%' || TRIM(:query) || '%' COLLATE NOCASE OR
+            barcode LIKE '%' || TRIM(:query) || '%' COLLATE NOCASE
         )
         AND (
-            :hideTaggedWhenNoTagSelected = 0 OR :tagId IS NOT NULL OR NOT EXISTS (
+            :hideTaggedWhenNoTagSelected = 0
+            OR :tagId IS NOT NULL
+            OR (:query IS NOT NULL AND TRIM(:query) != '')
+            OR NOT EXISTS (
                 SELECT 1 FROM barcode_tag_cross_ref WHERE barcodeId = saved_barcodes.id
             )
         )
