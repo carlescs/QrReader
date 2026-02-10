@@ -39,7 +39,8 @@ class GetBarcodesWithTagsUseCaseTest {
         val result = uc(42, "q", true).first()
 
         assertEquals(1, recorded.size)
-        assertEquals(42, recorded[0].first)
+        // When query is non-empty, tagId is set to null (text search mode)
+        assertEquals(null, recorded[0].first)
         assertEquals("q", recorded[0].second)
         assertEquals(true, recorded[0].third)
 

@@ -98,7 +98,8 @@ class GetBarcodesWithTagsUseCaseHistoryTest {
         val result = uc(42, null, true).first()
 
         assertEquals(1, recorded.size)
-        assertEquals(null, recorded[0].first)
+        // When query is null (blank), tagId is forwarded
+        assertEquals(42, recorded[0].first)
         assertEquals(null, recorded[0].second)
         assertEquals(true, recorded[0].third)
         assertEquals(listOf(sample), result)
