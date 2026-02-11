@@ -35,7 +35,8 @@ class HistoryViewModelTest {
         override fun getBarcodesWithTagsByFilter(
             tagId: Int?,
             query: String?,
-            hideTaggedWhenNoTagSelected: Boolean
+            hideTaggedWhenNoTagSelected: Boolean,
+            searchAcrossAllTagsWhenFiltering: Boolean
         ): Flow<List<BarcodeWithTagsModel>> {
             lastRequest = Triple(tagId, query, hideTaggedWhenNoTagSelected)
             return resultFlow

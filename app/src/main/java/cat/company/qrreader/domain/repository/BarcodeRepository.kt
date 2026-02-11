@@ -26,7 +26,8 @@ interface BarcodeRepository {
     fun getBarcodesWithTagsByFilter(
         tagId: Int?,
         query: String?,
-        hideTaggedWhenNoTagSelected: Boolean
+        hideTaggedWhenNoTagSelected: Boolean,
+        searchAcrossAllTagsWhenFiltering: Boolean
     ): Flow<List<BarcodeWithTagsModel>>
 
     /**

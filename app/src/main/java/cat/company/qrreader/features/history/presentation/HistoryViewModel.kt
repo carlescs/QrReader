@@ -29,7 +29,7 @@ class HistoryViewModel(
     private val getBarcodesWithTagsUseCase: GetBarcodesWithTagsUseCase,
     private val updateBarcodeUseCase: UpdateBarcodeUseCase,
     private val deleteBarcodeUseCase: DeleteBarcodeUseCase,
-    private val settingsRepository: SettingsRepository
+    settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _selectedTagId = MutableStateFlow<Int?>(null)
@@ -37,8 +37,6 @@ class HistoryViewModel(
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
-
-    private val _hideTaggedWhenNoTagSelected = MutableStateFlow(false)
 
     // Debounce input to avoid querying DB on every keystroke
     @OptIn(FlowPreview::class)
@@ -51,7 +49,7 @@ class HistoryViewModel(
         combine(
             _selectedTagId,
             debouncedQuery,
-            _hideTaggedWhenNoTagSelected,
+            settingsRepository.hideTaggedWhenNoTagSelected,
             settingsRepository.searchAcrossAllTagsWhenFiltering
         ) { tagId, query, hideTagged, searchAcrossAll ->
             Quad(tagId, query, hideTagged, searchAcrossAll)
@@ -59,7 +57,7 @@ class HistoryViewModel(
             .flatMapLatest { (tagId, query, hideTagged, searchAcrossAll) ->
                 val q = query.takeIf { it.isNotBlank() }
                 val effectiveTagId = if (searchAcrossAll && q != null) null else tagId
-                getBarcodesWithTagsUseCase(effectiveTagId, q, hideTagged)
+                getBarcodesWithTagsUseCase(effectiveTagId, q, hideTagged, searchAcrossAll)
             }
 
     fun onTagSelected(tagId: Int?) {
@@ -68,10 +66,6 @@ class HistoryViewModel(
 
     fun onQueryChange(query: String) {
         _searchQuery.value = query
-    }
-
-    fun setHideTaggedWhenNoTagSelected(hide: Boolean) {
-        _hideTaggedWhenNoTagSelected.value = hide
     }
 
     fun updateBarcode(barcode: BarcodeModel) {

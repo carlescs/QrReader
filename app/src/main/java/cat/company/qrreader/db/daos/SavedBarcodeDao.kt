@@ -23,10 +23,14 @@ abstract class SavedBarcodeDao {
     @Query(
         """
         SELECT * FROM saved_barcodes
-        WHERE (:tagId IS NULL OR EXISTS (
-            SELECT 1 FROM barcode_tag_cross_ref
-            WHERE tagId = :tagId AND barcodeId = saved_barcodes.id
-        ))
+        WHERE (
+            :tagId IS NULL 
+            OR (:searchAcrossAllTagsWhenFiltering AND COALESCE(TRIM(:query), '') != '')
+            OR EXISTS (
+                SELECT 1 FROM barcode_tag_cross_ref
+                WHERE tagId = :tagId AND barcodeId = saved_barcodes.id
+            )
+        )
         AND (
             COALESCE(TRIM(:query), '') = '' OR
             title LIKE '%' || TRIM(:query) || '%' COLLATE NOCASE OR
@@ -46,7 +50,8 @@ abstract class SavedBarcodeDao {
     abstract fun getSavedBarcodesWithTagsByTagIdAndQuery(
         tagId: Int?,
         query: String?,
-        hideTaggedWhenNoTagSelected: Boolean
+        hideTaggedWhenNoTagSelected: Boolean,
+        searchAcrossAllTagsWhenFiltering: Boolean
     ): Flow<List<SavedBarcodeWithTags>>
 
     @Insert

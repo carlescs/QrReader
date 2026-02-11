@@ -20,7 +20,7 @@ class UpdateBarcodeUseCaseTest {
         val repo = object : BarcodeRepository {
             override fun getAllBarcodes(): Flow<List<BarcodeModel>> = flowOf(emptyList())
             override fun getBarcodesWithTags(): Flow<List<BarcodeWithTagsModel>> = flowOf(emptyList())
-            override fun getBarcodesWithTagsByFilter(tagId: Int?, query: String?, hideTaggedWhenNoTagSelected: Boolean): Flow<List<BarcodeWithTagsModel>> = flowOf(emptyList())
+            override fun getBarcodesWithTagsByFilter(tagId: Int?, query: String?, hideTaggedWhenNoTagSelected: Boolean, searchAcrossAllTagsWhenFiltering: Boolean): Flow<List<BarcodeWithTagsModel>> = flowOf(emptyList())
             override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
             override suspend fun updateBarcode(barcode: BarcodeModel): Int {
                 lastUpdated = barcode

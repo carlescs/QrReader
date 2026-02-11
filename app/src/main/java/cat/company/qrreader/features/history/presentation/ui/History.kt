@@ -27,7 +27,6 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -158,9 +157,6 @@ private fun HistoryContent(
     val settingsRepo: SettingsRepository = koinInject()
     val hideTagged by settingsRepo.hideTaggedWhenNoTagSelected.collectAsStateWithLifecycle(initialValue = false)
 
-    LaunchedEffect(hideTagged) {
-        viewModel.setHideTaggedWhenNoTagSelected(hideTagged)
-    }
 
     val visibleItems = applyClientSideFilter(items, hideTagged, selectedTagId)
 
@@ -209,7 +205,7 @@ private fun HistoryContent(
  * @param selectedTagId Currently selected tag ID, or null if showing all/filtered items
  * @return Filtered list of barcodes based on tag visibility settings
  *
- * @see HistoryViewModel.setHideTaggedWhenNoTagSelected for the primary filtering mechanism
+ * @see HistoryViewModel.savedBarcodes for the primary filtering mechanism
  */
 private fun applyClientSideFilter(
     items: List<cat.company.qrreader.domain.model.BarcodeWithTagsModel>,

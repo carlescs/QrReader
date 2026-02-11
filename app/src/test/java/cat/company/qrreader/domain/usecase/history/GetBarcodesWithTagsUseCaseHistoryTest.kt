@@ -22,7 +22,7 @@ class GetBarcodesWithTagsUseCaseHistoryTest {
             private val flow = flowOf(listOf(sample))
             override fun getAllBarcodes(): Flow<List<BarcodeModel>> = flowOf(emptyList())
             override fun getBarcodesWithTags(): Flow<List<BarcodeWithTagsModel>> = flow
-            override fun getBarcodesWithTagsByFilter(tagId: Int?, query: String?, hideTaggedWhenNoTagSelected: Boolean): Flow<List<BarcodeWithTagsModel>> {
+            override fun getBarcodesWithTagsByFilter(tagId: Int?, query: String?, hideTaggedWhenNoTagSelected: Boolean, searchAcrossAllTagsWhenFiltering: Boolean): Flow<List<BarcodeWithTagsModel>> {
                 recorded.add(Triple(tagId, query, hideTaggedWhenNoTagSelected))
                 return flow
             }
@@ -35,7 +35,7 @@ class GetBarcodesWithTagsUseCaseHistoryTest {
         }
 
         val uc = GetBarcodesWithTagsUseCase(repo)
-        val result = uc(42, "", true).first()
+        val result = uc(42, "", true, false).first()
 
         assertEquals(1, recorded.size)
         assertEquals(42, recorded[0].first)
@@ -52,7 +52,7 @@ class GetBarcodesWithTagsUseCaseHistoryTest {
             private val flow = flowOf(listOf(sample))
             override fun getAllBarcodes(): Flow<List<BarcodeModel>> = flowOf(emptyList())
             override fun getBarcodesWithTags(): Flow<List<BarcodeWithTagsModel>> = flow
-            override fun getBarcodesWithTagsByFilter(tagId: Int?, query: String?, hideTaggedWhenNoTagSelected: Boolean): Flow<List<BarcodeWithTagsModel>> {
+            override fun getBarcodesWithTagsByFilter(tagId: Int?, query: String?, hideTaggedWhenNoTagSelected: Boolean, searchAcrossAllTagsWhenFiltering: Boolean): Flow<List<BarcodeWithTagsModel>> {
                 recorded.add(Triple(tagId, query, hideTaggedWhenNoTagSelected))
                 return flow
             }
@@ -65,7 +65,7 @@ class GetBarcodesWithTagsUseCaseHistoryTest {
         }
 
         val uc = GetBarcodesWithTagsUseCase(repo)
-        val result = uc(42, "query", false).first()
+        val result = uc(42, "query", false, false).first()
 
         assertEquals(1, recorded.size)
         assertEquals(null, recorded[0].first)
@@ -82,7 +82,7 @@ class GetBarcodesWithTagsUseCaseHistoryTest {
             private val flow = flowOf(listOf(sample))
             override fun getAllBarcodes(): Flow<List<BarcodeModel>> = flowOf(emptyList())
             override fun getBarcodesWithTags(): Flow<List<BarcodeWithTagsModel>> = flow
-            override fun getBarcodesWithTagsByFilter(tagId: Int?, query: String?, hideTaggedWhenNoTagSelected: Boolean): Flow<List<BarcodeWithTagsModel>> {
+            override fun getBarcodesWithTagsByFilter(tagId: Int?, query: String?, hideTaggedWhenNoTagSelected: Boolean, searchAcrossAllTagsWhenFiltering: Boolean): Flow<List<BarcodeWithTagsModel>> {
                 recorded.add(Triple(tagId, query, hideTaggedWhenNoTagSelected))
                 return flow
             }
@@ -95,7 +95,7 @@ class GetBarcodesWithTagsUseCaseHistoryTest {
         }
 
         val uc = GetBarcodesWithTagsUseCase(repo)
-        val result = uc(42, null, true).first()
+        val result = uc(42, null, true, false).first()
 
         assertEquals(1, recorded.size)
         // When query is null (blank), tagId is forwarded

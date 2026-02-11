@@ -51,7 +51,12 @@ class SavedBarcodeDaoRobolectricTest {
         dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = tagged.id, tagId = tag.id))
 
         // Query with non-blank term; no tag selected (tagId = null); hide flag true
-        val results = dao.getSavedBarcodesWithTagsByTagIdAndQuery(tagId = null, query = "ABC", hideTaggedWhenNoTagSelected = true).first()
+        val results = dao.getSavedBarcodesWithTagsByTagIdAndQuery(
+            tagId = null,
+            query = "ABC",
+            hideTaggedWhenNoTagSelected = true,
+            searchAcrossAllTagsWhenFiltering = false
+        ).first()
 
         // We expect the tagged barcode to be returned because query is non-blank
         assertEquals(1, results.size)
@@ -78,7 +83,8 @@ class SavedBarcodeDaoRobolectricTest {
         val results = dao.getSavedBarcodesWithTagsByTagIdAndQuery(
             tagId = null,
             query = null,
-            hideTaggedWhenNoTagSelected = true
+            hideTaggedWhenNoTagSelected = true,
+            searchAcrossAllTagsWhenFiltering = false
         ).first()
 
         // Should only return the untagged barcode
@@ -103,7 +109,8 @@ class SavedBarcodeDaoRobolectricTest {
         val results = dao.getSavedBarcodesWithTagsByTagIdAndQuery(
             tagId = null,
             query = "  ",
-            hideTaggedWhenNoTagSelected = true
+            hideTaggedWhenNoTagSelected = true,
+            searchAcrossAllTagsWhenFiltering = false
         ).first()
 
         // Should only return the untagged barcode (empty/whitespace query = no search)
@@ -128,7 +135,8 @@ class SavedBarcodeDaoRobolectricTest {
         val results = dao.getSavedBarcodesWithTagsByTagIdAndQuery(
             tagId = null,
             query = null,
-            hideTaggedWhenNoTagSelected = false
+            hideTaggedWhenNoTagSelected = false,
+            searchAcrossAllTagsWhenFiltering = false
         ).first()
 
         // Should return both barcodes
@@ -156,7 +164,8 @@ class SavedBarcodeDaoRobolectricTest {
         val results = dao.getSavedBarcodesWithTagsByTagIdAndQuery(
             tagId = null,
             query = "SearchTerm",
-            hideTaggedWhenNoTagSelected = true
+            hideTaggedWhenNoTagSelected = true,
+            searchAcrossAllTagsWhenFiltering = false
         ).first()
 
         // Should return only the 3 matching barcodes, not the non-matching one
@@ -181,15 +190,46 @@ class SavedBarcodeDaoRobolectricTest {
         dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = barcode2Tag1.id, tagId = tag1.id))
         dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = barcode3Tag2.id, tagId = tag2.id))
 
-        // Search for "Find" with tag1 selected
+        // Search for "Find" with tag1 selected, searchAcrossAllTagsWhenFiltering = false
         val results = dao.getSavedBarcodesWithTagsByTagIdAndQuery(
             tagId = 1,
             query = "Find",
-            hideTaggedWhenNoTagSelected = true
+            hideTaggedWhenNoTagSelected = true,
+            searchAcrossAllTagsWhenFiltering = false
         ).first()
 
         // Should return only barcode1Tag1 (has tag1 AND matches "Find")
         assertEquals(1, results.size)
         assertEquals(barcode1Tag1.id, results[0].barcode.id)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `searchAcrossAllTagsWhenFiltering true should ignore tag filter when searching`() = runTest {
+        // Insert barcodes with different tags
+        val tag1 = Tag(id = 1, name = "Tag1", color = "#ff0000")
+        val tag2 = Tag(id = 2, name = "Tag2", color = "#00ff00")
+        val barcode1Tag1 = SavedBarcode(id = 1, date = Date(), type = 1, format = 1, title = "Find Me", barcode = "123")
+        val barcode2Tag1 = SavedBarcode(id = 2, date = Date(), type = 1, format = 1, title = "Other", barcode = "456")
+        val barcode3Tag2 = SavedBarcode(id = 3, date = Date(), type = 1, format = 1, title = "Find Me Too", barcode = "789")
+
+        db.tagDao().insertAll(tag1, tag2)
+        dao.insertAll(barcode1Tag1, barcode2Tag1, barcode3Tag2)
+        dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = barcode1Tag1.id, tagId = tag1.id))
+        dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = barcode2Tag1.id, tagId = tag1.id))
+        dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = barcode3Tag2.id, tagId = tag2.id))
+
+        // Search for "Find" with tag1 selected BUT searchAcrossAllTagsWhenFiltering = true
+        val results = dao.getSavedBarcodesWithTagsByTagIdAndQuery(
+            tagId = 1,
+            query = "Find",
+            hideTaggedWhenNoTagSelected = false,
+            searchAcrossAllTagsWhenFiltering = true
+        ).first()
+
+        // Should return BOTH barcodes that match "Find", ignoring the tag filter
+        assertEquals(2, results.size)
+        val ids = results.map { it.barcode.id }.sorted()
+        assertEquals(listOf(1, 3), ids)
     }
 }

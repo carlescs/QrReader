@@ -49,7 +49,8 @@ class HistoryTest {
         override fun getBarcodesWithTagsByFilter(
             tagId: Int?,
             query: String?,
-            hideTaggedWhenNoTagSelected: Boolean
+            hideTaggedWhenNoTagSelected: Boolean,
+            searchAcrossAllTagsWhenFiltering: Boolean
         ): Flow<List<BarcodeWithTagsModel>> {
             lastRequest = Triple(tagId, query, hideTaggedWhenNoTagSelected)
             return resultFlow
@@ -297,9 +298,6 @@ class HistoryTest {
         viewModel.onTagSelected(1)
         assertEquals(1, viewModel.selectedTagId.value)
 
-        // Test hide flag and collect from savedBarcodes to trigger the flow
-        viewModel.setHideTaggedWhenNoTagSelected(true)
-
         // Collect one value from the flow to trigger the repository query
         viewModel.savedBarcodes.first()
 
@@ -308,7 +306,7 @@ class HistoryTest {
         // When query is non-blank, the use case sets tagId to null
         assertEquals(null, fakeRepository.lastRequest?.first) // tagId
         assertEquals("test", fakeRepository.lastRequest?.second) // query
-        assertEquals(true, fakeRepository.lastRequest?.third) // hideTaggedWhenNoTagSelected
+        assertEquals(false, fakeRepository.lastRequest?.third) // hideTaggedWhenNoTagSelected (from fakeSettingsRepo)
     }
 
     /**

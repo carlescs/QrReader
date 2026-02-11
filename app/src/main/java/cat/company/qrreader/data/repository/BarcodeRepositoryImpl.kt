@@ -33,12 +33,14 @@ class BarcodeRepositoryImpl(database: BarcodesDb) : BarcodeRepository {
     override fun getBarcodesWithTagsByFilter(
         tagId: Int?,
         query: String?,
-        hideTaggedWhenNoTagSelected: Boolean
+        hideTaggedWhenNoTagSelected: Boolean,
+        searchAcrossAllTagsWhenFiltering: Boolean
     ): Flow<List<BarcodeWithTagsModel>> {
         return barcodeDao.getSavedBarcodesWithTagsByTagIdAndQuery(
             tagId = tagId,
             query = query,
-            hideTaggedWhenNoTagSelected = hideTaggedWhenNoTagSelected
+            hideTaggedWhenNoTagSelected = hideTaggedWhenNoTagSelected,
+            searchAcrossAllTagsWhenFiltering = searchAcrossAllTagsWhenFiltering
         ).map { list ->
             list.map { it.toDomainModel() }
         }

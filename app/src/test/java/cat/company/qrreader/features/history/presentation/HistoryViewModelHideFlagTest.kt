@@ -31,7 +31,8 @@ class HistoryViewModelHideFlagTest {
         override fun getBarcodesWithTagsByFilter(
             tagId: Int?,
             query: String?,
-            hideTaggedWhenNoTagSelected: Boolean
+            hideTaggedWhenNoTagSelected: Boolean,
+            searchAcrossAllTagsWhenFiltering: Boolean
         ): Flow<List<BarcodeWithTagsModel>> {
             lastRequest = Triple(tagId, query, hideTaggedWhenNoTagSelected)
             return resultFlow
@@ -57,11 +58,13 @@ class HistoryViewModelHideFlagTest {
         val getBarcodesWithTagsUseCase = GetBarcodesWithTagsUseCase(fakeRepository)
         val updateBarcodeUseCase = UpdateBarcodeUseCase(fakeRepository)
         val deleteBarcodeUseCase = DeleteBarcodeUseCase(fakeRepository)
+
+        val hideTaggedFlow = MutableStateFlow(false)
         val fakeSettingsRepo = object : cat.company.qrreader.domain.repository.SettingsRepository {
-            override val hideTaggedWhenNoTagSelected: kotlinx.coroutines.flow.Flow<Boolean>
-                get() = kotlinx.coroutines.flow.flowOf(false)
+            override val hideTaggedWhenNoTagSelected: Flow<Boolean>
+                get() = hideTaggedFlow
             override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
-            override val searchAcrossAllTagsWhenFiltering: kotlinx.coroutines.flow.Flow<Boolean>
+            override val searchAcrossAllTagsWhenFiltering: Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
         }
@@ -83,8 +86,8 @@ class HistoryViewModelHideFlagTest {
         runCurrent()
         assertEquals(false, fakeRepository.lastRequest?.third ?: false)
 
-        // Now set hide flag true and ensure repository gets called with true
-        vm.setHideTaggedWhenNoTagSelected(true)
+        // Now set hide flag true in settings and ensure repository gets called with true
+        hideTaggedFlow.value = true
         advanceTimeBy(50)
         runCurrent()
         // trigger the debounce time to ensure query fires
