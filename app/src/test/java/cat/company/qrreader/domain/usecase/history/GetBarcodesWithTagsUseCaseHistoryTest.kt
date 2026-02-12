@@ -45,7 +45,7 @@ class GetBarcodesWithTagsUseCaseHistoryTest {
     }
 
     @Test
-    fun `when query is non-empty does not forward tagId to repository`() = runTest {
+    fun `when query is non-empty forwards tagId to repository`() = runTest {
         val recorded = mutableListOf<Triple<Int?, String?, Boolean?>>()
         val sample = BarcodeWithTagsModel(BarcodeModel(id = 2, date = Date(), type = 1, format = 1, barcode = "Y"), emptyList())
         val repo = object : BarcodeRepository {
@@ -68,7 +68,8 @@ class GetBarcodesWithTagsUseCaseHistoryTest {
         val result = uc(42, "query", false, false).first()
 
         assertEquals(1, recorded.size)
-        assertEquals(null, recorded[0].first)
+        // Use case now forwards tagId as-is (ViewModel handles searchAcrossAllTags logic)
+        assertEquals(42, recorded[0].first)
         assertEquals("query", recorded[0].second)
         assertEquals(false, recorded[0].third)
         assertEquals(listOf(sample), result)

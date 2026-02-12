@@ -131,8 +131,8 @@ class HistoryViewModelTest {
         runCurrent()
 
         // Now repository should have been called with trimmed query
-        // When query is non-blank, the use case sets tagId to null
-        assertEquals(null, fakeRepository.lastRequest?.first)
+        // When searchAcrossAllTagsWhenFiltering=false, tagId is preserved even with a query
+        assertEquals(7, fakeRepository.lastRequest?.first)
         assertEquals("abc", fakeRepository.lastRequest?.second)
 
         // Emit a sample result and ensure it's received
