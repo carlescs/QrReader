@@ -303,8 +303,8 @@ class HistoryTest {
 
         // Verify repository received correct parameters
         assertNotNull(fakeRepository.lastRequest)
-        // When query is non-blank, the use case sets tagId to null
-        assertEquals(null, fakeRepository.lastRequest?.first) // tagId
+        // When searchAcrossAllTagsWhenFiltering=false, tagId is preserved even with a query
+        assertEquals(1, fakeRepository.lastRequest?.first) // tagId
         assertEquals("test", fakeRepository.lastRequest?.second) // query
         assertEquals(false, fakeRepository.lastRequest?.third) // hideTaggedWhenNoTagSelected (from fakeSettingsRepo)
     }

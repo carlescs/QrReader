@@ -13,15 +13,14 @@ class GetBarcodesWithTagsUseCase(private val barcodeRepository: BarcodeRepositor
      * Get barcodes with tags filtered by tag and/or text.
      *
      * Behavior:
-     * - If `query` is null or blank (i.e. `query == null || query.isBlank()`), the `tagId`
-     *   is forwarded to the repository and can be used to filter by tag (no active text search).
-     * - If `query` contains non-whitespace characters (is non-blank), `tagId` is set to `null`
-     *   and ignored by the repository; filtering is then based only on `query`
-     *   (and `hideTaggedWhenNoTagSelected`).
+     * - When searchAcrossAllTagsWhenFiltering is true and query is non-blank, searches across all tags
+     * - When searchAcrossAllTagsWhenFiltering is false, respects the tagId filter even when searching
+     * - The ViewModel determines the effective tagId based on the searchAcrossAllTagsWhenFiltering setting
      *
-     * @param tagId ID of the tag to filter by when no non-blank query is provided.
-     * @param query Text query used to filter barcodes; when non-blank, tag filtering is disabled.
-     * @param hideTaggedWhenNoTagSelected Whether to hide tagged items when no tag is effectively selected.
+     * @param tagId ID of the tag to filter by, or null to show all tags
+     * @param query Text query used to filter barcodes
+     * @param hideTaggedWhenNoTagSelected Whether to hide tagged items when no tag is selected
+     * @param searchAcrossAllTagsWhenFiltering Whether to search across all tags when a query is active
      */
     operator fun invoke(
         tagId: Int?,
@@ -30,7 +29,7 @@ class GetBarcodesWithTagsUseCase(private val barcodeRepository: BarcodeRepositor
         searchAcrossAllTagsWhenFiltering: Boolean
     ): Flow<List<BarcodeWithTagsModel>> {
         return barcodeRepository.getBarcodesWithTagsByFilter(
-            tagId = if (query == null || query.isBlank()) tagId else null,
+            tagId = tagId,
             query = query,
             hideTaggedWhenNoTagSelected = hideTaggedWhenNoTagSelected,
             searchAcrossAllTagsWhenFiltering = searchAcrossAllTagsWhenFiltering
