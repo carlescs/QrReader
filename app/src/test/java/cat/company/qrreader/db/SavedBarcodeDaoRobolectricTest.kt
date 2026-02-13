@@ -41,16 +41,17 @@ class SavedBarcodeDaoRobolectricTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `non blank query should return tagged items even when hideTaggedWhenNoTagSelected is true and no tag selected`() = runTest {
-        // Insert a tagged barcode
+    fun `hideTaggedWhenNoTagSelected with query but searchAcrossAllTagsWhenFiltering false should hide tagged items`() = runTest {
+        // Insert tagged and untagged barcodes
         val tagged = SavedBarcode(id = 1, date = Date(), type = 1, format = 1, title = "Tagged", barcode = "ABC123")
+        val untagged = SavedBarcode(id = 2, date = Date(), type = 1, format = 1, title = "Untagged", barcode = "ABC456")
         val tag = Tag(id = 1, name = "T", color = "#fff")
-        // Call DAO suspend methods
+
         db.tagDao().insertAll(tag)
-        dao.insertAll(tagged)
+        dao.insertAll(tagged, untagged)
         dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = tagged.id, tagId = tag.id))
 
-        // Query with non-blank term; no tag selected (tagId = null); hide flag true
+        // Query with non-blank term; no tag selected (tagId = null); hide flag true; searchAcrossAllTagsWhenFiltering = false
         val results = dao.getSavedBarcodesWithTagsByTagIdAndQuery(
             tagId = null,
             query = "ABC",
@@ -58,13 +59,37 @@ class SavedBarcodeDaoRobolectricTest {
             searchAcrossAllTagsWhenFiltering = false
         ).first()
 
-        // We expect the tagged barcode to be returned because query is non-blank
+        // Should hide tagged items because searchAcrossAllTagsWhenFiltering is false
+        // Only the untagged barcode should be returned
         assertEquals(1, results.size)
-        val result = results[0]
-        assertEquals(tagged.id, result.barcode.id)
-        // ensure tag is present
-        assertEquals(1, result.tags.size)
-        assertEquals(tag.id, result.tags[0].id)
+        assertEquals(untagged.id, results[0].barcode.id)
+        assertEquals(0, results[0].tags.size)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `hideTaggedWhenNoTagSelected with query and searchAcrossAllTagsWhenFiltering true should show tagged items`() = runTest {
+        // Insert tagged and untagged barcodes
+        val tagged = SavedBarcode(id = 1, date = Date(), type = 1, format = 1, title = "Tagged", barcode = "ABC123")
+        val untagged = SavedBarcode(id = 2, date = Date(), type = 1, format = 1, title = "Untagged", barcode = "ABC456")
+        val tag = Tag(id = 1, name = "T", color = "#fff")
+
+        db.tagDao().insertAll(tag)
+        dao.insertAll(tagged, untagged)
+        dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = tagged.id, tagId = tag.id))
+
+        // Query with non-blank term; no tag selected (tagId = null); hide flag true; searchAcrossAllTagsWhenFiltering = true
+        val results = dao.getSavedBarcodesWithTagsByTagIdAndQuery(
+            tagId = null,
+            query = "ABC",
+            hideTaggedWhenNoTagSelected = true,
+            searchAcrossAllTagsWhenFiltering = true
+        ).first()
+
+        // Should show ALL matching items (both tagged and untagged) because searchAcrossAllTagsWhenFiltering is true
+        assertEquals(2, results.size)
+        val ids = results.map { it.barcode.id }.sorted()
+        assertEquals(listOf(1, 2), ids)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -160,12 +185,12 @@ class SavedBarcodeDaoRobolectricTest {
         dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = taggedInBarcode.id, tagId = tag.id))
         dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = notMatching.id, tagId = tag.id))
 
-        // Search for "SearchTerm" with hideTaggedWhenNoTagSelected = true
+        // Search for "SearchTerm" with hideTaggedWhenNoTagSelected = true and searchAcrossAllTagsWhenFiltering = true
         val results = dao.getSavedBarcodesWithTagsByTagIdAndQuery(
             tagId = null,
             query = "SearchTerm",
             hideTaggedWhenNoTagSelected = true,
-            searchAcrossAllTagsWhenFiltering = false
+            searchAcrossAllTagsWhenFiltering = true
         ).first()
 
         // Should return only the 3 matching barcodes, not the non-matching one

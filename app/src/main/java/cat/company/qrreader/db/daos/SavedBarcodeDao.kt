@@ -24,26 +24,30 @@ abstract class SavedBarcodeDao {
         """
         SELECT * FROM saved_barcodes
         WHERE (
-            :tagId IS NULL 
-            OR (:searchAcrossAllTagsWhenFiltering AND COALESCE(TRIM(:query), '') != '')
-            OR EXISTS (
-                SELECT 1 FROM barcode_tag_cross_ref
-                WHERE tagId = :tagId AND barcodeId = saved_barcodes.id
+            -- When searching across all tags with a query, bypass all filters except the search itself
+            (:searchAcrossAllTagsWhenFiltering AND COALESCE(TRIM(:query), '') != '')
+            OR (
+                -- Tag filter: show all if no tag selected, or only those with the selected tag
+                (:tagId IS NULL OR EXISTS (
+                    SELECT 1 FROM barcode_tag_cross_ref
+                    WHERE tagId = :tagId AND barcodeId = saved_barcodes.id
+                ))
+                AND (
+                    -- Hide tagged items filter: only apply when flag is true, no tag selected, and not a "tagged item"
+                    NOT :hideTaggedWhenNoTagSelected
+                    OR :tagId IS NOT NULL
+                    OR NOT EXISTS (
+                        SELECT 1 FROM barcode_tag_cross_ref WHERE barcodeId = saved_barcodes.id
+                    )
+                )
             )
         )
         AND (
+            -- Search filter: match query in title, description, or barcode
             COALESCE(TRIM(:query), '') = '' OR
             title LIKE '%' || TRIM(:query) || '%' COLLATE NOCASE OR
             description LIKE '%' || TRIM(:query) || '%' COLLATE NOCASE OR
             barcode LIKE '%' || TRIM(:query) || '%' COLLATE NOCASE
-        )
-        AND (
-            NOT :hideTaggedWhenNoTagSelected
-            OR :tagId IS NOT NULL
-            OR COALESCE(TRIM(:query), '') != ''
-            OR NOT EXISTS (
-                SELECT 1 FROM barcode_tag_cross_ref WHERE barcodeId = saved_barcodes.id
-            )
         )
         """
     )
