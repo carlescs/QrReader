@@ -369,13 +369,19 @@ Primary CI/CD configured in `.github/workflows/android-ci-cd.yml`:
 - **VM Image**: ubuntu-latest
 - **Java Version**: 21
 
+**Build Optimization (2026):**
+- Uses `gradle/actions/setup-gradle@v4` for intelligent Gradle caching
+- Uses `gradle/actions/wrapper-validation@v4` for security validation
+- Configuration cache enabled for faster incremental builds
+- Superior performance compared to manual `actions/cache`
+
 **Required Secrets for Publishing:**
 - `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` - Service account for Play Store API
 - `KEYSTORE_BASE64` - Base64-encoded keystore for signing
 - `KEYSTORE_PASSWORD` - Keystore password
 - `KEY_ALIAS` - Key alias in keystore
 
-See [.github/CICD.md](.github/CICD.md) for detailed setup instructions.
+See [.github/CICD.md](.github/CICD.md) for detailed setup instructions and best practices.
 
 ### Azure Pipelines (Legacy)
 

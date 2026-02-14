@@ -6,6 +6,26 @@ This document describes the CI/CD pipeline configuration for the QR Reader Andro
 
 The project uses GitHub Actions for continuous integration and deployment. The main workflow is defined in `.github/workflows/android-ci-cd.yml`.
 
+## Key Technologies
+
+### Gradle Build Actions
+The workflow uses the official [Gradle Actions](https://github.com/gradle/actions) for optimal build performance:
+
+- **gradle/actions/wrapper-validation@v4**: Validates the Gradle wrapper for security
+- **gradle/actions/setup-gradle@v4**: Sets up Gradle with intelligent caching
+  - Automatically caches Gradle User Home directory
+  - Caches configuration cache for faster incremental builds
+  - Provides dependency graph for Dependabot alerts
+  - Superior to manual caching with `actions/cache`
+
+### Action Versions (2026 Best Practices)
+All actions are pinned to specific versions for security and reproducibility:
+
+- Core Actions: `actions/checkout@v4`, `actions/setup-java@v4`, `actions/upload-artifact@v4`
+- Testing: `EnricoMi/publish-unit-test-result-action@v2.22.0`
+- Coverage: `codecov/codecov-action@v4`
+- Publishing: `r0adkll/upload-google-play@v1.1.3`
+
 ## Workflow Jobs
 
 ### 1. Test Job
@@ -143,8 +163,87 @@ To test the build locally:
 ./gradlew jacocoTestReport
 ```
 
+## GitHub Actions Best Practices (2026)
+
+### Caching Strategy
+The workflow uses the official Gradle Actions for optimal caching:
+- **gradle/actions/setup-gradle**: Provides superior caching compared to manual `actions/cache`
+- Automatically caches Gradle User Home directory
+- Caches configuration cache for faster incremental builds
+- Generates dependency graphs for Dependabot security alerts
+
+**Why not `actions/setup-java` with `cache: 'gradle'`?**
+- The Gradle-specific action provides more efficient caching
+- Supports configuration cache (critical for Android builds)
+- Better cache hit rates and faster builds
+- Recommended by both Gradle and GitHub communities
+
+### Security Practices
+- **Gradle Wrapper Validation**: Validates wrapper JARs against known checksums to prevent supply chain attacks
+- **Version Pinning**: All actions pinned to specific versions (e.g., `@v4`, `@v2.22.0`)
+- **Minimal Permissions**: Workflow uses principle of least privilege for permissions
+- **Secret Handling**: Secrets validated before use, never logged or exposed
+
+### Alternative Publishing Options
+
+While the workflow uses `r0adkll/upload-google-play@v1.1.3`, alternatives include:
+
+**Fastlane**
+- More flexible and feature-rich
+- Supports complex release workflows
+- Better for teams managing iOS and Android
+- Supports Workload Identity Federation (keyless auth)
+- Requires Ruby environment and Fastfile configuration
+
+**Custom Scripts**
+- Maximum control over publishing process
+- Uses Google Play Developer API directly
+- Higher maintenance overhead
+- Best for specific enterprise requirements
+
+**Current Choice: r0adkll/upload-google-play**
+- Native GitHub Actions integration
+- Easy to configure and maintain
+- Well-maintained and widely adopted
+- Sufficient for most Android projects
+
+## Performance Optimizations
+
+### Build Time Improvements
+1. **Gradle caching**: Configured via `gradle/actions/setup-gradle`
+2. **Parallel execution**: Gradle runs tests and builds in parallel where possible
+3. **Incremental builds**: Configuration cache enabled for faster subsequent builds
+4. **Artifact reuse**: Build artifacts shared between jobs to avoid rebuilds
+
+### CI/CD Pipeline Efficiency
+- Test and build jobs run in parallel where dependencies allow
+- Artifacts uploaded/downloaded only when needed
+- Conditional job execution (release/promote only on master branch)
+- SonarCloud analysis runs with `continue-on-error` to prevent blocking deployments
+
+## Maintenance Guidelines
+
+### Updating Actions
+Check for new versions quarterly:
+```bash
+# Check current versions
+grep 'uses:' .github/workflows/android-ci-cd.yml
+
+# Update to latest
+# - Review changelogs for breaking changes
+# - Test in a branch before merging to master
+# - Pin to specific versions, not tags like @latest
+```
+
+### Monitoring Build Performance
+- Review Gradle Build Scans for performance insights
+- Monitor cache hit rates in workflow logs
+- Track build times trends over time
+
 ## References
 
+- [Gradle Actions Documentation](https://github.com/gradle/actions)
 - [r0adkll/upload-google-play Action](https://github.com/r0adkll/upload-google-play)
 - [Google Play Developer API](https://developers.google.com/android-publisher)
+- [GitHub Actions Best Practices](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions)
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
