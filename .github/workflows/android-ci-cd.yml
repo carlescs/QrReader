@@ -8,6 +8,13 @@ on:
     branches:
       - master
 
+# Required permissions for the workflow
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+  statuses: write
+
 env:
   JAVA_VERSION: '21'
   JAVA_DISTRIBUTION: 'temurin'
@@ -39,8 +46,18 @@ jobs:
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
+        continue-on-error: true
         with:
-          files: '**/TEST-*.xml'
+          files: '**/test-results/**/*.xml'
+          check_name: 'Unit Test Results'
+          comment_mode: off
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: '**/test-results/**/*.xml'
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -86,20 +103,43 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Build release bundle with SonarCloud analysis
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: coverage-reports
+          path: app/build/reports/jacoco/jacocoTestReport/
+
+      - name: Build release bundle
+        run: ./gradlew bundleRelease --no-configuration-cache
+
+      - name: Run SonarCloud analysis
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        if: env.SONAR_TOKEN != ''
+        continue-on-error: true
         run: |
-          ./gradlew bundleRelease \
-            -Dsonar.projectKey=carles-cs_QrReader \
-            -Dsonar.projectName=QrReader \
-            -Dsonar.organization=carles-cs \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.coverage.jacoco.xmlReportPaths=app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml \
-            --no-configuration-cache \
-            --rerun-tasks \
-            sonar
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # For pull requests, use branch analysis instead of PR analysis
+            # PR analysis requires the PR to exist in SonarCloud first
+            ./gradlew sonar \
+              -Dsonar.projectKey=carles-cs_QrReader \
+              -Dsonar.projectName=QrReader \
+              -Dsonar.organization=carles-cs \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.branch.name=${{ github.head_ref }} \
+              -Dsonar.coverage.jacoco.xmlReportPaths=app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml \
+              --no-configuration-cache
+          else
+            ./gradlew sonar \
+              -Dsonar.projectKey=carles-cs_QrReader \
+              -Dsonar.projectName=QrReader \
+              -Dsonar.organization=carles-cs \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.coverage.jacoco.xmlReportPaths=app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml \
+              --no-configuration-cache
+          fi
 
       - name: Upload unsigned bundle
         uses: actions/upload-artifact@v4
@@ -109,17 +149,18 @@ jobs:
           path: app/build/outputs/bundle/release/*.aab
 
       - name: Decode keystore
-        if: github.ref == 'refs/heads/master'
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        if: github.ref == 'refs/heads/master' && env.KEYSTORE_BASE64 != ''
         run: |
           echo "$KEYSTORE_BASE64" | base64 -d > ${{ runner.temp }}/debugkeystore.jks
 
       - name: Sign bundle
-        if: github.ref == 'refs/heads/master'
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        if: github.ref == 'refs/heads/master' && env.KEYSTORE_BASE64 != ''
         run: |
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
             -keystore ${{ runner.temp }}/debugkeystore.jks \
@@ -128,7 +169,9 @@ jobs:
             $KEY_ALIAS
 
       - name: Upload signed bundle
-        if: github.ref == 'refs/heads/master'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        if: github.ref == 'refs/heads/master' && env.KEYSTORE_BASE64 != ''
         uses: actions/upload-artifact@v4
         with:
           name: app-bundle-signed
