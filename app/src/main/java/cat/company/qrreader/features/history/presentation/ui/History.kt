@@ -39,14 +39,12 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.events.SharedEvents
 import cat.company.qrreader.features.history.presentation.HistoryViewModel
 import cat.company.qrreader.features.history.presentation.ui.components.BarcodeCard
 import cat.company.qrreader.features.history.presentation.ui.components.HistoryModalDrawerContent
 import cat.company.qrreader.features.history.presentation.ui.components.SimpleBarcodeCard
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -124,15 +122,15 @@ private fun HistoryDrawerSetup(drawerState: androidx.compose.runtime.MutableStat
  * Main content of history screen with search and results.
  *
  * Orchestrates the main UI components including the search bar and results list.
- * Manages state collection from the ViewModel and settings, applies client-side filtering
- * based on tag visibility settings, and delegates rendering to specialized composables.
+ * Manages state collection from the ViewModel and delegates rendering to specialized composables.
  *
  * This composable:
  * - Collects barcode items and search query from ViewModel
- * - Observes tag visibility settings from SettingsRepository
- * - Applies client-side filtering when needed
  * - Renders search bar with all barcode items (for search suggestions)
  * - Renders filtered results list below search bar
+ *
+ * Note: All filtering logic (tag filtering, search queries, hideTaggedWhenNoTagSelected)
+ * is handled at the database level via the ViewModel and repository.
  *
  * @param snackbarHostState SnackbarHostState for user feedback messages
  * @param viewModel HistoryViewModel managing barcode list state and search query
@@ -140,7 +138,6 @@ private fun HistoryDrawerSetup(drawerState: androidx.compose.runtime.MutableStat
  *
  * @see HistorySearchBar for the search interface
  * @see HistoryResults for the results display
- * @see applyClientSideFilter for the filtering logic
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -154,11 +151,6 @@ private fun HistoryContent(
     val query by viewModel.searchQuery.collectAsStateWithLifecycle()
     var searchActive by rememberSaveable { mutableStateOf(false) }
 
-    val settingsRepo: SettingsRepository = koinInject()
-    val hideTagged by settingsRepo.hideTaggedWhenNoTagSelected.collectAsStateWithLifecycle(initialValue = false)
-
-
-    val visibleItems = applyClientSideFilter(items, hideTagged, selectedTagId)
 
     Column(modifier = Modifier.fillMaxSize()) {
         val clipboard: Clipboard = LocalClipboard.current
@@ -176,7 +168,7 @@ private fun HistoryContent(
         HistoryResults(
             searchActive = searchActive,
             displayData = BarcodeDisplayData(
-                visibleItems = visibleItems,
+                visibleItems = items,
                 query = query,
                 sdf = sdf
             ),
@@ -190,32 +182,6 @@ private fun HistoryContent(
     }
 }
 
-/**
- * Apply client-side filtering based on tag visibility settings.
- *
- * This is a fallback filter that runs on the UI side after the database query.
- * When [hideTagged] is true and no specific tag is selected, it filters out all
- * barcodes that have any tags attached, showing only untagged items.
- *
- * Note: The primary filtering happens at the database level via the ViewModel.
- * This client-side filter acts as an additional safety layer.
- *
- * @param items The full list of barcode items from the database query
- * @param hideTagged User preference for hiding tagged items when no tag filter is active
- * @param selectedTagId Currently selected tag ID, or null if showing all/filtered items
- * @return Filtered list of barcodes based on tag visibility settings
- *
- * @see HistoryViewModel.savedBarcodes for the primary filtering mechanism
- */
-private fun applyClientSideFilter(
-    items: List<cat.company.qrreader.domain.model.BarcodeWithTagsModel>,
-    hideTagged: Boolean,
-    selectedTagId: Int?
-) = if (hideTagged && selectedTagId == null) {
-    items.filter { it.tags.isEmpty() }
-} else {
-    items
-}
 
 /**
  * Search bar component with integrated search functionality.

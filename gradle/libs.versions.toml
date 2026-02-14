@@ -3,11 +3,11 @@
 kotlinxCoroutinesTest = "1.10.2"
 minSdk = "23"
 targetSdk = "36"
-versionCode = "256"
-versionName = "5.1.5"
+versionCode = "257"
+versionName = "5.1.6"
 
 # Plugins
-agp = "9.0.0"
+agp = "9.0.1"
 kotlin = "2.3.10"
 ksp = "2.3.2"
 sonarqube = "7.2.2.6593"
