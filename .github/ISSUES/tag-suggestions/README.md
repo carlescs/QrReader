@@ -2,11 +2,58 @@
 
 This directory contains Product Backlog Items (PBIs) for implementing the AI-powered tag suggestions feature using ML Kit GenAI with Gemini Nano.
 
-## Quick Start
+## 🚀 Quick Start - Multiple Options
 
-Copy each PBI file content into a new GitHub issue on the repository. The files are numbered in the recommended implementation order.
+Choose the method that works best for you:
+
+### Option 1: Python Script (Recommended - Automated)
+```bash
+# Install requirements
+pip install requests
+
+# Set your GitHub token
+export GITHUB_TOKEN="your_token_here"
+
+# Run the script
+python3 ..create_github_issues.py
+```
+
+### Option 2: Bash Script (Alternative - Automated)
+```bash
+# Requires GitHub CLI (gh)
+gh auth login
+../create-issues.sh
+```
+
+### Option 3: Web Interface (Interactive)
+Open `../create-issues.html` in your browser for a visual interface to create issues.
+
+### Option 4: Manual (Step-by-Step)
+See detailed instructions in `../MANUAL_ISSUE_CREATION.md`
 
 ## Issue Creation Instructions
+
+### Automated Method (Recommended)
+
+1. Get a GitHub Personal Access Token:
+   - Go to https://github.com/settings/tokens
+   - Click "Generate new token (classic)"
+   - Select `repo` scope
+   - Copy the token
+
+2. Run the Python script:
+   ```bash
+   export GITHUB_TOKEN="your_token_here"
+   python3 ../create_github_issues.py
+   ```
+
+The script will automatically:
+- ✅ Create all necessary labels
+- ✅ Create all 11 issues in order
+- ✅ Apply proper labels to each issue
+- ✅ Provide links to created issues
+
+### Manual Method
 
 1. Go to your GitHub repository: https://github.com/carlescs/QrReader/issues
 2. Click "New Issue"

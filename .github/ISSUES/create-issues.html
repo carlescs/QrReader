@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create GitHub Issues - Tag Suggestions Feature</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: #161b22;
+            padding: 30px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            border: 1px solid #30363d;
+        }
+        
+        h1 {
+            color: #58a6ff;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #8b949e;
+            font-size: 14px;
+        }
+        
+        .setup-section {
+            background: #161b22;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #30363d;
+        }
+        
+        .setup-section h2 {
+            color: #58a6ff;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .token-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 8px 12px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #c9d1d9;
+            font-size: 14px;
+        }
+        
+        button {
+            padding: 8px 16px;
+            background: #238636;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        button:hover {
+            background: #2ea043;
+        }
+        
+        button:disabled {
+            background: #21262d;
+            color: #484f58;
+            cursor: not-allowed;
+        }
+        
+        .issues-grid {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .issue-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            transition: border-color 0.2s;
+        }
+        
+        .issue-card:hover {
+            border-color: #58a6ff;
+        }
+        
+        .issue-card.created {
+            border-color: #238636;
+            background: #0d1117;
+        }
+        
+        .issue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+        
+        .issue-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #c9d1d9;
+        }
+        
+        .issue-meta {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-sp {
+            background: #1f6feb;
+            color: white;
+        }
+        
+        .badge-label {
+            background: #30363d;
+            color: #c9d1d9;
+        }
+        
+        .issue-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-create {
+            background: #238636;
+        }
+        
+        .btn-view {
+            background: #1f6feb;
+        }
+        
+        .btn-copy {
+            background: #6e7681;
+        }
+        
+        .status-icon {
+            font-size: 20px;
+            margin-right: 5px;
+        }
+        
+        .success {
+            color: #3fb950;
+        }
+        
+        .pending {
+            color: #f85149;
+        }
+        
+        .info-box {
+            background: #1f6feb20;
+            border: 1px solid #1f6feb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+        
+        .info-box a:hover {
+            text-decoration: underline;
+        }
+        
+        .progress-bar {
+            background: #21262d;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .progress-fill {
+            background: #238636;
+            height: 100%;
+            transition: width 0.3s;
+        }
+        
+        code {
+            background: #0d1117;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Create GitHub Issues</h1>
+            <p class="subtitle">Tag Suggestions Feature - 11 Product Backlog Items (41 Story Points)</p>
+        </header>
+        
+        <div class="setup-section">
+            <h2>⚙️ Setup</h2>
+            <div class="info-box">
+                <strong>📝 Note:</strong> This tool requires a GitHub Personal Access Token with <code>repo</code> scope.
+                <br>Create one at: <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a>
+            </div>
+            <div class="token-input-group">
+                <input type="text" id="githubToken" placeholder="Paste your GitHub token here (ghp_...)" />
+                <button onclick="verifyToken()">Verify Token</button>
+            </div>
+            <p style="font-size: 12px; color: #8b949e;">Your token is only stored in your browser and never sent anywhere except GitHub's API.</p>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+        </div>
+        
+        <div class="issues-grid" id="issuesGrid">
+            <!-- Issues will be populated by JavaScript -->
+        </div>
+    </div>
+    
+    <script>
+        const REPO_OWNER = 'carlescs';
+        const REPO_NAME = 'QrReader';
+        
+        const ISSUES = [
+            {
+                number: 1,
+                title: 'PBI #1: Add ML Kit GenAI Dependency and Configuration',
+                file: 'PBI-01-dependencies.md',
+                labels: ['enhancement', 'dependencies', 'setup'],
+                sp: 2,
+                status: 'pending'
+            },
+            {
+                number: 2,
+                title: 'PBI #2: Create GeminiNanoService for On-Device AI',
+                file: 'PBI-02-gemini-service.md',
+                labels: ['enhancement', 'core', 'ml'],
+                sp: 5,
+                status: 'pending'
+            },
+            {
+                number: 3,
+                title: 'PBI #3: Define Domain Models and Repository Interface',
+                file: 'PBI-03-domain-models.md',
+                labels: ['enhancement', 'domain', 'architecture'],
+                sp: 3,
+                status: 'pending'
+            },
+            {
+                number: 4,
+                title: 'PBI #4: Implement Use Cases for Tag Suggestions',
+                file: 'PBI-04-use-cases.md',
+                labels: ['enhancement', 'domain', 'use-case'],
+                sp: 3,
+                status: 'pending'
+            },
+            {
+                number: 5,
+                title: 'PBI #5: Implement TagSuggestionRepository',
+                file: 'PBI-05-repository-impl.md',
+                labels: ['enhancement', 'data', 'repository'],
+                sp: 5,
+                status: 'pending'
+            },
+            {
+                number: 6,
+                title: 'PBI #6: Update Camera Feature with Tag Suggestions',
+                file: 'PBI-06-camera-integration.md',
+                labels: ['enhancement', 'ui', 'feature', 'camera'],
+                sp: 5,
+                status: 'pending'
+            },
+            {
+                number: 7,
+                title: 'PBI #7: Update Code Creator Feature with Tag Suggestions',
+                file: 'PBI-07-creator-integration.md',
+                labels: ['enhancement', 'ui', 'feature', 'code-creator'],
+                sp: 5,
+                status: 'pending'
+            },
+            {
+                number: 8,
+                title: 'PBI #8: Add Settings Toggle for Tag Suggestions',
+                file: 'PBI-08-settings-toggle.md',
+                labels: ['enhancement', 'settings', 'ui'],
+                sp: 3,
+                status: 'pending'
+            },
+            {
+                number: 9,
+                title: 'PBI #9: Write Comprehensive Unit Tests',
+                file: 'PBI-09-unit-tests.md',
+                labels: ['testing', 'quality', 'unit-tests'],
+                sp: 5,
+                status: 'pending'
+            },
+            {
+                number: 10,
+                title: 'PBI #10: Add UI/Instrumentation Tests',
+                file: 'PBI-10-ui-tests.md',
+                labels: ['testing', 'ui', 'instrumentation'],
+                sp: 3,
+                status: 'pending'
+            },
+            {
+                number: 11,
+                title: 'PBI #11: Update Documentation',
+                file: 'PBI-11-documentation.md',
+                labels: ['documentation'],
+                sp: 2,
+                status: 'pending'
+            }
+        ];
+        
+        function renderIssues() {
+            const grid = document.getElementById('issuesGrid');
+            grid.innerHTML = ISSUES.map(issue => `
+                <div class="issue-card ${issue.status === 'created' ? 'created' : ''}" id="issue-${issue.number}">
+                    <div class="issue-header">
+                        <div>
+                            <div class="issue-title">
+                                <span class="status-icon ${issue.status === 'created' ? 'success' : 'pending'}">
+                                    ${issue.status === 'created' ? '✓' : '○'}
+                                </span>
+                                ${issue.title}
+                            </div>
+                            <div class="issue-meta">
+                                <span class="badge badge-sp">${issue.sp} SP</span>
+                                ${issue.labels.map(label => `<span class="badge badge-label">${label}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="issue-actions">
+                        <button class="btn-create" onclick="createIssue(${issue.number})" ${issue.status === 'created' ? 'disabled' : ''}>
+                            ${issue.status === 'created' ? 'Created ✓' : 'Create Issue'}
+                        </button>
+                        ${issue.issueUrl ? `<button class="btn-view" onclick="window.open('${issue.issueUrl}', '_blank')">View Issue</button>` : ''}
+                        <button class="btn-copy" onclick="copyToClipboard(${issue.number})">Copy Content</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateProgress();
+        }
+        
+        function updateProgress() {
+            const created = ISSUES.filter(i => i.status === 'created').length;
+            const total = ISSUES.length;
+            const percentage = (created / total) * 100;
+            document.getElementById('progressBar').style.width = `${percentage}%`;
+        }
+        
+        async function verifyToken() {
+            const token = document.getElementById('githubToken').value.trim();
+            if (!token) {
+                alert('Please enter a GitHub token');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`, {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`✓ Token verified!\n\nRepository: ${data.full_name}\nIssues enabled: ${data.has_issues}\n\nYou can now create issues.`);
+                    localStorage.setItem('githubToken', token);
+                } else {
+                    alert(`✗ Token verification failed\n\nStatus: ${response.status}\n\nPlease check your token and permissions.`);
+                }
+            } catch (error) {
+                alert(`✗ Error: ${error.message}`);
+            }
+        }
+        
+        async function createIssue(issueNumber) {
+            const token = localStorage.getItem('githubToken') || document.getElementById('githubToken').value.trim();
+            if (!token) {
+                alert('Please set up your GitHub token first');
+                return;
+            }
+            
+            const issue = ISSUES.find(i => i.number === issueNumber);
+            if (!issue) return;
+            
+            // For demo purposes, we'll show manual URL
+            // In real implementation, you'd need to load the PBI file content
+            const manualUrl = `https://github.com/${REPO_OWNER}/${REPO_NAME}/issues/new?title=${encodeURIComponent(issue.title)}&labels=${issue.labels.join(',')}`;
+            
+            window.open(manualUrl, '_blank');
+            
+            // Mark as potentially created (user would need to confirm)
+            setTimeout(() => {
+                if (confirm('Did you successfully create the issue?')) {
+                    issue.status = 'created';
+                    renderIssues();
+                }
+            }, 2000);
+        }
+        
+        function copyToClipboard(issueNumber) {
+            const issue = ISSUES.find(i => i.number === issueNumber);
+            if (!issue) return;
+            
+            // Copy issue details to clipboard
+            const text = `Title: ${issue.title}\nLabels: ${issue.labels.join(', ')}\nStory Points: ${issue.sp}\n\nFile: .github/ISSUES/tag-suggestions/${issue.file}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Issue details copied to clipboard!');
+            });
+        }
+        
+        function createAllIssues() {
+            if (!confirm('This will open 11 browser tabs to create all issues. Continue?')) {
+                return;
+            }
+            
+            ISSUES.forEach((issue, index) => {
+                setTimeout(() => createIssue(issue.number), index * 1000);
+            });
+        }
+        
+        // Initialize
+        renderIssues();
+        
+        // Load saved token
+        const savedToken = localStorage.getItem('githubToken');
+        if (savedToken) {
+            document.getElementById('githubToken').value = savedToken;
+        }
+    </script>
+</body>
+</html>
