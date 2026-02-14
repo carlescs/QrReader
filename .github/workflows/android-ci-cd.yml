@@ -1,0 +1,255 @@
+name: Android CI/CD
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  JAVA_VERSION: '21'
+  JAVA_DISTRIBUTION: 'temurin'
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run unit tests and generate coverage report
+        run: ./gradlew testDebugUnitTest jacocoTestReport --no-configuration-cache --rerun-tasks
+
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: '**/TEST-*.xml'
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
+          flags: unittests
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload coverage reports as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-reports
+          path: app/build/reports/jacoco/jacocoTestReport/
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Build release bundle with SonarCloud analysis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          ./gradlew bundleRelease \
+            -Dsonar.projectKey=carles-cs_QrReader \
+            -Dsonar.projectName=QrReader \
+            -Dsonar.organization=carles-cs \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.coverage.jacoco.xmlReportPaths=app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml \
+            --no-configuration-cache \
+            --rerun-tasks \
+            sonar
+
+      - name: Upload unsigned bundle
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: app-bundle-unsigned
+          path: app/build/outputs/bundle/release/*.aab
+
+      - name: Decode keystore
+        if: github.ref == 'refs/heads/master'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > ${{ runner.temp }}/debugkeystore.jks
+
+      - name: Sign bundle
+        if: github.ref == 'refs/heads/master'
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore ${{ runner.temp }}/debugkeystore.jks \
+            -storepass $KEYSTORE_PASSWORD \
+            app/build/outputs/bundle/release/app-release.aab \
+            $KEY_ALIAS
+
+      - name: Upload signed bundle
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-bundle-signed
+          path: app/build/outputs/bundle/release/*.aab
+
+  release:
+    name: Release to Google Play (Alpha)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    environment:
+      name: PlayStore-Alpha
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download signed bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: app-bundle-signed
+          path: ./bundle
+
+      - name: Release to Google Play (Alpha track)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: cat.company.qrreader
+          releaseFiles: ./bundle/app-release.aab
+          track: alpha
+          status: completed
+
+  promote:
+    name: Promote to Production
+    runs-on: ubuntu-latest
+    needs: release
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    environment:
+      name: PlayStore
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Google Play API dependencies
+        run: |
+          pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+
+      - name: Promote to production track
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          cat > promote.py << 'EOF'
+          import json
+          import os
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+          
+          # Load service account credentials
+          credentials_json = os.environ['GOOGLE_PLAY_SERVICE_ACCOUNT_JSON']
+          credentials_dict = json.loads(credentials_json)
+          credentials = service_account.Credentials.from_service_account_info(
+              credentials_dict,
+              scopes=['https://www.googleapis.com/auth/androidpublisher']
+          )
+          
+          # Build the service
+          service = build('androidpublisher', 'v3', credentials=credentials)
+          package_name = 'cat.company.qrreader'
+          
+          # Start an edit
+          edit_request = service.edits().insert(body={}, packageName=package_name)
+          edit_response = edit_request.execute()
+          edit_id = edit_response['id']
+          
+          try:
+              # Get the latest version from alpha track
+              tracks_result = service.edits().tracks().get(
+                  editId=edit_id,
+                  packageName=package_name,
+                  track='alpha'
+              ).execute()
+              
+              if tracks_result.get('releases'):
+                  latest_release = tracks_result['releases'][0]
+                  version_codes = latest_release.get('versionCodes', [])
+                  
+                  if version_codes:
+                      # Promote to production
+                      service.edits().tracks().update(
+                          editId=edit_id,
+                          packageName=package_name,
+                          track='production',
+                          body={
+                              'releases': [{
+                                  'versionCodes': version_codes,
+                                  'status': 'completed'
+                              }]
+                          }
+                      ).execute()
+                      
+                      # Commit the edit
+                      commit_request = service.edits().commit(
+                          editId=edit_id,
+                          packageName=package_name
+                      )
+                      commit_request.execute()
+                      print(f'Successfully promoted version codes {version_codes} to production')
+                  else:
+                      print('No version codes found in alpha track')
+              else:
+                  print('No releases found in alpha track')
+          except Exception as e:
+              print(f'Error promoting to production: {e}')
+              raise
+          EOF
+          
+          python promote.py
+
