@@ -100,7 +100,7 @@ This project uses SonarCloud for continuous code quality and security analysis. 
 
 **Gradle-based Analysis** (Recommended for Android Projects):
 - The project uses the official `org.sonarqube` Gradle plugin
-- This is the [recommended approach](https://docs.sonarsource.com/sonarqube-cloud/advanced-setup/ci-based-analysis/sonarscanner-for-gradle/) for Gradle/Android projects
+- This is the [recommended approach](https://docs.sonarsource.com/sonarcloud/advanced-setup/ci-based-analysis/sonarscanner-for-gradle/) for Gradle/Android projects
 - Configuration is centralized in `sonar-project.properties` at the repository root
 - Analysis is triggered via `./gradlew sonar` command in the CI/CD pipeline
 
