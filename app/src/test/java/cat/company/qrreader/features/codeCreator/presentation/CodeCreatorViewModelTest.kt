@@ -12,6 +12,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Unit tests for CodeCreatorViewModel
@@ -22,6 +25,8 @@ import org.junit.Test
  * - State management (text, bitmap, sharing)
  * - Edge cases (empty text, special characters, etc.)
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(manifest = Config.NONE)
 @OptIn(ExperimentalCoroutinesApi::class)
 class CodeCreatorViewModelTest {
 
