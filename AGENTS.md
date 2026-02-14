@@ -349,7 +349,7 @@ All dependency versions are managed in `gradle/libs.versions.toml`:
 ./gradlew jacocoTestReport              # Coverage report
 
 # Analysis
-./gradlew sonar                         # SonarQube analysis
+./gradlew sonar                         # SonarCloud analysis (requires SONAR_TOKEN)
 ./gradlew lint                          # Android Lint
 
 # Clean
@@ -362,12 +362,18 @@ All dependency versions are managed in `gradle/libs.versions.toml`:
 
 Primary CI/CD configured in `.github/workflows/android-ci-cd.yml`:
 - **Test Job**: Runs unit tests, generates JaCoCo coverage, uploads to Codecov
-- **Build Job**: Builds release bundle (AAB), runs SonarCloud analysis, signs bundle
+- **Build Job**: Builds release bundle (AAB), runs SonarCloud analysis (Gradle-based), signs bundle
 - **Release Job**: Automatically publishes to Google Play Alpha track (master branch only)
 - **Promote Job**: Promotes to Production track (requires manual approval)
 - **Triggers**: On push to master and pull requests
 - **VM Image**: ubuntu-latest
 - **Java Version**: 21
+
+**SonarCloud Configuration:**
+- Uses official `org.sonarqube` Gradle plugin (recommended for Android projects)
+- Configuration centralized in `sonar-project.properties`
+- Automatically integrates with JaCoCo coverage reports
+- See <a>.github/CICD.md</a> for detailed SonarCloud setup instructions
 
 **Build Optimization (2026):**
 - Uses `gradle/actions/setup-gradle@v4` for intelligent Gradle caching

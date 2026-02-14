@@ -39,6 +39,9 @@ Runs on every push and pull request:
 Runs after tests pass:
 - Builds release bundle (AAB)
 - Runs SonarCloud analysis (if configured)
+  - Configuration centralized in `sonar-project.properties`
+  - Uses Gradle SonarQube plugin for Android project analysis
+  - Automatically uploads coverage reports from test job
 - Signs the bundle (on master branch only, requires secrets)
 - Uploads artifacts
 
@@ -86,6 +89,149 @@ The following secrets must be configured in GitHub repository settings:
 6. **SONAR_TOKEN**
    - Token for SonarCloud code quality analysis
    - Optional but recommended for code quality tracking
+   - Get from [SonarCloud](https://sonarcloud.io/) → Account → Security → Generate Token
+   - Configuration stored in `sonar-project.properties` at repository root
+
+## SonarCloud Configuration
+
+This project uses SonarCloud for continuous code quality and security analysis. The configuration follows best practices for Android/Gradle projects.
+
+### Architecture
+
+**Gradle-based Analysis** (Recommended for Android Projects):
+- The project uses the official `org.sonarqube` Gradle plugin
+- This is the [recommended approach](https://docs.sonarsource.com/sonarcloud/advanced-setup/ci-based-analysis/sonarscanner-for-gradle/) for Gradle/Android projects
+- Configuration is centralized in `sonar-project.properties` at the repository root
+- Analysis is triggered via `./gradlew sonar` command in the CI/CD pipeline
+
+### Why Gradle Plugin Instead of Generic Action?
+
+SonarSource officially recommends using the Gradle plugin for Gradle-based projects because:
+1. **Better Integration**: Native understanding of Gradle project structure
+2. **Automatic Configuration**: Picks up source sets, dependencies, and build outputs automatically
+3. **Coverage Integration**: Seamlessly integrates with JaCoCo coverage reports
+4. **Android-Specific**: Handles Android-specific files and module structure correctly
+
+The generic `sonarsource/sonarqube-scan-action` is designed for non-Gradle projects (e.g., pure JavaScript, Python, etc.).
+
+### Configuration Files
+
+**sonar-project.properties** (Repository Root):
+```properties
+sonar.projectKey=carles-cs_QrReader
+sonar.projectName=QrReader
+sonar.organization=carles-cs
+sonar.host.url=https://sonarcloud.io
+sonar.sources=app/src/main/java
+sonar.tests=app/src/test/java,app/src/androidTest/java
+sonar.coverage.jacoco.xmlReportPaths=app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
+# ... (see file for complete configuration)
+```
+
+**build.gradle** (Root):
+```gradle
+plugins {
+    alias(libs.plugins.sonarqube)  // Applies the SonarQube plugin
+}
+```
+
+**gradle/libs.versions.toml**:
+```toml
+[versions]
+sonarqube = "7.2.2.6593"
+
+[plugins]
+sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
+```
+
+### GitHub Actions Integration
+
+The workflow runs SonarCloud analysis in the Build job:
+
+```yaml
+- name: Run SonarCloud analysis
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  if: env.SONAR_TOKEN != ''
+  continue-on-error: true
+  run: |
+    if [ "${{ github.event_name }}" == "pull_request" ]; then
+      ./gradlew sonar -Dsonar.branch.name=${{ github.head_ref }} --no-configuration-cache
+    else
+      ./gradlew sonar --no-configuration-cache
+    fi
+```
+
+**Key Features**:
+- Only runs if `SONAR_TOKEN` secret is configured
+- Uses `continue-on-error: true` to prevent blocking deployments if SonarCloud is temporarily unavailable
+- Branch analysis for pull requests (uses `sonar.branch.name`)
+- All other configuration comes from `sonar-project.properties`
+
+### Setup Instructions
+
+1. **Create SonarCloud Project**
+   - Go to [SonarCloud](https://sonarcloud.io/)
+   - Sign in with your GitHub account
+   - Click "+" → "Analyze new project"
+   - Select your repository
+   - Follow the setup wizard
+
+2. **Generate Token**
+   - Go to Account → Security → Generate Tokens
+   - Name: "GitHub Actions"
+   - Type: "User Token" or "Project Analysis Token"
+   - Copy the generated token
+
+3. **Add Token to GitHub**
+   - Repository Settings → Secrets and variables → Actions
+   - New repository secret: `SONAR_TOKEN`
+   - Paste the token value
+
+4. **Verify Configuration**
+   - Check that `sonar-project.properties` matches your SonarCloud project
+   - Ensure `sonar.projectKey` and `sonar.organization` are correct
+   - Push to master or create a pull request to trigger analysis
+
+### Troubleshooting
+
+**"Could not find project":**
+- Verify `sonar.projectKey` in `sonar-project.properties` matches SonarCloud
+- Ensure the project exists in your SonarCloud organization
+
+**"Unauthorized" or "Forbidden":**
+- Check that `SONAR_TOKEN` is correctly set in GitHub secrets
+- Regenerate the token if it's expired
+- Verify token has appropriate permissions
+
+**Coverage not showing:**
+- Ensure the test job runs before the build job
+- Verify JaCoCo reports are generated: `./gradlew jacocoTestReport`
+- Check that `sonar.coverage.jacoco.xmlReportPaths` points to the correct file
+- The workflow downloads coverage artifacts from the test job
+
+**Analysis skipped:**
+- The step only runs if `SONAR_TOKEN` is set
+- Check workflow logs to confirm the step was executed
+- Look for errors in Gradle output
+
+### Local Analysis
+
+To run SonarCloud analysis locally:
+
+```bash
+# Ensure you have SONAR_TOKEN environment variable set
+export SONAR_TOKEN=your-token-here
+
+# Run tests and generate coverage
+./gradlew testDebugUnitTest jacocoTestReport
+
+# Run SonarCloud analysis
+./gradlew sonar
+```
+
+View results at: https://sonarcloud.io/project/overview?id=carles-cs_QrReader
 
 ## Setting Up Google Play Publishing
 

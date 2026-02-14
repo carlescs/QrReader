@@ -106,13 +106,6 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
       - name: Download coverage reports
         uses: actions/download-artifact@v4
         continue-on-error: true
@@ -131,24 +124,10 @@ jobs:
         continue-on-error: true
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # For pull requests, use branch analysis instead of PR analysis
-            # PR analysis requires the PR to exist in SonarCloud first
-            ./gradlew sonar \
-              -Dsonar.projectKey=carles-cs_QrReader \
-              -Dsonar.projectName=QrReader \
-              -Dsonar.organization=carles-cs \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.branch.name=${{ github.head_ref }} \
-              -Dsonar.coverage.jacoco.xmlReportPaths=app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml \
-              --no-configuration-cache
+            # For pull requests, use branch analysis
+            ./gradlew sonar -Dsonar.branch.name=${{ github.head_ref }} --no-configuration-cache
           else
-            ./gradlew sonar \
-              -Dsonar.projectKey=carles-cs_QrReader \
-              -Dsonar.projectName=QrReader \
-              -Dsonar.organization=carles-cs \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.coverage.jacoco.xmlReportPaths=app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml \
-              --no-configuration-cache
+            ./gradlew sonar --no-configuration-cache
           fi
 
       - name: Upload unsigned bundle
