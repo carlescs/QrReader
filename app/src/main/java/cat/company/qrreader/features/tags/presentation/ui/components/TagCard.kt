@@ -59,7 +59,11 @@ fun TagCard(
             if(isSystemInDarkTheme()) Color.White else Color.Black
         ) else null,
         onClick = {
-            selectTag(it)
+            if (selectedTagId == it.id) {
+                selectTag(null)
+            } else {
+                selectTag(it)
+            }
         }
     ) {
         TagCardContent(it, color, ioCoroutine, selectedTagId, selectTag, viewModel)
