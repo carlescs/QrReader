@@ -8,12 +8,6 @@ on:
     branches:
       - master
   workflow_dispatch:
-    inputs:
-      promote_to_production:
-        description: 'Promote to Production'
-        required: true
-        type: boolean
-        default: false
 
 # Required permissions for the workflow
 permissions:
@@ -222,10 +216,12 @@ jobs:
   promote:
     name: Promote to Production
     runs-on: ubuntu-latest
-    # This job only runs when manually triggered via workflow_dispatch
-    if: github.event_name == 'workflow_dispatch' && inputs.promote_to_production == true
+    needs: release
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     environment:
       name: PlayStore
+      # Configure required reviewers in GitHub Settings → Environments → PlayStore
+      # This creates a manual approval gate before the job executes
 
     steps:
       - name: Checkout code
