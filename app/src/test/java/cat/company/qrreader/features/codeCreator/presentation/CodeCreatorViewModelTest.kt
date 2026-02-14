@@ -2,9 +2,14 @@ package cat.company.qrreader.features.codeCreator.presentation
 
 import android.graphics.Bitmap
 import cat.company.qrreader.domain.usecase.codecreator.GenerateQrCodeUseCase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -30,6 +35,7 @@ import org.robolectric.annotation.Config
 @OptIn(ExperimentalCoroutinesApi::class)
 class CodeCreatorViewModelTest {
 
+    private val testDispatcher = StandardTestDispatcher()
     private lateinit var viewModel: CodeCreatorViewModel
     private lateinit var fakeUseCase: FakeGenerateQrCodeUseCase
 
@@ -50,8 +56,14 @@ class CodeCreatorViewModelTest {
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
         fakeUseCase = FakeGenerateQrCodeUseCase()
         viewModel = CodeCreatorViewModel(fakeUseCase)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test
