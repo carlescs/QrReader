@@ -51,10 +51,12 @@ Automatically publishes to Google Play Alpha track:
 - Validates bundle and secrets
 - Uploads to Google Play Console Alpha track
 
-### 4. Promote Job (Master Branch Only)
+### 4. Promote Job (**MANUAL TRIGGER REQUIRED**)
 Promotes from Alpha to Production track:
-- Requires manual approval via environment protection
-- Uses Google Play API to promote the release
+- **Requires manual workflow dispatch trigger** - does not run automatically
+- Requires environment protection via GitHub Environments
+- Uses Google Play API to promote the release from Alpha to Production
+- See "Manual Promotion to Production" section below for instructions
 
 ## Required Secrets
 
@@ -282,12 +284,51 @@ View results at: https://sonarcloud.io/project/overview?id=carles-cs_QrReader
 - The release and promote jobs will fail with clear error messages if secrets are missing
 - Add the required secrets following the instructions above
 
+## Manual Promotion to Production
+
+The promote job is configured to run **only when manually triggered**. This provides control over when releases are promoted from Alpha to Production.
+
+### How to Manually Trigger Production Promotion
+
+1. **Navigate to Actions tab** in GitHub repository
+2. **Select "Android CI/CD" workflow** from the left sidebar
+3. **Click "Run workflow"** button (top right)
+4. **Select branch**: Choose `master` (or the branch with your release)
+5. **Check "Promote to Production"** checkbox
+6. **Click "Run workflow"** to start the promotion
+
+### What Happens During Promotion
+
+The promote job will:
+1. Connect to Google Play Console using service account credentials
+2. Fetch the latest version from the Alpha track
+3. Promote that version to the Production track
+4. Mark the release as "completed" (fully rolled out)
+
+### Prerequisites
+
+- The release job must have successfully published to Alpha track
+- All required secrets must be configured (see Required Secrets section)
+- The app must pass Google Play's review process
+
+### Environment Protection (Optional Additional Layer)
+
+For additional security, configure GitHub Environment protection rules:
+
+1. Go to repository **Settings → Environments**
+2. Click on **PlayStore** environment
+3. Configure **Required reviewers**: Add team members who must approve
+4. Configure **Wait timer**: Add delay before deployment (optional)
+5. **Save protection rules**
+
+When environment protection is enabled, the promote job will pause and wait for approval even after manual trigger.
+
 ## Environment Protection
 
 The workflow uses GitHub Environments for deployment gates:
 
-- **PlayStore-Alpha**: Automatically deploys to alpha track
-- **PlayStore**: Requires manual approval before promoting to production
+- **PlayStore-Alpha**: Automatically deploys to alpha track (no protection)
+- **PlayStore**: Used for production promotion (can be configured with protection rules)
 
 Configure these in repository Settings → Environments.
 
