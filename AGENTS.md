@@ -358,9 +358,28 @@ All dependency versions are managed in `gradle/libs.versions.toml`:
 
 ## CI/CD
 
-### Azure Pipelines
+### GitHub Actions
 
-CI/CD configured in `devops/azure-pipelines.yml`:
+Primary CI/CD configured in `.github/workflows/android-ci-cd.yml`:
+- **Test Job**: Runs unit tests, generates JaCoCo coverage, uploads to Codecov
+- **Build Job**: Builds release bundle (AAB), runs SonarCloud analysis, signs bundle
+- **Release Job**: Automatically publishes to Google Play Alpha track (master branch only)
+- **Promote Job**: Promotes to Production track (requires manual approval)
+- **Triggers**: On push to master and pull requests
+- **VM Image**: ubuntu-latest
+- **Java Version**: 21
+
+**Required Secrets for Publishing:**
+- `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` - Service account for Play Store API
+- `KEYSTORE_BASE64` - Base64-encoded keystore for signing
+- `KEYSTORE_PASSWORD` - Keystore password
+- `KEY_ALIAS` - Key alias in keystore
+
+See [.github/CICD.md](.github/CICD.md) for detailed setup instructions.
+
+### Azure Pipelines (Legacy)
+
+Alternative CI/CD configured in `devops/azure-pipelines.yml`:
 - **Test Stage**: Runs unit tests, generates JaCoCo coverage
 - **Build Stage**: Builds APK
 - **Triggers**: On push to master branch

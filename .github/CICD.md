@@ -89,9 +89,10 @@ The following secrets must be configured in GitHub repository settings:
    - Invite the service account email
    - Grant "Release Manager" permissions
 
-5. **Initial Manual Upload**
-   - Upload your app manually at least once
-   - This creates the necessary API connections
+5. **⚠️ IMPORTANT: Initial Manual Upload Required**
+   - **You must upload your app manually at least once before automation will work**
+   - This creates the necessary API connections and initializes your app in the Play Console
+   - Without this step, the automated upload will fail with authentication errors
 
 6. **Add Secret to GitHub**
    - Go to repository Settings → Secrets and variables → Actions
