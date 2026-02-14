@@ -3,17 +3,19 @@ package cat.company.qrreader.domain.usecase.tags
 import android.content.Context
 import android.os.Build
 import cat.company.qrreader.domain.model.SuggestedTagModel
-import com.google.mlkit.genai.GenerativeModel
-import com.google.mlkit.genai.GenerativeModelConfig
-import com.google.mlkit.genai.prompt.GenerationConfig
-import com.google.mlkit.genai.prompt.ModelAvailabilityStatus
+import com.google.mlkit.genai.prompt.Generation
+import com.google.mlkit.genai.prompt.GenerativeModel
+import com.google.mlkit.genai.prompt.FeatureStatus
+import com.google.mlkit.genai.prompt.TextPart
+import com.google.mlkit.genai.prompt.generateContentRequest
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 /**
  * Use case to generate tag suggestions for a barcode using ML Kit GenAI
  */
-class GenerateTagSuggestionsUseCase(
+open class GenerateTagSuggestionsUseCase(
     private val context: Context
 ) {
     private var model: GenerativeModel? = null
@@ -32,17 +34,14 @@ class GenerateTagSuggestionsUseCase(
 
             // Initialize model if not already done
             if (model == null) {
-                val config = GenerativeModelConfig(
-                    GenerationConfig(temperature = 0.3f, maxOutputTokens = 100)
-                )
-                model = GenerativeModel(context, config)
+                model = Generation.getClient()
             }
 
             // Check model availability
-            val status = model?.checkAvailability()
-            if (status != ModelAvailabilityStatus.AVAILABLE) {
+            val status = model?.checkStatus()
+            if (status != FeatureStatus.AVAILABLE) {
                 return@withContext Result.failure(
-                    IllegalStateException("Gemini Nano is not available on this device")
+                    IllegalStateException("Gemini Nano is not available on this device (status: $status)")
                 )
             }
 
@@ -53,16 +52,21 @@ class GenerateTagSuggestionsUseCase(
                 ""
             }
 
-            val prompt = """
+            val promptText = """
                 Suggest up to 3 short, relevant tags (1-2 words each) for categorizing this barcode content: "$barcodeContent"
                 $existingTagsText
                 
                 Return ONLY the tag names separated by commas, nothing else. Example: Shopping, Food, Receipt
             """.trimIndent()
 
-            // Generate suggestions
-            val response = model?.generateContent(prompt)
-            val text = response?.text?.trim() ?: ""
+            // Generate suggestions using the Prompt API
+            val request = generateContentRequest(TextPart(promptText)) {
+                temperature = 0.3f
+                maxOutputTokens = 100
+            }
+            
+            val response = model?.generateContent(request)?.await()
+            val text = response?.candidates?.firstOrNull()?.text?.trim() ?: ""
 
             // Parse the response into tag suggestions
             val suggestions = text
@@ -85,8 +89,8 @@ class GenerateTagSuggestionsUseCase(
         }
     }
 
-    fun cleanup() {
-        model?.close()
+    open fun cleanup() {
+        // No explicit close method in the new API
         model = null
     }
 }

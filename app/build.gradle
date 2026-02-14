@@ -67,6 +67,9 @@ dependencies {
     // Barcode model
     implementation libs.google.mlkit.barcode
     implementation libs.google.mlkit.genai.prompt
+    
+    // Coroutines support for Play Services Tasks
+    implementation libs.kotlinx.coroutines.play.services
 
     implementation libs.qrcode.kotlin
 

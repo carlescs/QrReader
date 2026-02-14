@@ -1,6 +1,7 @@
 [versions]
 # Android
 kotlinxCoroutinesTest = "1.10.2"
+kotlinxCoroutines = "1.10.2"
 minSdk = "26"
 targetSdk = "36"
 versionCode = "260"
@@ -99,6 +100,7 @@ colorpicker-compose = { group = "com.godaddy.android.colorpicker", name = "compo
 google-mlkit-barcode = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "barcode" }
 google-mlkit-genai-prompt = { group = "com.google.mlkit", name = "genai-prompt", version.ref = "genaiPrompt" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
+kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutines" }
 qrcode-kotlin = { group = "io.github.g0dkar", name = "qrcode-kotlin-android", version.ref = "qrcode" }
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
 
