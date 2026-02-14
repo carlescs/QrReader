@@ -5,9 +5,9 @@ import android.graphics.Bitmap
 /**
  * Use case to generate QR code bitmap from text
  */
-class GenerateQrCodeUseCase {
+open class GenerateQrCodeUseCase {
 
-    operator fun invoke(text: String): Bitmap? {
+    open operator fun invoke(text: String): Bitmap? {
         if (text.isEmpty()) return null
 
         return try {
