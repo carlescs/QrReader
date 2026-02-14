@@ -49,6 +49,10 @@ class BarcodeRepositoryImpl(database: BarcodesDb) : BarcodeRepository {
     override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {
         barcodeDao.insertAll(*barcodes.map { it.toEntity() }.toTypedArray())
     }
+    
+    override suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long {
+        return barcodeDao.insert(barcode.toEntity())
+    }
 
     override suspend fun updateBarcode(barcode: BarcodeModel): Int {
         return barcodeDao.updateItem(barcode.toEntity())

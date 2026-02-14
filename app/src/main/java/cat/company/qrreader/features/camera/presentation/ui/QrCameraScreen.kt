@@ -98,7 +98,7 @@ fun QrCameraScreen(
                 },
                 scrimColor = Color.DarkGray.copy(alpha = 0.8f)
             ) {
-                BottomSheetContent(lastBarcode = state.lastBarcode, snackbarHostState)
+                BottomSheetContent(lastBarcode = state.lastBarcode, snackbarHostState, viewModel)
             }
         }
     }

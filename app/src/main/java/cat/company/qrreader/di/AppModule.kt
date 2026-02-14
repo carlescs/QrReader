@@ -53,10 +53,13 @@ val repositoryModule = module {
 val useCaseModule = module {
     factory { GetBarcodesWithTagsUseCase(get()) }
     factory { SaveBarcodeUseCase(get()) }
+    factory { SaveBarcodeWithTagsUseCase(get()) }
     factory { UpdateBarcodeUseCase(get()) }
     factory { DeleteBarcodeUseCase(get()) }
     factory { SwitchBarcodeTagUseCase(get()) }
     factory { GetAllTagsUseCase(get()) }
+    factory { GetOrCreateTagsByNameUseCase(get()) }
+    factory { GenerateTagSuggestionsUseCase(androidContext()) }
     factory { DeleteTagUseCase(get()) }
     factory { GetHideTaggedSettingUseCase(get()) }
     factory { SetHideTaggedSettingUseCase(get()) }
@@ -69,7 +72,7 @@ val useCaseModule = module {
 val viewModelModule = module {
     viewModel { HistoryViewModel(get(), get(), get(), get()) }
     viewModel { TagsViewModel(get(), get()) }
-    viewModel { QrCameraViewModel() }
+    viewModel { QrCameraViewModel(get(), get()) }
     viewModel { CodeCreatorViewModel(get<GenerateQrCodeUseCase>()) }
     viewModel { SettingsViewModel(get(), get(), get(), get()) }
 }
