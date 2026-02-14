@@ -201,6 +201,7 @@ jobs:
 
       - name: Download signed bundle
         uses: actions/download-artifact@v4
+        continue-on-error: false
         with:
           name: app-bundle-signed
           path: ./bundle
