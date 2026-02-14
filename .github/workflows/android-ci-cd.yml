@@ -189,14 +189,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check for required secrets
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret is not set"
+            exit 1
+          fi
+          echo "Service account secret is configured"
+
       - name: Download signed bundle
         uses: actions/download-artifact@v4
         with:
           name: app-bundle-signed
           path: ./bundle
 
+      - name: Verify bundle exists
+        run: |
+          if [ ! -f "./bundle/app-release.aab" ]; then
+            echo "::error::Signed bundle not found at ./bundle/app-release.aab"
+            ls -la ./bundle/
+            exit 1
+          fi
+          echo "Bundle found: $(ls -lh ./bundle/app-release.aab)"
+
       - name: Release to Google Play (Alpha track)
-        uses: r0adkll/upload-google-play@v1
+        uses: r0adkll/upload-google-play@v1.1.3
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: cat.company.qrreader
@@ -215,6 +234,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Check for required secrets
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret is not set"
+            exit 1
+          fi
+          echo "Service account secret is configured"
 
       - name: Set up Python
         uses: actions/setup-python@v5
