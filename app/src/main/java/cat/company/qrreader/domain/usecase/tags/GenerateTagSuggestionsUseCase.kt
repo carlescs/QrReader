@@ -3,15 +3,11 @@ package cat.company.qrreader.domain.usecase.tags
 import android.util.Log
 import cat.company.qrreader.domain.model.SuggestedTagModel
 import com.google.mlkit.genai.common.FeatureStatus
-import com.google.mlkit.genai.prompt.GenerateContentRequest
-import com.google.mlkit.genai.prompt.GenerateContentResult
 import com.google.mlkit.genai.prompt.Generation
 import com.google.mlkit.genai.prompt.GenerativeModel
-import com.google.mlkit.genai.prompt.TextPart
+import com.google.mlkit.genai.prompt.generateContentRequest
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
 
 /**
  * Use case to generate tag suggestions for a barcode using ML Kit GenAI
@@ -80,26 +76,16 @@ open class GenerateTagSuggestionsUseCase {
             
             Log.d(TAG, "Generating tags for: $barcodeContent ($barcodeDefinition)")
 
-            // Generate suggestions using the Prompt API (callback-based)
-            val request = GenerateContentRequest.Builder(TextPart(promptText))
-                .build()
-            
-            // Convert callback-based API to suspend function
-            val text = suspendCancellableCoroutine<String> { continuation ->
-                model?.generateContent(request) { result ->
-                    when (result) {
-                        is GenerateContentResult.Success -> {
-                            val outputText = result.outputText?.trim() ?: ""
-                            Log.d(TAG, "Generated content: $outputText")
-                            continuation.resume(outputText)
-                        }
-                        is GenerateContentResult.Failure -> {
-                            Log.w(TAG, "Content generation failed: ${result.message}")
-                            continuation.resume("")
-                        }
-                    }
-                }
+            // Generate suggestions using the Prompt API
+            val request = generateContentRequest {
+                text(promptText)
             }
+            
+            // Generate content synchronously (suspend function)
+            val response = model?.generateContent(request)
+            val text = response?.text?.trim() ?: ""
+            
+            Log.d(TAG, "Generated content: $text")
 
             if (text.isEmpty()) {
                 return@withContext Result.failure(
