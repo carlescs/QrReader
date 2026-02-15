@@ -27,6 +27,7 @@ class GetBarcodesWithTagsUseCaseHistoryTest {
                 return flow
             }
             override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
+            override suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long = 0L
             override suspend fun updateBarcode(barcode: BarcodeModel): Int = 0
             override suspend fun deleteBarcode(barcode: BarcodeModel) {}
             override suspend fun addTagToBarcode(barcodeId: Int, tagId: Int) {}
@@ -57,6 +58,7 @@ class GetBarcodesWithTagsUseCaseHistoryTest {
                 return flow
             }
             override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
+            override suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long = 0L
             override suspend fun updateBarcode(barcode: BarcodeModel): Int = 0
             override suspend fun deleteBarcode(barcode: BarcodeModel) {}
             override suspend fun addTagToBarcode(barcodeId: Int, tagId: Int) {}
@@ -88,6 +90,7 @@ class GetBarcodesWithTagsUseCaseHistoryTest {
                 return flow
             }
             override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
+            override suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long = 0L
             override suspend fun updateBarcode(barcode: BarcodeModel): Int = 0
             override suspend fun deleteBarcode(barcode: BarcodeModel) {}
             override suspend fun addTagToBarcode(barcodeId: Int, tagId: Int) {}

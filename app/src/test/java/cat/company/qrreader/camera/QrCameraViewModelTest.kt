@@ -1,8 +1,15 @@
 package cat.company.qrreader.camera
 
+import cat.company.qrreader.domain.model.SuggestedTagModel
+import cat.company.qrreader.domain.model.TagModel
+import cat.company.qrreader.domain.repository.TagRepository
+import cat.company.qrreader.domain.usecase.tags.GenerateTagSuggestionsUseCase
+import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import cat.company.qrreader.features.camera.presentation.BarcodeState
 import cat.company.qrreader.features.camera.presentation.QrCameraViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -16,12 +23,41 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class QrCameraViewModelTest {
 
+    // Fake GenerateTagSuggestionsUseCase for testing
+    private class FakeGenerateTagSuggestionsUseCase : GenerateTagSuggestionsUseCase() {
+        override suspend fun invoke(
+            barcodeContent: String,
+            existingTags: List<String>
+        ): Result<List<SuggestedTagModel>> {
+            return Result.success(emptyList())
+        }
+
+        override fun cleanup() {
+            // No-op for tests
+        }
+    }
+
+    // Fake TagRepository for testing
+    private class FakeTagRepository : TagRepository {
+        override fun getAllTags(): Flow<List<TagModel>> = MutableStateFlow(emptyList())
+        override fun insertTags(vararg tags: TagModel) {}
+        override fun updateTag(tag: TagModel) {}
+        override fun deleteTag(tag: TagModel) {}
+    }
+
+    private fun createViewModel(): QrCameraViewModel {
+        return QrCameraViewModel(
+            generateTagSuggestionsUseCase = FakeGenerateTagSuggestionsUseCase(),
+            getAllTagsUseCase = GetAllTagsUseCase(FakeTagRepository())
+        )
+    }
+
     /**
      * Test initial state has null lastBarcode
      */
     @Test
     fun initialState_lastBarcodeIsNull() = runTest {
-        val viewModel = QrCameraViewModel()
+        val viewModel = createViewModel()
 
         val state = viewModel.uiState.first()
 
@@ -33,7 +69,7 @@ class QrCameraViewModelTest {
      */
     @Test
     fun saveBarcodes_withNull_updatesStateToNull() = runTest {
-        val viewModel = QrCameraViewModel()
+        val viewModel = createViewModel()
 
         viewModel.saveBarcodes(null)
 
@@ -46,7 +82,7 @@ class QrCameraViewModelTest {
      */
     @Test
     fun saveBarcodes_withEmptyList_updatesState() = runTest {
-        val viewModel = QrCameraViewModel()
+        val viewModel = createViewModel()
 
         viewModel.saveBarcodes(emptyList())
 
@@ -60,7 +96,7 @@ class QrCameraViewModelTest {
      */
     @Test
     fun uiState_isStateFlow() {
-        val viewModel = QrCameraViewModel()
+        val viewModel = createViewModel()
 
         assertNotNull(viewModel.uiState)
         assertNotNull(viewModel.uiState.value)
@@ -71,7 +107,7 @@ class QrCameraViewModelTest {
      */
     @Test
     fun saveBarcodes_multipleCalls_lastCallWins() = runTest {
-        val viewModel = QrCameraViewModel()
+        val viewModel = createViewModel()
 
         // First save with empty list
         viewModel.saveBarcodes(emptyList())

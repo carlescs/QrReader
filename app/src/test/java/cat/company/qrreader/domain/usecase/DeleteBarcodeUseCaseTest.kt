@@ -22,6 +22,7 @@ class DeleteBarcodeUseCaseTest {
             override fun getBarcodesWithTags(): Flow<List<BarcodeWithTagsModel>> = flowOf(emptyList())
             override fun getBarcodesWithTagsByFilter(tagId: Int?, query: String?, hideTaggedWhenNoTagSelected: Boolean, searchAcrossAllTagsWhenFiltering: Boolean): Flow<List<BarcodeWithTagsModel>> = flowOf(emptyList())
             override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
+            override suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long = 0L
             override suspend fun updateBarcode(barcode: BarcodeModel): Int = 0
             override suspend fun deleteBarcode(barcode: BarcodeModel) { deleted = barcode }
             override suspend fun addTagToBarcode(barcodeId: Int, tagId: Int) {}
