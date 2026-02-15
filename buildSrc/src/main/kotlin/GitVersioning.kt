@@ -41,14 +41,17 @@ object GitVersioning {
 
     private fun runCommand(project: Project, vararg command: String): String {
         return try {
-            val stdout = ByteArrayOutputStream()
-            val result = project.exec {
-                commandLine(*command)
-                standardOutput = stdout
-                isIgnoreExitValue = true
-            }
-            if (result.exitValue == 0) {
-                stdout.toString().trim()
+            val process = ProcessBuilder(*command)
+                .directory(project.rootDir)
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.PIPE)
+                .start()
+            
+            val output = process.inputStream.bufferedReader().use { it.readText() }
+            process.waitFor()
+            
+            if (process.exitValue() == 0) {
+                output.trim()
             } else {
                 ""
             }
