@@ -97,6 +97,10 @@ git push origin v5.2.0
 - Ensure Git is available in your build environment
 - Check that `.git` directory exists
 - Verify you have commit history: `git log --oneline`
+- **Important**: Shallow clones are not supported. If you cloned with `--depth`, convert to full clone:
+  ```bash
+  git fetch --unshallow
+  ```
 
 ## Migration Notes
 

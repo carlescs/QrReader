@@ -57,7 +57,8 @@ jobs:
         run: |
           # Get the previous tag (excluding the current one)
           CURRENT_TAG="${{ github.ref_name }}"
-          PREV_TAG=$(git describe --tags --abbrev=0 --exclude="$CURRENT_TAG" 2>/dev/null || echo "")
+          # Use a compatible approach that works with older Git versions
+          PREV_TAG=$(git tag --sort=-version:refname | grep -v "^$CURRENT_TAG$" | head -n 1)
           
           if [ -z "$PREV_TAG" ]; then
             echo "release_notes=Initial release" >> $GITHUB_OUTPUT
