@@ -1,45 +1,30 @@
 package cat.company.qrreader.domain.usecase.tags
 
-import android.content.Context
-import android.os.Build
 import android.util.Log
 import cat.company.qrreader.domain.model.SuggestedTagModel
-import com.google.mlkit.genai.prompt.DownloadStatus
-import com.google.mlkit.genai.prompt.FeatureStatus
+import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.GenerateContentRequest
-import com.google.mlkit.genai.prompt.GenerateContentResult
 import com.google.mlkit.genai.prompt.Generation
 import com.google.mlkit.genai.prompt.GenerativeModel
 import com.google.mlkit.genai.prompt.TextPart
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
 
 /**
  * Use case to generate tag suggestions for a barcode using ML Kit GenAI
  */
-open class GenerateTagSuggestionsUseCase(
-    private val context: Context
-) {
+open class GenerateTagSuggestionsUseCase {
     companion object {
         private const val TAG = "GenerateTagSuggestions"
     }
     
     private var model: GenerativeModel? = null
     
-    suspend operator fun invoke(
+    open suspend operator fun invoke(
         barcodeContent: String,
         existingTags: List<String>
     ): Result<List<SuggestedTagModel>> = withContext(Dispatchers.IO) {
         try {
-            // Check if device supports Gemini Nano (API 26+)
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                return@withContext Result.failure(
-                    UnsupportedOperationException("ML Kit GenAI requires Android 8.0 (API 26) or higher")
-                )
-            }
-
             // Initialize model if not already done
             if (model == null) {
                 model = Generation.getClient()
@@ -68,24 +53,18 @@ open class GenerateTagSuggestionsUseCase(
                 Return ONLY the tag names separated by commas, nothing else. Example: Shopping, Food, Receipt
             """.trimIndent()
 
-            // Generate suggestions using the Prompt API with callback
-            val request = GenerateContentRequest.Builder()
-                .addPart(TextPart(promptText))
+            // Generate suggestions using the Prompt API
+            val request = GenerateContentRequest.Builder(TextPart(promptText))
                 .build()
             
-            val text = suspendCancellableCoroutine<String> { continuation ->
-                model?.generateContent(request) { result ->
-                    when (result) {
-                        is GenerateContentResult.Success -> {
-                            val output = result.outputText?.trim() ?: ""
-                            continuation.resume(output)
-                        }
-                        is GenerateContentResult.Failure -> {
-                            Log.e(TAG, "Failed to generate content", result.error)
-                            continuation.resume("")
-                        }
-                    }
-                }
+            // generateContent is a suspend function that returns a response
+            val response = model?.generateContent(request)
+            val text = response?.candidates?.firstOrNull()?.text?.trim() ?: ""
+
+            if (text.isEmpty()) {
+                return@withContext Result.failure(
+                    IllegalStateException("Empty response from model")
+                )
             }
 
             // Parse the response into tag suggestions

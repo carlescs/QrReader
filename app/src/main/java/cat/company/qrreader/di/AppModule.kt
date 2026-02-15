@@ -13,6 +13,7 @@ import cat.company.qrreader.domain.usecase.history.*
 import cat.company.qrreader.domain.usecase.tags.*
 import cat.company.qrreader.domain.usecase.settings.*
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeUseCase
+import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
 import cat.company.qrreader.domain.usecase.codecreator.GenerateQrCodeUseCase
 import cat.company.qrreader.domain.usecase.codecreator.SaveBitmapToMediaStoreUseCase
 import cat.company.qrreader.features.history.presentation.HistoryViewModel
@@ -59,7 +60,7 @@ val useCaseModule = module {
     factory { SwitchBarcodeTagUseCase(get()) }
     factory { GetAllTagsUseCase(get()) }
     factory { GetOrCreateTagsByNameUseCase(get()) }
-    factory { GenerateTagSuggestionsUseCase(androidContext()) }
+    factory { GenerateTagSuggestionsUseCase() }
     factory { DeleteTagUseCase(get()) }
     factory { GetHideTaggedSettingUseCase(get()) }
     factory { SetHideTaggedSettingUseCase(get()) }

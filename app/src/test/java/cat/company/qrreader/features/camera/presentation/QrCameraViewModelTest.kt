@@ -22,7 +22,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.robolectric.util.ReflectionHelpers
 
 /**
  * Unit tests for QrCameraViewModel
@@ -40,9 +39,7 @@ class QrCameraViewModelTest {
     private class FakeGenerateTagSuggestionsUseCase(
         var shouldSucceed: Boolean = true,
         var suggestionsToReturn: List<SuggestedTagModel> = emptyList()
-    ) : GenerateTagSuggestionsUseCase(
-        context = ReflectionHelpers.createNullProxy(android.content.Context::class.java)
-    ) {
+    ) : GenerateTagSuggestionsUseCase() {
         override suspend fun invoke(
             barcodeContent: String,
             existingTags: List<String>
@@ -69,25 +66,36 @@ class QrCameraViewModelTest {
         override fun updateTag(tag: TagModel) {}
         override fun deleteTag(tag: TagModel) {}
 
+        @Suppress("unused")
         fun emitTags(tags: List<TagModel>) {
             tagsFlow.value = tags
         }
     }
     
     // Simple fake Barcode for testing
-    private class FakeBarcode(val value: String) : Barcode() {
-        init {
-            // Use reflection to set the displayValue field
-            try {
-                val field = Barcode::class.java.getDeclaredField("displayValue")
-                field.isAccessible = true
-                field.set(this, value)
-            } catch (e: Exception) {
-                // Ignore if unable to set via reflection
+    @Suppress("UNCHECKED_CAST")
+    private class FakeBarcode(private val value: String) : Barcode(
+        createBarcodeSource() as com.google.mlkit.vision.barcode.common.internal.BarcodeSource
+    ) {
+        override fun getDisplayValue(): String = value
+        override fun getRawValue(): String = value
+
+        companion object {
+            private fun createBarcodeSource(): Any {
+                return try {
+                    // Try to create a BarcodeSource instance using reflection
+                    val barcodeSourceClass = Class.forName(
+                        "com.google.mlkit.vision.barcode.common.internal.BarcodeSource"
+                    )
+                    // Get the first enum constant or create a default instance
+                    barcodeSourceClass.enumConstants?.firstOrNull()
+                        ?: barcodeSourceClass.getDeclaredConstructor().newInstance()
+                } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+                    // If reflection fails, this is a compile error we can't avoid
+                    throw IllegalStateException("Unable to create BarcodeSource", e)
+                }
             }
         }
-        
-        override fun getDisplayValue(): String = value
     }
 
     @Before
