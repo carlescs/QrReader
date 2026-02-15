@@ -5,6 +5,7 @@ import cat.company.qrreader.domain.model.SuggestedTagModel
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.Generation
 import com.google.mlkit.genai.prompt.GenerativeModel
+import com.google.mlkit.genai.prompt.TextPart
 import com.google.mlkit.genai.prompt.generateContentRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -77,13 +78,11 @@ open class GenerateTagSuggestionsUseCase {
             Log.d(TAG, "Generating tags for: $barcodeContent ($barcodeDefinition)")
 
             // Generate suggestions using the Prompt API
-            val request = generateContentRequest {
-                text(promptText)
-            }
+            val request = generateContentRequest(TextPart(textString = promptText)){}
             
             // Generate content synchronously (suspend function)
             val response = model?.generateContent(request)
-            val text = response?.text?.trim() ?: ""
+            val text = response?.candidates[0]?.text?.trim() ?: ""
             
             Log.d(TAG, "Generated content: $text")
 
