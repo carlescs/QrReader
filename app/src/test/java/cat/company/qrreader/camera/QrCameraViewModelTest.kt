@@ -27,6 +27,8 @@ class QrCameraViewModelTest {
     private class FakeGenerateTagSuggestionsUseCase : GenerateTagSuggestionsUseCase() {
         override suspend fun invoke(
             barcodeContent: String,
+            barcodeType: String?,
+            barcodeFormat: String?,
             existingTags: List<String>
         ): Result<List<SuggestedTagModel>> {
             return Result.success(emptyList())

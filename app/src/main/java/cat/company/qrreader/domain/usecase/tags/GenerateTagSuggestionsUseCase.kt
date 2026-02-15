@@ -22,6 +22,8 @@ open class GenerateTagSuggestionsUseCase {
     
     open suspend operator fun invoke(
         barcodeContent: String,
+        barcodeType: String? = null,
+        barcodeFormat: String? = null,
         existingTags: List<String>
     ): Result<List<SuggestedTagModel>> = withContext(Dispatchers.IO) {
         try {
@@ -39,6 +41,23 @@ open class GenerateTagSuggestionsUseCase {
                 )
             }
 
+            // Build barcode definition context
+            val barcodeDefinition = buildString {
+                if (!barcodeType.isNullOrBlank()) {
+                    append("Type: $barcodeType")
+                }
+                if (!barcodeFormat.isNullOrBlank()) {
+                    if (isNotEmpty()) append(", ")
+                    append("Format: $barcodeFormat")
+                }
+            }
+            
+            val barcodeContext = if (barcodeDefinition.isNotEmpty()) {
+                "Barcode definition: $barcodeDefinition"
+            } else {
+                ""
+            }
+
             // Build the prompt
             val existingTagsText = if (existingTags.isNotEmpty()) {
                 "Prioritize these existing tags if relevant: ${existingTags.joinToString(", ")}"
@@ -47,11 +66,16 @@ open class GenerateTagSuggestionsUseCase {
             }
 
             val promptText = """
-                Suggest up to 3 short, relevant tags (1-2 words each) for categorizing this barcode content: "$barcodeContent"
+                Suggest up to 3 short, relevant tags (1-2 words each) for categorizing this barcode.
+                
+                Barcode content: "$barcodeContent"
+                $barcodeContext
                 $existingTagsText
                 
                 Return ONLY the tag names separated by commas, nothing else. Example: Shopping, Food, Receipt
             """.trimIndent()
+            
+            Log.d(TAG, "Generating tags for: $barcodeContent ($barcodeDefinition)")
 
             // Generate suggestions using the Prompt API
             val request = GenerateContentRequest.Builder(TextPart(promptText))
