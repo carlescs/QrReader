@@ -266,13 +266,6 @@ class QrCameraViewModelTest {
 
     @Test
     fun toggleTagSelection_withNonExistentTag_doesNotCrash() {
-        // Setup some initial tags
-        val initialState = viewModel.uiState.value.copy(
-            suggestedTags = listOf(
-                SuggestedTagModel("Tag1", true),
-                SuggestedTagModel("Tag2", false)
-            )
-        )
         // We can't directly set state, but we can verify the method doesn't crash
         // when called with a non-existent tag name
         viewModel.toggleTagSelection("NonExistentTag")
