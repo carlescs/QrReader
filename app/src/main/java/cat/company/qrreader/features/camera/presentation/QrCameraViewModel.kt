@@ -32,82 +32,116 @@ class QrCameraViewModel(
     fun saveBarcodes(barcodes: List<Barcode>?) {
         _uiState.update { it.copy(lastBarcode = barcodes) }
         
-        // Generate tag suggestions for the first barcode
+        // Generate tag suggestions for ALL barcodes
         if (!barcodes.isNullOrEmpty()) {
-            val firstBarcode = barcodes.first()
-            val content = firstBarcode.displayValue ?: return
-            
-            // Get barcode type and format for better context
-            val barcodeType = getBarcodeTypeName(firstBarcode.valueType)
-            val barcodeFormat = getBarcodeFormatName(firstBarcode.format)
-            
-            Log.d(TAG, "Generating tags for barcode: content='$content', type=$barcodeType, format=$barcodeFormat")
-            
-            viewModelScope.launch {
-                _uiState.update { it.copy(isLoadingTagSuggestions = true) }
+            barcodes.forEach { barcode ->
+                val content = barcode.displayValue ?: return@forEach
+                val barcodeHash = barcode.hashCode()
                 
-                try {
-                    // Get existing tag names
-                    val existingTags = getAllTagsUseCase().first()
-                    val existingTagNames = existingTags.map { it.name }
-                    
-                    // Generate suggestions with full barcode context
-                    val result = generateTagSuggestionsUseCase(
-                        barcodeContent = content,
-                        barcodeType = barcodeType,
-                        barcodeFormat = barcodeFormat,
-                        existingTags = existingTagNames
-                    )
-                    
-                    result.onSuccess { suggestions ->
-                        _uiState.update { 
-                            it.copy(
-                                suggestedTags = suggestions,
-                                isLoadingTagSuggestions = false,
-                                tagSuggestionError = null
-                            ) 
-                        }
-                    }.onFailure { error ->
-                        Log.w("QrCameraViewModel", "Failed to generate tag suggestions: ${error.message}")
-                        _uiState.update { 
-                            it.copy(
-                                suggestedTags = emptyList(),
-                                isLoadingTagSuggestions = false,
-                                tagSuggestionError = error.message
-                            ) 
-                        }
+                // Get barcode type and format for better context
+                val barcodeType = getBarcodeTypeName(barcode.valueType)
+                val barcodeFormat = getBarcodeFormatName(barcode.format)
+                
+                Log.d(TAG, "Generating tags for barcode #$barcodeHash: content='$content', type=$barcodeType, format=$barcodeFormat")
+                
+                viewModelScope.launch {
+                    // Mark this barcode as loading
+                    _uiState.update { state ->
+                        state.copy(isLoadingTags = state.isLoadingTags + barcodeHash)
                     }
-                } catch (e: Exception) {
-                    Log.e("QrCameraViewModel", "Error generating tag suggestions", e)
-                    _uiState.update { 
-                        it.copy(
-                            suggestedTags = emptyList(),
-                            isLoadingTagSuggestions = false,
-                            tagSuggestionError = e.message
-                        ) 
+                    
+                    try {
+                        // Get existing tag names
+                        val existingTags = getAllTagsUseCase().first()
+                        val existingTagNames = existingTags.map { it.name }
+                        
+                        // Generate suggestions with full barcode context
+                        val result = generateTagSuggestionsUseCase(
+                            barcodeContent = content,
+                            barcodeType = barcodeType,
+                            barcodeFormat = barcodeFormat,
+                            existingTags = existingTagNames
+                        )
+                        
+                        result.onSuccess { suggestions ->
+                            _uiState.update { state ->
+                                state.copy(
+                                    barcodeTags = state.barcodeTags + (barcodeHash to suggestions),
+                                    isLoadingTags = state.isLoadingTags - barcodeHash,
+                                    tagSuggestionErrors = state.tagSuggestionErrors - barcodeHash
+                                )
+                            }
+                        }.onFailure { error ->
+                            Log.w(TAG, "Failed to generate tag suggestions for barcode #$barcodeHash: ${error.message}")
+                            _uiState.update { state ->
+                                state.copy(
+                                    barcodeTags = state.barcodeTags + (barcodeHash to emptyList()),
+                                    isLoadingTags = state.isLoadingTags - barcodeHash,
+                                    tagSuggestionErrors = state.tagSuggestionErrors + (barcodeHash to (error.message ?: "Unknown error"))
+                                )
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Exception generating tag suggestions for barcode #$barcodeHash", e)
+                        _uiState.update { state ->
+                            state.copy(
+                                barcodeTags = state.barcodeTags + (barcodeHash to emptyList()),
+                                isLoadingTags = state.isLoadingTags - barcodeHash,
+                                tagSuggestionErrors = state.tagSuggestionErrors + (barcodeHash to (e.message ?: "Unknown error"))
+                            )
+                        }
                     }
                 }
             }
         }
     }
     
-    fun toggleTagSelection(tagName: String) {
+    /**
+     * Toggle tag selection for a specific barcode
+     */
+    fun toggleTagSelection(barcodeHash: Int, tagName: String) {
         _uiState.update { state ->
-            val updatedTags = state.suggestedTags.map { tag ->
+            val currentTags = state.barcodeTags[barcodeHash] ?: return@update state
+            val updatedTags = currentTags.map { tag ->
                 if (tag.name == tagName) {
                     tag.copy(isSelected = !tag.isSelected)
                 } else {
                     tag
                 }
             }
-            state.copy(suggestedTags = updatedTags)
+            state.copy(barcodeTags = state.barcodeTags + (barcodeHash to updatedTags))
         }
     }
     
-    fun getSelectedTagNames(): List<String> {
-        return _uiState.value.suggestedTags
-            .filter { it.isSelected }
-            .map { it.name }
+    /**
+     * Get selected tag names for a specific barcode
+     */
+    fun getSelectedTagNames(barcodeHash: Int): List<String> {
+        return _uiState.value.barcodeTags[barcodeHash]
+            ?.filter { it.isSelected }
+            ?.map { it.name }
+            ?: emptyList()
+    }
+    
+    /**
+     * Get suggested tags for a specific barcode
+     */
+    fun getSuggestedTags(barcodeHash: Int): List<SuggestedTagModel> {
+        return _uiState.value.barcodeTags[barcodeHash] ?: emptyList()
+    }
+    
+    /**
+     * Check if tags are loading for a specific barcode
+     */
+    fun isLoadingTags(barcodeHash: Int): Boolean {
+        return _uiState.value.isLoadingTags.contains(barcodeHash)
+    }
+    
+    /**
+     * Get error message for a specific barcode
+     */
+    fun getTagError(barcodeHash: Int): String? {
+        return _uiState.value.tagSuggestionErrors[barcodeHash]
     }
     
     /**
@@ -161,11 +195,16 @@ class QrCameraViewModel(
 
 /**
  * State for the barcode
+ * 
+ * @property lastBarcode List of scanned barcodes
+ * @property barcodeTags Map of barcode hash to its suggested tags
+ * @property isLoadingTags Set of barcode hashes that are currently loading tags
+ * @property tagSuggestionErrors Map of barcode hash to error messages
  */
 data class BarcodeState(
     var lastBarcode: List<Barcode>? = null,
-    val suggestedTags: List<SuggestedTagModel> = emptyList(),
-    val isLoadingTagSuggestions: Boolean = false,
-    val tagSuggestionError: String? = null
+    val barcodeTags: Map<Int, List<SuggestedTagModel>> = emptyMap(),
+    val isLoadingTags: Set<Int> = emptySet(),
+    val tagSuggestionErrors: Map<Int, String> = emptyMap()
 )
 

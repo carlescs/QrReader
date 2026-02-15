@@ -43,24 +43,6 @@ fun BottomSheetContent(
     ) {
         val clipboard: Clipboard = LocalClipboard.current
         val coroutineScope = rememberCoroutineScope()
-        val state = viewModel.uiState.value
-        
-        // Show suggested tags section
-        if (!lastBarcode.isNullOrEmpty()) {
-            SuggestedTagsSection(
-                suggestedTags = state.suggestedTags,
-                isLoading = state.isLoadingTagSuggestions,
-                error = state.tagSuggestionError,
-                onToggleTag = { tagName ->
-                    viewModel.toggleTagSelection(tagName)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            )
-            
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        }
         
         if (lastBarcode != null) {
             LazyColumn(modifier = Modifier.fillMaxHeight().padding(horizontal = 16.dp)) {
@@ -68,6 +50,8 @@ fun BottomSheetContent(
                     items = lastBarcode,
                     key = { it.hashCode() },
                     itemContent = { barcode ->
+                        val barcodeHash = barcode.hashCode()
+                        
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -91,7 +75,24 @@ fun BottomSheetContent(
                             elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
                         ) {
                             Column(modifier = Modifier.padding(15.dp)) {
-                                val selectedTagNames = viewModel.getSelectedTagNames()
+                                // Show suggested tags for THIS specific barcode
+                                SuggestedTagsSection(
+                                    suggestedTags = viewModel.getSuggestedTags(barcodeHash),
+                                    isLoading = viewModel.isLoadingTags(barcodeHash),
+                                    error = viewModel.getTagError(barcodeHash),
+                                    onToggleTag = { tagName ->
+                                        viewModel.toggleTagSelection(barcodeHash, tagName)
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 8.dp)
+                                )
+                                
+                                if (viewModel.getSuggestedTags(barcodeHash).isNotEmpty()) {
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                                }
+                                
+                                val selectedTagNames = viewModel.getSelectedTagNames(barcodeHash)
                                 when (barcode.valueType) {
                                     Barcode.TYPE_URL -> {
                                         UrlBarcodeDisplay(
