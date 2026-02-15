@@ -35,7 +35,40 @@ git push
 ```
 Versions are calculated automatically.
 
-### 2. Creating a Release
+### 2. Feature Branch Development (Dev Versions)
+
+When working on feature branches, the system automatically generates development versions:
+
+**Example on feature branch `feature/new-scanner`:**
+- Version Code: Current commit count (e.g., 267)
+- Version Name: `5.1.8-dev.8+a1b2c3d` 
+  - Based on last tag `v5.1.8`
+  - `8` commits since that tag
+  - `a1b2c3d` = unique commit hash
+
+**To upload a dev version from a feature branch to Play Store Alpha:**
+
+1. Push your feature branch to GitHub:
+   ```bash
+   git push origin feature/new-scanner
+   ```
+
+2. Go to GitHub Actions → Select "Android CI/CD" workflow
+
+3. Click "Run workflow" → Select your feature branch
+
+4. Check "Upload to Google Play Alpha" option
+
+5. Click "Run workflow"
+
+This uploads your dev version (e.g., `5.1.8-dev.8+a1b2c3d`) to the Alpha track for testing.
+
+**Why use manual upload for feature branches?**
+- Safety: Prevents accidental uploads from every feature branch push
+- Control: You decide when a feature branch is ready for Alpha testing
+- Traceability: Each dev version includes commit hash for tracking
+
+### 3. Creating a Production Release
 
 When ready to release:
 
@@ -79,7 +112,37 @@ versionName = GitVersioning.getVersionName(project)
 
 ### Existing Workflows
 - `.github/workflows/android-ci-cd.yml`: Runs tests and builds on every push/PR
+  - **Automatic uploads**: Master branch pushes automatically upload to Alpha track
+  - **Manual uploads**: Feature branches can upload via workflow_dispatch
 - `.github/workflows/release.yml`: Creates GitHub releases when tags are pushed
+
+### Uploading Feature Branch Dev Versions
+
+Feature branches generate unique dev versions that can be uploaded for testing:
+
+**Automatic (Master only):**
+- Every push to master automatically uploads to Play Store Alpha track
+- Version: Either a tagged release or a dev version
+
+**Manual (Any branch):**
+1. Navigate to: GitHub → Actions → "Android CI/CD" workflow
+2. Click "Run workflow" dropdown
+3. Select your feature branch from the branch dropdown
+4. Check "Upload to Google Play Alpha" option
+5. Click "Run workflow" button
+
+The build will use the dev version from your branch (e.g., `5.1.8-dev.8+a1b2c3d`).
+
+### Dev Version Benefits
+
+Each dev version is unique and traceable:
+- **Version Code**: Monotonically increasing (commit count)
+- **Version Name**: Includes commit hash for traceability
+- **Examples**:
+  - `5.1.8-dev.5+abc1234` - 5 commits after tag v5.1.8
+  - `5.2.0-dev.12+def5678` - 12 commits after tag v5.2.0
+
+This allows multiple feature branches to be tested in parallel without version conflicts.
 
 ### GitHub Secrets
 No additional secrets needed for automatic versioning. Existing secrets for Google Play publishing remain unchanged.
@@ -101,6 +164,31 @@ git push origin v5.2.0
   ```bash
   git fetch --unshallow
   ```
+
+### Can I upload dev versions from feature branches?
+
+**Yes!** The system supports uploading dev versions from any branch:
+
+1. Feature branches automatically get unique dev versions (e.g., `5.1.8-dev.8+a1b2c3d`)
+2. Use GitHub Actions workflow_dispatch to manually trigger upload
+3. Go to Actions → "Android CI/CD" → "Run workflow" → Select branch → Check "Upload to Google Play Alpha"
+
+### Will different feature branches have version conflicts?
+
+**No.** Each feature branch has a unique version name because:
+- The commit hash is different for each branch
+- Example: 
+  - Branch A: `5.1.8-dev.5+abc1234`
+  - Branch B: `5.1.8-dev.3+def5678`
+
+The version code (commit count) might be similar, but Google Play accepts this for Alpha/Beta tracks.
+
+### Should I use dev versions for production releases?
+
+**No.** Production releases should always use clean tag versions:
+- Tag the commit: `git tag v5.2.0`
+- Push the tag: `git push origin v5.2.0`
+- This creates version `5.2.0` (without `-dev` suffix)
 
 ## Migration Notes
 
