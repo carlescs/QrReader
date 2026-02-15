@@ -42,11 +42,13 @@ Runs after tests pass:
   - Configuration centralized in `sonar-project.properties`
   - Uses Gradle SonarQube plugin for Android project analysis
   - Automatically uploads coverage reports from test job
-- Signs the bundle (on master branch only, requires secrets)
-- Uploads artifacts
+- Signs the bundle when deploying to Play Store (master auto-deploy or manual trigger from any branch, requires secrets)
+- Uploads artifacts (both unsigned and signed bundles)
 
-### 3. Release Job (Master Branch Only)
-Automatically publishes to Google Play Alpha track:
+### 3. Release Job (Alpha Track)
+Publishes to Google Play Alpha track:
+- **Automatic**: On master branch push
+- **Manual**: Via workflow_dispatch from any branch (must check "Upload to Google Play Alpha")
 - Downloads signed bundle
 - Validates bundle and secrets
 - Uploads to Google Play Console Alpha track
@@ -63,12 +65,13 @@ Promotes from Alpha to Production track:
 
 The following secrets must be configured in GitHub repository settings:
 
-### For Bundle Signing (Master Branch Only)
+### For Bundle Signing
 
 1. **KEYSTORE_BASE64**
    - Base64-encoded Android keystore file
    - Generate: `base64 -w 0 your-keystore.jks`
-   - Used to sign the release bundle
+   - Used to sign the release bundle when deploying to Play Store
+   - Required for both automatic (master) and manual (any branch) deployments
 
 2. **KEYSTORE_PASSWORD**
    - Password for the keystore file
@@ -278,12 +281,75 @@ View results at: https://sonarcloud.io/project/overview?id=carles-cs_QrReader
 
 **Bundle not found:**
 - Ensure the build job completed successfully
-- Check that signing secrets are configured (for master branch)
+- Check that signing secrets are configured
 - Verify the artifact was uploaded in the build job
+- For feature branches, ensure "Upload to Google Play Alpha" was checked when triggering the workflow
 
 **Secret not found:**
 - The release and promote jobs will fail with clear error messages if secrets are missing
 - Add the required secrets following the instructions above
+
+## Deploying from Feature Branches
+
+The workflow supports deploying development versions from any branch to the Alpha track for testing. This is useful for:
+- Testing features in production-like environment before merging
+- QA testing of specific feature branches
+- Beta testing with stakeholders
+
+### How to Deploy a Feature Branch to Alpha
+
+1. **Push your feature branch to GitHub**:
+   ```bash
+   git push origin feature/my-new-feature
+   ```
+
+2. **Trigger the workflow manually**:
+   - Go to GitHub repository → **Actions** tab
+   - Select **"Android CI/CD"** workflow from the left sidebar
+   - Click **"Run workflow"** button (top right)
+   - In the dropdown:
+     - **Branch**: Select your feature branch (e.g., `feature/my-new-feature`)
+     - **Upload to Google Play Alpha**: ✅ Check this box
+   - Click **"Run workflow"** button
+
+3. **Monitor the workflow**:
+   - The workflow will run tests, build, sign, and deploy to Alpha track
+   - Development version format: `5.2.0-dev.3+abc1234` (includes commit hash)
+   - Each branch gets a unique version name for parallel testing
+
+### What Happens
+
+✅ **Test job**: Runs unit tests and generates coverage
+✅ **Build job**: Builds release bundle (AAB)
+✅ **Sign bundle**: Signs the bundle using keystore secrets (same as master)
+✅ **Release to Alpha**: Uploads to Google Play Alpha track
+❌ **Promote to Production**: Does NOT run (master only)
+
+### Version Naming
+
+Feature branch deployments use development version names:
+- Format: `{version}-dev.{commits}+{hash}`
+- Example: `5.2.0-dev.8+a1b2c3d`
+  - `5.2.0`: Last git tag version
+  - `dev.8`: 8 commits since that tag
+  - `a1b2c3d`: Unique commit hash
+
+This ensures each branch has a unique, traceable version.
+
+### Requirements
+
+- All signing secrets must be configured (see "Required Secrets" section)
+- Feature branch must be pushed to GitHub remote
+- You must have permission to trigger workflows in the repository
+
+### Differences from Master Branch Deployment
+
+| Aspect | Master Branch | Feature Branch |
+|--------|--------------|----------------|
+| **Trigger** | Automatic on push | Manual via workflow_dispatch |
+| **Alpha Deploy** | ✅ Automatic | ✅ Manual (must check box) |
+| **Production Promote** | ✅ Available (with approval) | ❌ Not available |
+| **Version Name** | Clean (e.g., `5.2.0`) or dev | Always dev (e.g., `5.2.0-dev.8+hash`) |
 
 ## Manual Approval for Production Promotion
 
