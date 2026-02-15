@@ -3,8 +3,9 @@
 kotlinxCoroutinesTest = "1.10.2"
 minSdk = "23"
 targetSdk = "36"
-versionCode = "259"
-versionName = "5.1.8"
+# versionCode and versionName are now calculated from Git
+# versionCode = "259"  # Last manual version - now auto-calculated from commit count
+# versionName = "5.1.8"  # Last manual version - now from git tags
 
 # Plugins
 agp = "8.5.2"
