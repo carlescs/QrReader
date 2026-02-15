@@ -10,7 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -159,7 +158,8 @@ class QrCameraViewModelTest {
     @Ignore("Cannot create Barcode instances in unit tests - BarcodeSource is an internal non-enum class")
     fun saveBarcodes_generatesTagSuggestions() = runTest {
         val barcode = FakeBarcode("https://example.com")
-        
+        val barcodeHash = barcode.hashCode()
+
         fakeGenerateTagSuggestionsUseCase.suggestionsToReturn = listOf(
             SuggestedTagModel("Shopping", true),
             SuggestedTagModel("Online", true)
@@ -168,32 +168,34 @@ class QrCameraViewModelTest {
         viewModel.saveBarcodes(listOf(barcode))
         testDispatcher.scheduler.advanceUntilIdle()
 
-        val state = viewModel.uiState.first()
-        assertEquals(2, state.suggestedTags.size)
-        assertEquals("Shopping", state.suggestedTags[0].name)
-        assertEquals("Online", state.suggestedTags[1].name)
+        val suggestedTags = viewModel.getSuggestedTags(barcodeHash)
+        assertEquals(2, suggestedTags.size)
+        assertEquals("Shopping", suggestedTags[0].name)
+        assertEquals("Online", suggestedTags[1].name)
     }
 
     @Test
     @Ignore("Cannot create Barcode instances in unit tests - BarcodeSource is an internal non-enum class")
     fun saveBarcodes_handlesSuggestionError() = runTest {
         val barcode = FakeBarcode("test content")
-        
+        val barcodeHash = barcode.hashCode()
+
         fakeGenerateTagSuggestionsUseCase.shouldSucceed = false
 
         viewModel.saveBarcodes(listOf(barcode))
         testDispatcher.scheduler.advanceUntilIdle()
 
-        val state = viewModel.uiState.first()
-        assertTrue(state.suggestedTags.isEmpty())
-        assertNotNull(state.tagSuggestionError)
+        val suggestedTags = viewModel.getSuggestedTags(barcodeHash)
+        assertTrue(suggestedTags.isEmpty())
+        assertNotNull(viewModel.getTagError(barcodeHash))
     }
 
     @Test
     @Ignore("Cannot create Barcode instances in unit tests - BarcodeSource is an internal non-enum class")
     fun toggleTagSelection_togglesTag() = runTest {
         val barcode = FakeBarcode("test")
-        
+        val barcodeHash = barcode.hashCode()
+
         fakeGenerateTagSuggestionsUseCase.suggestionsToReturn = listOf(
             SuggestedTagModel("Tag1", true)
         )
@@ -202,22 +204,23 @@ class QrCameraViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Initially selected
-        assertTrue(viewModel.uiState.first().suggestedTags[0].isSelected)
+        assertTrue(viewModel.getSuggestedTags(barcodeHash)[0].isSelected)
 
         // Toggle off
-        viewModel.toggleTagSelection("Tag1")
-        assertFalse(viewModel.uiState.first().suggestedTags[0].isSelected)
+        viewModel.toggleTagSelection(barcodeHash, "Tag1")
+        assertFalse(viewModel.getSuggestedTags(barcodeHash)[0].isSelected)
 
         // Toggle on
-        viewModel.toggleTagSelection("Tag1")
-        assertTrue(viewModel.uiState.first().suggestedTags[0].isSelected)
+        viewModel.toggleTagSelection(barcodeHash, "Tag1")
+        assertTrue(viewModel.getSuggestedTags(barcodeHash)[0].isSelected)
     }
 
     @Test
     @Ignore("Cannot create Barcode instances in unit tests - BarcodeSource is an internal non-enum class")
     fun getSelectedTagNames_returnsOnlySelectedTags() = runTest {
         val barcode = FakeBarcode("test")
-        
+        val barcodeHash = barcode.hashCode()
+
         fakeGenerateTagSuggestionsUseCase.suggestionsToReturn = listOf(
             SuggestedTagModel("Tag1", true),
             SuggestedTagModel("Tag2", true),
@@ -228,9 +231,9 @@ class QrCameraViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Unselect Tag2
-        viewModel.toggleTagSelection("Tag2")
+        viewModel.toggleTagSelection(barcodeHash, "Tag2")
 
-        val selectedNames = viewModel.getSelectedTagNames()
+        val selectedNames = viewModel.getSelectedTagNames(barcodeHash)
         assertEquals(2, selectedNames.size)
         assertTrue(selectedNames.contains("Tag1"))
         assertFalse(selectedNames.contains("Tag2"))
@@ -244,9 +247,9 @@ class QrCameraViewModelTest {
         val state = viewModel.uiState.value
 
         assertEquals(null, state.lastBarcode)
-        assertEquals(emptyList<SuggestedTagModel>(), state.suggestedTags)
-        assertEquals(false, state.isLoadingTagSuggestions)
-        assertEquals(null, state.tagSuggestionError)
+        assertEquals(emptyMap<Int, List<SuggestedTagModel>>(), state.barcodeTags)
+        assertEquals(emptySet<Int>(), state.isLoadingTags)
+        assertEquals(emptyMap<Int, String>(), state.tagSuggestionErrors)
     }
 
     @Test
@@ -267,38 +270,28 @@ class QrCameraViewModelTest {
     }
 
     @Test
-    fun toggleTagSelection_withNonExistentTag_doesNotCrash() {
+    fun toggleTagSelection_withNonExistentBarcodeHash_doesNotCrash() {
         // We can't directly set state, but we can verify the method doesn't crash
-        // when called with a non-existent tag name
-        viewModel.toggleTagSelection("NonExistentTag")
+        // when called with a non-existent barcode hash
+        viewModel.toggleTagSelection(12345, "NonExistentTag")
 
         // Should not throw exception
         assertNotNull(viewModel.uiState.value)
     }
 
     @Test
-    fun getSelectedTagNames_whenNoTags_returnsEmptyList() {
-        val selectedNames = viewModel.getSelectedTagNames()
+    fun getSelectedTagNames_whenNoBarcode_returnsEmptyList() {
+        val selectedNames = viewModel.getSelectedTagNames(12345)
 
         assertEquals(0, selectedNames.size)
         assertTrue(selectedNames.isEmpty())
     }
 
     @Test
-    fun getSelectedTagNames_whenNoTagsSelected_returnsEmptyList() = runTest {
-        // Manually update state to have unselected tags
-        // Since we can't directly manipulate state, we test the behavior
-        val selectedNames = viewModel.getSelectedTagNames()
-
-        // Initially no tags, so should be empty
-        assertTrue(selectedNames.isEmpty())
-    }
-
-    @Test
-    fun toggleTagSelection_withExistingTags_onlyTogglesMatchingTag() {
+    fun toggleTagSelection_withExistingBarcodeHash_doesNotCrash() {
         // This test verifies the logic would work correctly
         // We're testing that the method exists and can be called
-        viewModel.toggleTagSelection("SomeTag")
+        viewModel.toggleTagSelection(12345, "SomeTag")
 
         // Should complete without error
         assertNotNull(viewModel.uiState.value)
@@ -308,57 +301,57 @@ class QrCameraViewModelTest {
     fun barcodeState_dataClassCopy_worksCorrectly() {
         val state = BarcodeState(
             lastBarcode = null,
-            suggestedTags = listOf(SuggestedTagModel("Test", true)),
-            isLoadingTagSuggestions = true,
-            tagSuggestionError = "Error"
+            barcodeTags = mapOf(1 to listOf(SuggestedTagModel("Test", true))),
+            isLoadingTags = setOf(1),
+            tagSuggestionErrors = mapOf(1 to "Error")
         )
 
-        val copied = state.copy(isLoadingTagSuggestions = false)
+        val copied = state.copy(isLoadingTags = emptySet())
 
-        assertEquals(false, copied.isLoadingTagSuggestions)
-        assertEquals("Error", copied.tagSuggestionError)
-        assertEquals(1, copied.suggestedTags.size)
+        assertEquals(emptySet<Int>(), copied.isLoadingTags)
+        assertEquals(mapOf(1 to "Error"), copied.tagSuggestionErrors)
+        assertEquals(1, copied.barcodeTags.size)
     }
 
     @Test
     fun barcodeState_equality_worksCorrectly() {
         val state1 = BarcodeState(
             lastBarcode = null,
-            suggestedTags = emptyList(),
-            isLoadingTagSuggestions = false,
-            tagSuggestionError = null
+            barcodeTags = emptyMap(),
+            isLoadingTags = emptySet(),
+            tagSuggestionErrors = emptyMap()
         )
 
         val state2 = BarcodeState(
             lastBarcode = null,
-            suggestedTags = emptyList(),
-            isLoadingTagSuggestions = false,
-            tagSuggestionError = null
+            barcodeTags = emptyMap(),
+            isLoadingTags = emptySet(),
+            tagSuggestionErrors = emptyMap()
         )
 
         assertEquals(state1, state2)
     }
 
     @Test
-    fun barcodeState_withDifferentSuggestedTags_notEqual() {
-        val state1 = BarcodeState(suggestedTags = emptyList())
-        val state2 = BarcodeState(suggestedTags = listOf(SuggestedTagModel("Tag", true)))
+    fun barcodeState_withDifferentBarcodeTags_notEqual() {
+        val state1 = BarcodeState(barcodeTags = emptyMap())
+        val state2 = BarcodeState(barcodeTags = mapOf(1 to listOf(SuggestedTagModel("Tag", true))))
 
         assertFalse(state1 == state2)
     }
 
     @Test
     fun barcodeState_withDifferentLoadingState_notEqual() {
-        val state1 = BarcodeState(isLoadingTagSuggestions = false)
-        val state2 = BarcodeState(isLoadingTagSuggestions = true)
+        val state1 = BarcodeState(isLoadingTags = emptySet())
+        val state2 = BarcodeState(isLoadingTags = setOf(1))
 
         assertFalse(state1 == state2)
     }
 
     @Test
     fun barcodeState_withDifferentError_notEqual() {
-        val state1 = BarcodeState(tagSuggestionError = null)
-        val state2 = BarcodeState(tagSuggestionError = "Error")
+        val state1 = BarcodeState(tagSuggestionErrors = emptyMap())
+        val state2 = BarcodeState(tagSuggestionErrors = mapOf(1 to "Error"))
 
         assertFalse(state1 == state2)
     }
@@ -428,10 +421,11 @@ class QrCameraViewModelTest {
 
     @Test
     fun toggleTagSelection_multipleCalls_togglesCorrectly() {
+        val barcodeHash = 12345
         // First toggle would select, second would deselect, etc.
-        viewModel.toggleTagSelection("TestTag")
-        viewModel.toggleTagSelection("TestTag")
-        viewModel.toggleTagSelection("TestTag")
+        viewModel.toggleTagSelection(barcodeHash, "TestTag")
+        viewModel.toggleTagSelection(barcodeHash, "TestTag")
+        viewModel.toggleTagSelection(barcodeHash, "TestTag")
 
         // Should not crash with multiple toggles
         assertNotNull(viewModel.uiState.value)
@@ -439,8 +433,9 @@ class QrCameraViewModelTest {
 
     @Test
     fun getSelectedTagNames_multipleCallsConsecutive_returnsSameResult() {
-        val result1 = viewModel.getSelectedTagNames()
-        val result2 = viewModel.getSelectedTagNames()
+        val barcodeHash = 12345
+        val result1 = viewModel.getSelectedTagNames(barcodeHash)
+        val result2 = viewModel.getSelectedTagNames(barcodeHash)
 
         assertEquals(result1, result2)
     }
