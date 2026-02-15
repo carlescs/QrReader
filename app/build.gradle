@@ -17,8 +17,10 @@ android {
         applicationId = "cat.company.qrreader"
         minSdk = libs.versions.minSdk.get().toInteger()
         targetSdk = libs.versions.targetSdk.get().toInteger()
-        versionCode = libs.versions.versionCode.get().toInteger()
-        versionName = libs.versions.versionName.get()
+        
+        // Use Git-based versioning
+        versionCode = GitVersioning.getVersionCode(project)
+        versionName = GitVersioning.getVersionName(project)
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -183,4 +185,11 @@ tasks.register('jacocoTestReport', JacocoReport) {
             "jacoco/*.exec",
             "outputs/unit_test_code_coverage/**/*.exec"
     ]))
+}
+
+// Task to print version name for CI/CD
+tasks.register("printVersionName") {
+    doLast {
+        println(android.defaultConfig.versionName)
+    }
 }
