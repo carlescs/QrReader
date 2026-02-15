@@ -1,7 +1,7 @@
 import org.gradle.api.Project
-import java.io.ByteArrayOutputStream
 
 object GitVersioning {
+    @JvmStatic
     fun getVersionCode(project: Project): Int {
         // Note: Requires full Git history (not a shallow clone)
         // GitHub Actions workflows should use fetch-depth: 0
@@ -14,6 +14,7 @@ object GitVersioning {
         return count
     }
 
+    @JvmStatic
     fun getVersionName(project: Project): String {
         // Try to get the latest tag
         val tag = runCommand(project, "git", "describe", "--tags", "--abbrev=0").trim()
