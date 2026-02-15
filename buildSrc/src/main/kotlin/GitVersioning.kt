@@ -3,7 +3,12 @@ import java.io.ByteArrayOutputStream
 
 object GitVersioning {
     fun getVersionCode(project: Project): Int {
-        return runCommand(project, "git", "rev-list", "--count", "HEAD").toIntOrNull() ?: 1
+        val count = runCommand(project, "git", "rev-list", "--count", "HEAD").toIntOrNull()
+        if (count == null) {
+            project.logger.warn("Failed to get Git commit count, falling back to version code 1")
+            return 1
+        }
+        return count
     }
 
     fun getVersionName(project: Project): String {
@@ -45,7 +50,7 @@ object GitVersioning {
                 ""
             }
         } catch (e: Exception) {
-            project.logger.warn("Failed to run command: ${command.joinToString(" ")}", e)
+            project.logger.warn("Failed to run command: ${command.joinToString(" ")} - ${e.message}")
             ""
         }
     }

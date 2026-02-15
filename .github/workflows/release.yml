@@ -55,8 +55,9 @@ jobs:
       - name: Generate Release Notes
         id: release_notes
         run: |
-          # Get the previous tag
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          # Get the previous tag (excluding the current one)
+          CURRENT_TAG="${{ github.ref_name }}"
+          PREV_TAG=$(git describe --tags --abbrev=0 --exclude="$CURRENT_TAG" 2>/dev/null || echo "")
           
           if [ -z "$PREV_TAG" ]; then
             echo "release_notes=Initial release" >> $GITHUB_OUTPUT
