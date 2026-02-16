@@ -1,11 +1,41 @@
 import org.gradle.api.Project
+import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ValueSource
+import org.gradle.api.provider.ValueSourceParameters
+import org.gradle.process.ExecOperations
+import java.io.ByteArrayOutputStream
+import javax.inject.Inject
+
+abstract class GitCommandValueSource : ValueSource<String, GitCommandValueSource.Parameters> {
+    interface Parameters : ValueSourceParameters {
+        var command: List<String>
+    }
+
+    @get:Inject
+    abstract val execOperations: ExecOperations
+
+    override fun obtain(): String {
+        val output = ByteArrayOutputStream()
+        return try {
+            execOperations.exec {
+                commandLine(parameters.command)
+                standardOutput = output
+                isIgnoreExitValue = true
+            }
+            output.toString().trim()
+        } catch (_: Exception) {
+            ""
+        }
+    }
+}
 
 object GitVersioning {
     @JvmStatic
     fun getVersionCode(project: Project): Int {
         // Note: Requires full Git history (not a shallow clone)
         // GitHub Actions workflows should use fetch-depth: 0
-        val count = runCommand(project, "git", "rev-list", "--count", "HEAD").toIntOrNull()
+        val countProvider = gitCommand(project, listOf("git", "rev-list", "--count", "HEAD"))
+        val count = countProvider.orNull?.toIntOrNull()
         if (count == null) {
             project.logger.warn("Failed to get Git commit count, falling back to version code 1. " +
                 "Ensure repository is not a shallow clone.")
@@ -17,48 +47,38 @@ object GitVersioning {
     @JvmStatic
     fun getVersionName(project: Project): String {
         // Try to get the latest tag
-        val tag = runCommand(project, "git", "describe", "--tags", "--abbrev=0").trim()
-        
+        val tagProvider = gitCommand(project, listOf("git", "describe", "--tags", "--abbrev=0"))
+        val tag = tagProvider.orNull?.trim() ?: ""
+
         if (tag.isNotEmpty()) {
             // Check if current commit is tagged
-            val currentCommit = runCommand(project, "git", "rev-parse", "HEAD").trim()
-            val tagCommit = runCommand(project, "git", "rev-list", "-n", "1", tag).trim()
-            
-            if (currentCommit == tagCommit) {
+            val currentCommitProvider = gitCommand(project, listOf("git", "rev-parse", "HEAD"))
+            val currentCommit = currentCommitProvider.orNull?.trim() ?: ""
+            val tagCommitProvider = gitCommand(project, listOf("git", "rev-list", "-n", "1", tag))
+            val tagCommit = tagCommitProvider.orNull?.trim() ?: ""
+
+            if (currentCommit == tagCommit && currentCommit.isNotEmpty()) {
                 // Clean release build
                 return tag.removePrefix("v")
             } else {
                 // Development build with commit hash
-                val shortHash = runCommand(project, "git", "rev-parse", "--short", "HEAD").trim()
-                val commitsSinceTag = runCommand(project, "git", "rev-list", "$tag..HEAD", "--count").trim()
+                val shortHashProvider = gitCommand(project, listOf("git", "rev-parse", "--short", "HEAD"))
+                val shortHash = shortHashProvider.orNull?.trim() ?: "unknown"
+                val commitsSinceTagProvider = gitCommand(project, listOf("git", "rev-list", "$tag..HEAD", "--count"))
+                val commitsSinceTag = commitsSinceTagProvider.orNull?.trim() ?: "0"
                 return "${tag.removePrefix("v")}-dev.$commitsSinceTag+$shortHash"
             }
         }
         
         // No tags found, use default
-        val shortHash = runCommand(project, "git", "rev-parse", "--short", "HEAD").trim()
+        val shortHashProvider = gitCommand(project, listOf("git", "rev-parse", "--short", "HEAD"))
+        val shortHash = shortHashProvider.orNull?.trim() ?: "unknown"
         return "0.0.1-dev+$shortHash"
     }
 
-    private fun runCommand(project: Project, vararg command: String): String {
-        return try {
-            val process = ProcessBuilder(*command)
-                .directory(project.rootDir)
-                .redirectOutput(ProcessBuilder.Redirect.PIPE)
-                .redirectError(ProcessBuilder.Redirect.PIPE)
-                .start()
-            
-            val output = process.inputStream.bufferedReader().use { it.readText() }
-            process.waitFor()
-            
-            if (process.exitValue() == 0) {
-                output.trim()
-            } else {
-                ""
-            }
-        } catch (e: Exception) {
-            project.logger.warn("Failed to run command: ${command.joinToString(" ")} - ${e.message}")
-            ""
+    private fun gitCommand(project: Project, command: List<String>): Provider<String> {
+        return project.providers.of(GitCommandValueSource::class.java) {
+            parameters.command = command
         }
     }
 }
