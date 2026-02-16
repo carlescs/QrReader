@@ -2,12 +2,15 @@ package cat.company.qrreader.domain.usecase.tags
 
 import android.util.Log
 import cat.company.qrreader.domain.model.SuggestedTagModel
+import com.google.mlkit.genai.common.DownloadStatus
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.Generation
 import com.google.mlkit.genai.prompt.GenerativeModel
 import com.google.mlkit.genai.prompt.TextPart
 import com.google.mlkit.genai.prompt.generateContentRequest
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 
 /**
@@ -32,13 +35,36 @@ open class GenerateTagSuggestionsUseCase {
                 model = Generation.getClient()
             }
 
-            // Check model availability
+            // Check model availability and download if needed
             val status = model?.checkStatus()
-            if (status != FeatureStatus.AVAILABLE) {
-                Log.w(TAG, "Gemini Nano not available. Status: $status")
-                return@withContext Result.failure(
-                    IllegalStateException("Gemini Nano is not available on this device (status: $status)")
-                )
+            when (status) {
+                FeatureStatus.UNAVAILABLE -> {
+                    Log.w(TAG, "Gemini Nano unavailable on this device")
+                    return@withContext Result.failure(
+                        IllegalStateException("Gemini Nano is not supported on this device")
+                    )
+                }
+                FeatureStatus.DOWNLOADABLE -> {
+                    Log.i(TAG, "Gemini Nano downloadable - starting download")
+                    return@withContext Result.failure(
+                        IllegalStateException("Gemini Nano model is being downloaded. Please try again in a moment.")
+                    )
+                }
+                FeatureStatus.DOWNLOADING -> {
+                    Log.i(TAG, "Gemini Nano download in progress")
+                    return@withContext Result.failure(
+                        IllegalStateException("Gemini Nano model download in progress. Please try again in a moment.")
+                    )
+                }
+                FeatureStatus.AVAILABLE -> {
+                    Log.d(TAG, "Gemini Nano is available")
+                }
+                else -> {
+                    Log.w(TAG, "Unknown Gemini Nano status: $status")
+                    return@withContext Result.failure(
+                        IllegalStateException("Unable to determine Gemini Nano availability (status: $status)")
+                    )
+                }
             }
 
             // Build barcode definition context
@@ -118,6 +144,59 @@ open class GenerateTagSuggestionsUseCase {
         } catch (e: Exception) {
             Log.e(TAG, "Error generating tag suggestions", e)
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Attempt to download the Gemini Nano model if it's downloadable
+     * @return Flow of download status updates
+     */
+    open suspend fun downloadModelIfNeeded() = withContext(Dispatchers.IO) {
+        try {
+            if (model == null) {
+                model = Generation.getClient()
+            }
+            
+            val status = model?.checkStatus()
+            when (status) {
+                FeatureStatus.DOWNLOADABLE -> {
+                    Log.i(TAG, "Starting Gemini Nano model download")
+                    model?.download()
+                        ?.catch { e ->
+                            Log.e(TAG, "Error during model download", e)
+                        }
+                        ?.collect { downloadStatus ->
+                            when (downloadStatus) {
+                                is DownloadStatus.DownloadStarted -> {
+                                    Log.d(TAG, "Gemini Nano download started")
+                                }
+                                is DownloadStatus.DownloadProgress -> {
+                                    Log.d(TAG, "Gemini Nano: ${downloadStatus.totalBytesDownloaded} bytes downloaded")
+                                }
+                                DownloadStatus.DownloadCompleted -> {
+                                    Log.i(TAG, "Gemini Nano download completed")
+                                }
+                                is DownloadStatus.DownloadFailed -> {
+                                    Log.e(TAG, "Gemini Nano download failed: ${downloadStatus.e.message}")
+                                }
+                            }
+                        }
+                }
+                FeatureStatus.DOWNLOADING -> {
+                    Log.i(TAG, "Gemini Nano download already in progress")
+                }
+                FeatureStatus.AVAILABLE -> {
+                    Log.d(TAG, "Gemini Nano already available, no download needed")
+                }
+                FeatureStatus.UNAVAILABLE -> {
+                    Log.w(TAG, "Gemini Nano not available on this device")
+                }
+                else -> {
+                    Log.w(TAG, "Unknown status: $status")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking/downloading model", e)
         }
     }
 

@@ -26,6 +26,18 @@ class QrCameraViewModel(
         private const val TAG = "QrCameraViewModel"
     }
     
+    init {
+        // Attempt to download Gemini Nano model on initialization
+        viewModelScope.launch {
+            try {
+                Log.d(TAG, "Checking Gemini Nano model availability")
+                generateTagSuggestionsUseCase.downloadModelIfNeeded()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error during model download check", e)
+            }
+        }
+    }
+    
     private val _uiState = MutableStateFlow(BarcodeState())
     val uiState: StateFlow<BarcodeState> = _uiState.asStateFlow()
 
