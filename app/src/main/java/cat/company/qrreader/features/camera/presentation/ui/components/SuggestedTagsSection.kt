@@ -47,8 +47,21 @@ fun SuggestedTagsSection(
                 }
             }
             error != null -> {
+                // Display user-friendly error message
+                val errorMessage = when {
+                    error.contains("not available on this device", ignoreCase = true) ||
+                    error.contains("UnsupportedOperation", ignoreCase = true) -> {
+                        "AI suggestions not supported on this device"
+                    }
+                    error.contains("downloading", ignoreCase = true) ||
+                    error.contains("download", ignoreCase = true) -> {
+                        "AI model downloading... Try again shortly"
+                    }
+                    else -> "Tag suggestions unavailable"
+                }
+                
                 Text(
-                    text = "Tag suggestions unavailable",
+                    text = errorMessage,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth(),
