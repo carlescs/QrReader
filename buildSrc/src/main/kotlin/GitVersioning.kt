@@ -19,13 +19,13 @@ abstract class GitCommandValueSource : ValueSource<String, GitCommandValueSource
 
     override fun obtain(): String {
         val output = ByteArrayOutputStream()
-        val error = ByteArrayOutputStream()
+        val errorStream = ByteArrayOutputStream()
         return try {
             val execResult = execOperations.exec {
                 commandLine(parameters.command)
                 workingDir = parameters.rootDir.get()
                 standardOutput = output
-                errorOutput = error
+                errorOutput = errorStream
                 isIgnoreExitValue = true
             }
             if (execResult.exitValue == 0) {
