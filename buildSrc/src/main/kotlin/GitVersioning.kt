@@ -1,15 +1,18 @@
 import org.gradle.api.Project
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.ValueSource
 import org.gradle.api.provider.ValueSourceParameters
 import org.gradle.process.ExecOperations
 import java.io.ByteArrayOutputStream
+import java.io.File
 import javax.inject.Inject
 
 abstract class GitCommandValueSource : ValueSource<String, GitCommandValueSource.Parameters> {
     interface Parameters : ValueSourceParameters {
         val command: ListProperty<String>
+        val rootDir: Property<File>
     }
 
     @get:Inject
@@ -17,13 +20,20 @@ abstract class GitCommandValueSource : ValueSource<String, GitCommandValueSource
 
     override fun obtain(): String {
         val output = ByteArrayOutputStream()
+        val errorStream = ByteArrayOutputStream()
         return try {
-            execOperations.exec {
-                commandLine(parameters.command)
+            val execResult = execOperations.exec {
+                commandLine(parameters.command.get())
+                workingDir = parameters.rootDir.get()
                 standardOutput = output
+                errorOutput = errorStream
                 isIgnoreExitValue = true
             }
-            output.toString().trim()
+            if (execResult.exitValue == 0) {
+                output.toString().trim()
+            } else {
+                ""
+            }
         } catch (_: Exception) {
             ""
         }
@@ -80,6 +90,7 @@ object GitVersioning {
     private fun gitCommand(project: Project, command: List<String>): Provider<String> {
         return project.providers.of(GitCommandValueSource::class.java) {
             parameters.command.set(command)
+            parameters.rootDir.set(project.rootDir)
         }
     }
 }
