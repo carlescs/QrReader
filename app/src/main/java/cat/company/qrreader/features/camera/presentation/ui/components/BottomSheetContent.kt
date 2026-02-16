@@ -22,20 +22,20 @@ import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.features.camera.presentation.BarcodeState
-import cat.company.qrreader.features.camera.presentation.QrCameraViewModel
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 
 /**
  * Content of the bottom sheet - displays scanned barcodes
  */
 @Composable
 fun BottomSheetContent(
-    lastBarcode: List<Barcode>?,
+    state: BarcodeState,
     snackbarHostState: SnackbarHostState,
-    viewModel: QrCameraViewModel = koinViewModel()
+    onToggleTag: (barcodeHash: Int, tagName: String) -> Unit
 ) {
+    val lastBarcode = state.lastBarcode
+
     Column(
         modifier = Modifier
             .padding(15.dp)
@@ -52,6 +52,12 @@ fun BottomSheetContent(
                     itemContent = { barcode ->
                         val barcodeHash = barcode.hashCode()
                         
+                        // Get tag data from the observed state (triggers recomposition when changed)
+                        val suggestedTags = state.barcodeTags[barcodeHash] ?: emptyList()
+                        val isLoading = state.isLoadingTags.contains(barcodeHash)
+                        val error = state.tagSuggestionErrors[barcodeHash]
+                        val selectedTagNames = suggestedTags.filter { it.isSelected }.map { it.name }
+
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -77,22 +83,20 @@ fun BottomSheetContent(
                             Column(modifier = Modifier.padding(15.dp)) {
                                 // Show suggested tags for THIS specific barcode
                                 SuggestedTagsSection(
-                                    suggestedTags = viewModel.getSuggestedTags(barcodeHash),
-                                    isLoading = viewModel.isLoadingTags(barcodeHash),
-                                    error = viewModel.getTagError(barcodeHash),
+                                    suggestedTags = suggestedTags,
+                                    isLoading = isLoading,
+                                    error = error,
                                     onToggleTag = { tagName ->
-                                        viewModel.toggleTagSelection(barcodeHash, tagName)
+                                        onToggleTag(barcodeHash, tagName)
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(bottom = 8.dp)
                                 )
                                 
-                                if (viewModel.getSuggestedTags(barcodeHash).isNotEmpty()) {
+                                if (suggestedTags.isNotEmpty()) {
                                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                                 }
-                                
-                                val selectedTagNames = viewModel.getSelectedTagNames(barcodeHash)
                                 when (barcode.valueType) {
                                     Barcode.TYPE_URL -> {
                                         UrlBarcodeDisplay(

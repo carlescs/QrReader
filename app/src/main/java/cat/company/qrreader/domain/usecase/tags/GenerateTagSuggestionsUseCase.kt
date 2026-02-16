@@ -185,36 +185,71 @@ open class GenerateTagSuggestionsUseCase {
                 model = Generation.getClient()
             }
             
-            val status = model?.checkStatus()
+            val generativeModel = model
+            if (generativeModel == null) {
+                Log.e(TAG, "✗ Failed to get GenerativeModel client")
+                return@withContext
+            }
+
+            val status = generativeModel.checkStatus()
             Log.i(TAG, "Gemini Nano status: $status")
             
             when (status) {
                 FeatureStatus.DOWNLOADABLE -> {
                     Log.i(TAG, "Gemini Nano is available but not downloaded. Starting download (~150-200MB)...")
-                    model?.download()
-                        ?.catch { e ->
-                            Log.e(TAG, "Error during model download stream", e)
-                        }
-                        ?.collect { downloadStatus ->
-                            when (downloadStatus) {
-                                is DownloadStatus.DownloadStarted -> {
-                                    Log.i(TAG, "✓ Gemini Nano download started. This may take 1-2 minutes.")
-                                }
-                                is DownloadStatus.DownloadProgress -> {
-                                    val mb = downloadStatus.totalBytesDownloaded / 1_000_000
-                                    Log.d(TAG, "  Download progress: ${mb}MB downloaded...")
-                                }
-                                DownloadStatus.DownloadCompleted -> {
-                                    Log.i(TAG, "✓ Gemini Nano download completed successfully! AI tag suggestions are now available.")
-                                }
-                                is DownloadStatus.DownloadFailed -> {
-                                    Log.e(TAG, "✗ Gemini Nano download failed: ${downloadStatus.e.message}", downloadStatus.e)
+                    try {
+                        generativeModel.download()
+                            .catch { e ->
+                                Log.e(TAG, "Error during model download stream", e)
+                                throw e
+                            }
+                            .collect { downloadStatus ->
+                                when (downloadStatus) {
+                                    is DownloadStatus.DownloadStarted -> {
+                                        Log.i(TAG, "✓ Gemini Nano download started. This may take 1-2 minutes.")
+                                    }
+                                    is DownloadStatus.DownloadProgress -> {
+                                        val mb = downloadStatus.totalBytesDownloaded / 1_000_000
+                                        Log.d(TAG, "  Download progress: ${mb}MB downloaded...")
+                                    }
+                                    DownloadStatus.DownloadCompleted -> {
+                                        Log.i(TAG, "✓ Gemini Nano download completed successfully! AI tag suggestions are now available.")
+                                    }
+                                    is DownloadStatus.DownloadFailed -> {
+                                        Log.e(TAG, "✗ Gemini Nano download failed: ${downloadStatus.e.message}", downloadStatus.e)
+                                    }
                                 }
                             }
-                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "✗ Failed to start Gemini Nano download", e)
+                    }
                 }
                 FeatureStatus.DOWNLOADING -> {
                     Log.i(TAG, "Gemini Nano download already in progress. Waiting for completion...")
+                    // Collect download progress for ongoing downloads too
+                    try {
+                        generativeModel.download()
+                            .catch { e ->
+                                Log.e(TAG, "Error monitoring download progress", e)
+                            }
+                            .collect { downloadStatus ->
+                                when (downloadStatus) {
+                                    is DownloadStatus.DownloadProgress -> {
+                                        val mb = downloadStatus.totalBytesDownloaded / 1_000_000
+                                        Log.d(TAG, "  Download progress: ${mb}MB downloaded...")
+                                    }
+                                    DownloadStatus.DownloadCompleted -> {
+                                        Log.i(TAG, "✓ Gemini Nano download completed successfully!")
+                                    }
+                                    is DownloadStatus.DownloadFailed -> {
+                                        Log.e(TAG, "✗ Gemini Nano download failed: ${downloadStatus.e.message}", downloadStatus.e)
+                                    }
+                                    else -> { /* Ignore other statuses */ }
+                                }
+                            }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "✗ Error monitoring download", e)
+                    }
                 }
                 FeatureStatus.AVAILABLE -> {
                     Log.i(TAG, "✓ Gemini Nano is already available. No download needed.")
@@ -222,9 +257,6 @@ open class GenerateTagSuggestionsUseCase {
                 FeatureStatus.UNAVAILABLE -> {
                     Log.w(TAG, "✗ Gemini Nano is NOT available on this device. AI tag suggestions will not work.")
                     Log.w(TAG, "  Supported devices: Pixel 9+, Galaxy Z Fold7+, Xiaomi 15, and other devices with AICore service.")
-                }
-                null -> {
-                    Log.e(TAG, "✗ Failed to check Gemini Nano status - model client is null")
                 }
                 else -> {
                     Log.w(TAG, "⚠ Unknown Gemini Nano status: $status")

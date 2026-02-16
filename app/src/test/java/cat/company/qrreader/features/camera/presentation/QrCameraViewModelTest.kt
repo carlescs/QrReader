@@ -391,32 +391,64 @@ class QrCameraViewModelTest {
 
         assertEquals("TestTag", tag.name)
         assertEquals(true, tag.isSelected)
+        assertTrue(tag.color.startsWith("#"))
+        assertEquals(7, tag.color.length) // #RRGGBB format
 
         val copied = tag.copy(isSelected = false)
         assertEquals(false, copied.isSelected)
         assertEquals("TestTag", copied.name)
+        assertEquals(tag.color, copied.color) // Color should be preserved on copy
+    }
+
+    @Test
+    fun suggestedTagModel_customColor() {
+        val customColor = "#FF5733"
+        val tag = SuggestedTagModel("Tag", true, customColor)
+
+        assertEquals(customColor, tag.color)
+    }
+
+    @Test
+    fun suggestedTagModel_generatesRandomColor() {
+        val tag1 = SuggestedTagModel("Tag1", true)
+        val tag2 = SuggestedTagModel("Tag2", true)
+
+        // Both should have valid hex colors
+        assertTrue(tag1.color.matches(Regex("#[0-9A-Fa-f]{6}")))
+        assertTrue(tag2.color.matches(Regex("#[0-9A-Fa-f]{6}")))
     }
 
     @Test
     fun suggestedTagModel_equality() {
-        val tag1 = SuggestedTagModel("Tag", true)
-        val tag2 = SuggestedTagModel("Tag", true)
+        val color = "#FF0000"
+        val tag1 = SuggestedTagModel("Tag", true, color)
+        val tag2 = SuggestedTagModel("Tag", true, color)
 
         assertEquals(tag1, tag2)
     }
 
     @Test
     fun suggestedTagModel_inequality_differentNames() {
-        val tag1 = SuggestedTagModel("Tag1", true)
-        val tag2 = SuggestedTagModel("Tag2", true)
+        val color = "#FF0000"
+        val tag1 = SuggestedTagModel("Tag1", true, color)
+        val tag2 = SuggestedTagModel("Tag2", true, color)
 
         assertFalse(tag1 == tag2)
     }
 
     @Test
     fun suggestedTagModel_inequality_differentSelection() {
-        val tag1 = SuggestedTagModel("Tag", true)
-        val tag2 = SuggestedTagModel("Tag", false)
+        val color = "#FF0000"
+        val tag1 = SuggestedTagModel("Tag", true, color)
+        val tag2 = SuggestedTagModel("Tag", false, color)
+
+        assertFalse(tag1 == tag2)
+    }
+
+    @Test
+    fun suggestedTagModel_inequality_differentColors() {
+        val tag1 = SuggestedTagModel("Tag", true, "#FF0000")
+        val tag2 = SuggestedTagModel("Tag", true, "#00FF00")
 
         assertFalse(tag1 == tag2)
     }

@@ -98,7 +98,13 @@ fun QrCameraScreen(
                 },
                 scrimColor = Color.DarkGray.copy(alpha = 0.8f)
             ) {
-                BottomSheetContent(lastBarcode = state.lastBarcode, snackbarHostState, viewModel)
+                BottomSheetContent(
+                    state = state,
+                    snackbarHostState = snackbarHostState,
+                    onToggleTag = { barcodeHash, tagName ->
+                        viewModel.toggleTagSelection(barcodeHash, tagName)
+                    }
+                )
             }
         }
     }
