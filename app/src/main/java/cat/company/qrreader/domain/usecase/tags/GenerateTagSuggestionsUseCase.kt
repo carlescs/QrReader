@@ -78,11 +78,18 @@ open class GenerateTagSuggestionsUseCase {
             Log.d(TAG, "Generating tags for: $barcodeContent ($barcodeDefinition)")
 
             // Generate suggestions using the Prompt API
-            val request = generateContentRequest(TextPart(textString = promptText)){}
+            val request = generateContentRequest(
+                TextPart(promptText)
+            ) {
+                temperature = 0.3f
+                topK = 10
+                candidateCount = 1
+                maxOutputTokens = 50
+            }
             
             // Generate content synchronously (suspend function)
             val response = model?.generateContent(request)
-            val text = response?.candidates[0]?.text?.trim() ?: ""
+            val text = response?.candidates?.firstOrNull()?.text?.trim() ?: ""
             
             Log.d(TAG, "Generated content: $text")
 
