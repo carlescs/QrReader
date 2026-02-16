@@ -58,6 +58,10 @@ class QrCameraViewModelTest {
             }
         }
 
+        override suspend fun downloadModelIfNeeded() {
+            // No-op for tests - model is not needed in test environment
+        }
+
         override fun cleanup() {
             // No-op for tests
         }
