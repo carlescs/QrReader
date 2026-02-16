@@ -10,7 +10,6 @@ import com.google.mlkit.genai.prompt.TextPart
 import com.google.mlkit.genai.prompt.generateContentRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 
 /**
@@ -152,11 +151,13 @@ open class GenerateTagSuggestionsUseCase {
             // Parse the response into tag suggestions
             val suggestions = text
                 .split(",")
+                .asSequence()
                 .map { it.trim() }
                 .filter { it.isNotEmpty() && it.length <= 30 }
                 .distinct()
                 .take(3)
                 .map { SuggestedTagModel(name = it, isSelected = true) }
+                .toList()
 
             if (suggestions.isEmpty()) {
                 return@withContext Result.failure(
