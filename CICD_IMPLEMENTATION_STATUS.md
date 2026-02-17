@@ -38,8 +38,10 @@ This document provides a quick overview of the CI/CD strategy implementation sta
 **Requires Admin Access:**
 - [ ] Configure GitHub Environments in repository Settings
   - [ ] PlayStore-Alpha (no reviewers)
-  - [ ] PlayStore-Beta (1 reviewer)
-  - [ ] PlayStore (2+ reviewers)
+  - [ ] PlayStore-Beta (1 reviewer - optional, for 3-tier flow)
+  - [ ] PlayStore (1+ reviewer - solo developers can add themselves)
+
+**Note for Solo Developers:** Add yourself as the sole reviewer to enable self-approval with a manual safety gate.
 
 **Instructions:** See `.github/CICD.md` → "Setting Up Environment Protection"
 
@@ -155,8 +157,10 @@ These items require repository administrator access to GitHub Settings:
 
 1. **GitHub Environments** (Settings → Environments)
    - Create `PlayStore-Alpha` (no protection)
-   - Create `PlayStore-Beta` (1 reviewer)
-   - Create `PlayStore` (2+ reviewers required)
+   - Create `PlayStore-Beta` (1 reviewer - optional for 3-tier flow)
+   - Create `PlayStore` (1+ reviewer)
+     - **Solo developers**: Add yourself for self-approval
+     - **Teams**: Add 2+ reviewers for redundancy
    - See: `.github/CICD.md` → "Setting Up Environment Protection"
 
 2. **Repository Secrets** (Settings → Secrets and variables → Actions)
@@ -184,7 +188,37 @@ These items require repository administrator access to GitHub Settings:
 
 ## Quick Start for Developers
 
-### Using 2-Tier Flow (Default)
+### Solo Developer Workflow
+
+As a solo developer, you have a streamlined setup:
+
+1. **Initial Setup** (one-time):
+   - Configure `PlayStore` environment with yourself as the sole reviewer
+   - This enables self-approval while maintaining a safety gate
+
+2. **Daily Workflow**:
+   ```bash
+   # Make changes, commit, push to master
+   git push origin master
+   
+   # Workflow automatically:
+   # 1. Runs tests and builds
+   # 2. Deploys to Alpha
+   # 3. Waits for your approval for Production
+   
+   # When ready to promote:
+   # - Go to Actions tab
+   # - Click on the workflow run
+   # - Review and self-approve the Production deployment
+   ```
+
+3. **Benefits**:
+   - ✅ No waiting for other reviewers
+   - ✅ Still have a manual safety check before production
+   - ✅ Can review Alpha deployment results before promoting
+   - ✅ Simple and efficient for solo projects
+
+### Using 2-Tier Flow (Default - All Developers)
 ```bash
 # Make changes, commit, push to master
 git push origin master

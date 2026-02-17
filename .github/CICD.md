@@ -2,6 +2,26 @@
 
 This document describes the CI/CD pipeline configuration for the QR Reader Android application.
 
+## Quick Start for Solo Developers
+
+**As a solo developer**, you can configure a streamlined approval process:
+
+1. **Environment Setup**: Add yourself as the sole reviewer for the `PlayStore` environment
+   - This creates a manual approval gate you control
+   - You can self-approve deployments when ready
+   - Provides a final safety check before production
+
+2. **Simplified Flow**: Use the default 2-tier flow (Alpha → Production)
+   - Push to master → automatic Alpha deployment
+   - Self-approve Production promotion when ready
+   - No need for Beta track or multiple reviewers
+
+3. **Optional**: Skip approval gates entirely by not configuring environment protection
+   - Deployments will proceed automatically
+   - **Not recommended** for production apps (no safety gate)
+
+See "Setting Up Environment Protection" below for configuration instructions.
+
 ## Overview
 
 The project uses GitHub Actions for continuous integration and deployment. The main workflow is defined in `.github/workflows/android-ci-cd.yml`.
@@ -69,7 +89,9 @@ Promotes to Production track (supports both flows):
 - **3-Tier Flow** (optional): Promotes from Beta to Production (when Beta job ran)
 - **Runs automatically after release job** (or after Beta if 3-tier)
 - **Pauses and waits for manual approval** before executing (via GitHub Environment protection)
-- Requires at least 2 reviewers to approve in the Actions UI
+- **Approval requirements**: Configurable based on team size
+  - Solo developers: Can add themselves as single reviewer for self-approval
+  - Teams: Recommend 2+ reviewers for redundancy
 - Intelligently detects source track (Alpha or Beta) based on workflow inputs
 - Uses Google Play API to promote the release to Production
 - See "Manual Approval for Production Promotion" section below for setup and usage instructions
@@ -95,7 +117,7 @@ Code → CI → Alpha (Internal) → Production (Public)
 **How to Trigger:**
 1. Push to master branch (automatic Alpha deployment)
 2. Wait for Alpha testing validation
-3. Approve Production promotion (2 reviewers required)
+3. Approve Production promotion (self-approve if solo developer, or wait for team reviewers)
 
 ### Flow 2: Cautious (3-Tier) - **OPT-IN**
 ```
@@ -119,8 +141,8 @@ Code → CI → Alpha (Internal) → Beta (External) → Production (Public)
 4. ✅ Check "Upload to Google Play Alpha"
 5. ✅ Check "Use Beta track before Production" ← **KEY STEP**
 6. Click "Run workflow"
-7. Approve Beta promotion (1 reviewer)
-8. Approve Production promotion (2 reviewers)
+7. Approve Beta promotion (if configured)
+8. Approve Production promotion (self-approve if solo developer)
 
 ## Required Secrets
 
@@ -554,8 +576,10 @@ The workflow uses three GitHub Environments for deployment control:
    - Click **"New environment"**
    - Name it **"PlayStore-Beta"** (exact name, case-sensitive)
    - Click **"Configure environment"**
+   - **For solo developers**: Add yourself as the reviewer (allows self-approval)
+   - **For teams**: Add 1 reviewer (e.g., Product Owner or Tech Lead)
    - Under **Environment protection rules**, check **"Required reviewers"**
-   - **Add reviewers**: Select 1 team member (e.g., Product Owner or Tech Lead)
+   - **Add reviewers**: Select team member(s)
    - (Optional) Configure **Wait timer**: Add a delay (e.g., 5 minutes)
    - Click **"Save protection rules"**
 
@@ -564,10 +588,11 @@ The workflow uses three GitHub Environments for deployment control:
    - Name it **"PlayStore"** (exact name, case-sensitive)
    - Click **"Configure environment"**
    - Under **Environment protection rules**, check **"Required reviewers"**
-   - **Add reviewers**: Click **"Add reviewers"** and select team members who can approve production deployments
-     - Recommend: Add at least 2 reviewers for redundancy
-     - Only selected reviewers can approve deployments
-   - (Optional) Configure **Wait timer**: Add a delay (e.g., 10 minutes) to give time for review
+   - **Add reviewers**: 
+     - **For solo developers**: Add yourself as the sole reviewer (enables self-approval with manual gate)
+     - **For small teams**: Add 1-2 reviewers
+     - **For larger teams**: Add 2+ reviewers for redundancy
+   - (Optional) Configure **Wait timer**: Add a delay (e.g., 10 minutes) to give time for final checks
    - Click **"Save protection rules"**
 
 #### Verification
@@ -576,8 +601,8 @@ After setup, verify environments exist:
 - Navigate to: Repository → Settings → Environments
 - You should see:
   - ✅ PlayStore-Alpha (no protection)
-  - ✅ PlayStore-Beta (1 reviewer - optional)
-  - ✅ PlayStore (2+ reviewers - required)
+  - ✅ PlayStore-Beta (1 reviewer - optional, only for 3-tier flow)
+  - ✅ PlayStore (at least 1 reviewer - required for manual approval gate)
 
 ### What Happens During Promotion
 
@@ -619,16 +644,19 @@ The workflow uses GitHub Environments for deployment gates:
 - **PlayStore-Beta** (Optional): Used for beta track promotion in 3-tier flow
   - Used for: External beta testing (optional deployment path)
   - Trigger: Manual workflow dispatch with "Use Beta track" enabled
-  - Approval: Recommended 1 reviewer
+  - Approval: 1 reviewer (can be yourself for solo development)
   - Only needed if using 3-tier deployment flow
 
-- **PlayStore** (Production): Used for production promotion (**CRITICAL**)
+- **PlayStore** (Production): Used for production promotion (**IMPORTANT**)
   - Used for: Production releases to all users
   - Trigger: After Alpha (2-tier) or Beta (3-tier) deployment
-  - Approval: **REQUIRED** - At least 2 reviewers must be configured
-  - Without reviewers configured, promote job will run automatically (NOT RECOMMENDED)
+  - Approval: **Configurable** based on team size
+    - **Solo developers**: Add yourself as reviewer (enables self-approval with safety gate)
+    - **Small teams**: 1-2 reviewers
+    - **Larger teams**: 2+ reviewers for redundancy
+  - **Without any reviewers configured**: Promote job will run automatically (provides no safety gate)
 
-**Critical**: The PlayStore environment **must** have "Required reviewers" configured for the manual approval gate to work. Without this configuration, the promote job will run automatically without waiting for approval.
+**Note for Solo Developers**: Adding yourself as the sole reviewer provides a final manual approval gate while allowing you to self-approve when ready. This is recommended over having no protection at all.
 
 See "Setting Up Environment Protection" in the "Manual Approval for Production Promotion" section above for detailed setup instructions.
 
