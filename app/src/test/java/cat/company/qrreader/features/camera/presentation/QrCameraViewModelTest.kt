@@ -303,9 +303,10 @@ class QrCameraViewModelTest {
 
     @Test
     fun barcodeState_dataClassCopy_worksCorrectly() {
+        val testColor = "#FF0000"
         val state = BarcodeState(
             lastBarcode = null,
-            barcodeTags = mapOf(1 to listOf(SuggestedTagModel("Test", true))),
+            barcodeTags = mapOf(1 to listOf(SuggestedTagModel("Test", true, testColor))),
             isLoadingTags = setOf(1),
             tagSuggestionErrors = mapOf(1 to "Error")
         )
@@ -339,7 +340,7 @@ class QrCameraViewModelTest {
     @Test
     fun barcodeState_withDifferentBarcodeTags_notEqual() {
         val state1 = BarcodeState(barcodeTags = emptyMap())
-        val state2 = BarcodeState(barcodeTags = mapOf(1 to listOf(SuggestedTagModel("Tag", true))))
+        val state2 = BarcodeState(barcodeTags = mapOf(1 to listOf(SuggestedTagModel("Tag", true, "#FF0000"))))
 
         assertFalse(state1 == state2)
     }
