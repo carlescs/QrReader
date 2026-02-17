@@ -60,6 +60,9 @@ abstract class SavedBarcodeDao {
 
     @Insert
     abstract suspend fun insertAll(vararg savedBarcodes: SavedBarcode)
+    
+    @Insert
+    abstract suspend fun insert(savedBarcode: SavedBarcode): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertBarcodeTag(barcodeTag:BarcodeTagCrossRef)

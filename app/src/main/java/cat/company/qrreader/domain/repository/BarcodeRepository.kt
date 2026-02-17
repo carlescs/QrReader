@@ -34,6 +34,11 @@ interface BarcodeRepository {
      * Insert barcodes
      */
     suspend fun insertBarcodes(vararg barcodes: BarcodeModel)
+    
+    /**
+     * Insert a single barcode and return its ID
+     */
+    suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long
 
     /**
      * Update a barcode

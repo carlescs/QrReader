@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -20,6 +21,7 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.features.camera.presentation.BarcodeState
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.launch
 
@@ -28,9 +30,12 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun BottomSheetContent(
-    lastBarcode: List<Barcode>?,
-    snackbarHostState: SnackbarHostState
+    state: BarcodeState,
+    snackbarHostState: SnackbarHostState,
+    onToggleTag: (barcodeHash: Int, tagName: String) -> Unit
 ) {
+    val lastBarcode = state.lastBarcode
+
     Column(
         modifier = Modifier
             .padding(15.dp)
@@ -38,13 +43,21 @@ fun BottomSheetContent(
     ) {
         val clipboard: Clipboard = LocalClipboard.current
         val coroutineScope = rememberCoroutineScope()
+        
         if (lastBarcode != null) {
-
             LazyColumn(modifier = Modifier.fillMaxHeight().padding(horizontal = 16.dp)) {
                 items(
                     items = lastBarcode,
                     key = { it.hashCode() },
                     itemContent = { barcode ->
+                        val barcodeHash = barcode.hashCode()
+                        
+                        // Get tag data from the observed state (triggers recomposition when changed)
+                        val suggestedTags = state.barcodeTags[barcodeHash] ?: emptyList()
+                        val isLoading = state.isLoadingTags.contains(barcodeHash)
+                        val error = state.tagSuggestionErrors[barcodeHash]
+                        val selectedTagNames = suggestedTags.filter { it.isSelected }.map { it.name }
+
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -68,15 +81,37 @@ fun BottomSheetContent(
                             elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
                         ) {
                             Column(modifier = Modifier.padding(15.dp)) {
+                                // Show suggested tags for THIS specific barcode
+                                SuggestedTagsSection(
+                                    suggestedTags = suggestedTags,
+                                    isLoading = isLoading,
+                                    error = error,
+                                    onToggleTag = { tagName ->
+                                        onToggleTag(barcodeHash, tagName)
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 8.dp)
+                                )
+                                
+                                if (suggestedTags.isNotEmpty()) {
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                                }
                                 when (barcode.valueType) {
                                     Barcode.TYPE_URL -> {
-                                        UrlBarcodeDisplay(barcode = barcode)
+                                        UrlBarcodeDisplay(
+                                            barcode = barcode,
+                                            selectedTagNames = selectedTagNames
+                                        )
                                     }
                                     Barcode.TYPE_CONTACT_INFO -> {
                                         ContactBarcodeDisplay(barcode = barcode)
                                     }
                                     else -> {
-                                        OtherContent(barcode = barcode)
+                                        OtherContent(
+                                            barcode = barcode,
+                                            selectedTagNames = selectedTagNames
+                                        )
                                     }
                                 }
                             }

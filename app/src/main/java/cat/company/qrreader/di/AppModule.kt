@@ -9,17 +9,27 @@ import cat.company.qrreader.db.Migrations
 import cat.company.qrreader.domain.repository.BarcodeRepository
 import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.repository.TagRepository
-import cat.company.qrreader.domain.usecase.history.*
-import cat.company.qrreader.domain.usecase.tags.*
-import cat.company.qrreader.domain.usecase.settings.*
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeUseCase
+import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
 import cat.company.qrreader.domain.usecase.codecreator.GenerateQrCodeUseCase
 import cat.company.qrreader.domain.usecase.codecreator.SaveBitmapToMediaStoreUseCase
-import cat.company.qrreader.features.history.presentation.HistoryViewModel
-import cat.company.qrreader.features.tags.presentation.TagsViewModel
+import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
+import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
+import cat.company.qrreader.domain.usecase.history.SwitchBarcodeTagUseCase
+import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
+import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
+import cat.company.qrreader.domain.usecase.settings.GetSearchAcrossAllTagsUseCase
+import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
+import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCase
+import cat.company.qrreader.domain.usecase.tags.DeleteTagUseCase
+import cat.company.qrreader.domain.usecase.tags.GenerateTagSuggestionsUseCase
+import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
+import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import cat.company.qrreader.features.camera.presentation.QrCameraViewModel
 import cat.company.qrreader.features.codeCreator.presentation.CodeCreatorViewModel
+import cat.company.qrreader.features.history.presentation.HistoryViewModel
 import cat.company.qrreader.features.settings.presentation.SettingsViewModel
+import cat.company.qrreader.features.tags.presentation.TagsViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -53,10 +63,13 @@ val repositoryModule = module {
 val useCaseModule = module {
     factory { GetBarcodesWithTagsUseCase(get()) }
     factory { SaveBarcodeUseCase(get()) }
+    factory { SaveBarcodeWithTagsUseCase(get()) }
     factory { UpdateBarcodeUseCase(get()) }
     factory { DeleteBarcodeUseCase(get()) }
     factory { SwitchBarcodeTagUseCase(get()) }
     factory { GetAllTagsUseCase(get()) }
+    factory { GetOrCreateTagsByNameUseCase(get()) }
+    factory { GenerateTagSuggestionsUseCase() }
     factory { DeleteTagUseCase(get()) }
     factory { GetHideTaggedSettingUseCase(get()) }
     factory { SetHideTaggedSettingUseCase(get()) }
@@ -69,7 +82,7 @@ val useCaseModule = module {
 val viewModelModule = module {
     viewModel { HistoryViewModel(get(), get(), get(), get()) }
     viewModel { TagsViewModel(get(), get()) }
-    viewModel { QrCameraViewModel() }
+    viewModel { QrCameraViewModel(get<GenerateTagSuggestionsUseCase>(), get<GetAllTagsUseCase>()) }
     viewModel { CodeCreatorViewModel(get<GenerateQrCodeUseCase>()) }
     viewModel { SettingsViewModel(get(), get(), get(), get()) }
 }

@@ -68,6 +68,7 @@ dependencies {
 
     // Barcode model
     implementation libs.google.mlkit.barcode
+    implementation libs.google.mlkit.genai.prompt
 
     implementation libs.qrcode.kotlin
 
