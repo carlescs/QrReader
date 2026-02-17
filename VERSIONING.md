@@ -12,7 +12,7 @@ For detailed technical information about version code testing and troubleshootin
 - Example: 259, 260, 261...
 - **Feature branches**: Additional branch-specific offset added to prevent collisions
   - Ensures each feature branch has unique version codes when deployed to Alpha track
-  - Example: Branch "feature/new-scanner" might use: 100200 (2 commits + branch offset)
+  - Example: Branch "feature/new-scanner" with 260 commits might use: 456260 (branch offset 456000 + 260 commits)
 
 ### Version Name
 - Derived from Git tags following semantic versioning (major.minor.patch)
@@ -167,9 +167,9 @@ When deploying multiple feature branches to the Alpha track:
 **Example Scenario:**
 ```bash
 # Three developers working on different features
-Branch: feature/ai-descriptions     → Version: 123456 (offset 123000 + 456 commits)
-Branch: feature/tag-suggestions      → Version: 789460 (offset 789000 + 460 commits)  
-Branch: feature/improved-scanner     → Version: 345458 (offset 345000 + 458 commits)
+Branch: feature/ai-descriptions     → Version: 123000 + 456 commits = 123456
+Branch: feature/tag-suggestions      → Version: 789000 + 460 commits = 789460
+Branch: feature/improved-scanner     → Version: 345000 + 458 commits = 345458
 
 # All can be deployed to Alpha simultaneously without conflicts
 ```

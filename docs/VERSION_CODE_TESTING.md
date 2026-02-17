@@ -119,8 +119,10 @@ fun getVersionCode(project: Project): Int {
     
     // Only apply offset for non-master/main branches
     if (branch != "master" && branch != "main" && branch != "HEAD") {
-        val branchHash = branch.hashCode().let { hash ->
-            (if (hash < 0) -hash else hash) % 10000
+        // Generate a consistent hash from the branch name
+        // Handle Int.MIN_VALUE edge case by converting to Long first
+        val branchHash = branch.hashCode().toLong().let { hash ->
+            kotlin.math.abs(hash).toInt() % 10000
         }
         return count + (branchHash * 100000)
     }
@@ -145,10 +147,10 @@ fun getVersionCode(project: Project): Int {
    - Production releases maintain sequential numbering
 
 4. **Version Code Ranges**: Understand the ranges
-   - Master: 1 - 99,999 (typical range, assuming < 100k commits)
+   - Master: 1 to 99,999 (typical range, assuming < 100k commits)
    - Feature branches: 100,000+ (with branch-specific offsets)
    - This prevents any overlap between master and feature branches
-   - **Note**: If master exceeds 100k commits, consider migrating to a new major version tag to reset the counter or adjust the offset multiplier in GitVersioning.kt
+   - **Note**: If master exceeds 100k commits, consider migrating to a new major version tag to reset the counter or adjust the offset multiplier in `buildSrc/src/main/kotlin/GitVersioning.kt`
 
 ## Troubleshooting
 
