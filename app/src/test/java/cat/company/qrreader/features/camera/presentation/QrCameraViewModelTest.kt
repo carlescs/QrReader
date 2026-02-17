@@ -3,6 +3,7 @@ package cat.company.qrreader.features.camera.presentation
 import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.domain.repository.TagRepository
+import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeDescriptionUseCase
 import cat.company.qrreader.domain.usecase.tags.GenerateTagSuggestionsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -35,6 +36,7 @@ import org.robolectric.annotation.Config
 class QrCameraViewModelTest {
 
     private lateinit var fakeGenerateTagSuggestionsUseCase: FakeGenerateTagSuggestionsUseCase
+    private lateinit var fakeGenerateBarcodeDescriptionUseCase: FakeGenerateBarcodeDescriptionUseCase
     private lateinit var fakeTagRepository: FakeTagRepository
     private lateinit var getAllTagsUseCase: GetAllTagsUseCase
     private lateinit var viewModel: QrCameraViewModel
@@ -60,6 +62,28 @@ class QrCameraViewModelTest {
 
         override suspend fun downloadModelIfNeeded() {
             // No-op for tests - model is not needed in test environment
+        }
+
+        override fun cleanup() {
+            // No-op for tests
+        }
+    }
+
+    // Fake GenerateBarcodeDescriptionUseCase that returns predetermined results
+    private class FakeGenerateBarcodeDescriptionUseCase(
+        var shouldSucceed: Boolean = true,
+        var descriptionToReturn: String = "Test description"
+    ) : GenerateBarcodeDescriptionUseCase() {
+        override suspend fun invoke(
+            barcodeContent: String,
+            barcodeType: String?,
+            barcodeFormat: String?
+        ): Result<String> {
+            return if (shouldSucceed) {
+                Result.success(descriptionToReturn)
+            } else {
+                Result.failure(Exception("Test error"))
+            }
         }
 
         override fun cleanup() {
@@ -137,9 +161,14 @@ class QrCameraViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         fakeGenerateTagSuggestionsUseCase = FakeGenerateTagSuggestionsUseCase()
+        fakeGenerateBarcodeDescriptionUseCase = FakeGenerateBarcodeDescriptionUseCase()
         fakeTagRepository = FakeTagRepository()
         getAllTagsUseCase = GetAllTagsUseCase(fakeTagRepository)
-        viewModel = QrCameraViewModel(fakeGenerateTagSuggestionsUseCase, getAllTagsUseCase)
+        viewModel = QrCameraViewModel(
+            fakeGenerateTagSuggestionsUseCase,
+            getAllTagsUseCase,
+            fakeGenerateBarcodeDescriptionUseCase
+        )
     }
 
     @After
@@ -484,5 +513,52 @@ class QrCameraViewModelTest {
 
         assertNotNull(viewModel.uiState.value.lastBarcode)
         assertEquals(0, viewModel.uiState.value.lastBarcode?.size)
+    }
+
+    // ==================== Tests for description functionality ====================
+
+    @Test
+    fun getDescription_nonExistentBarcode_returnsNull() {
+        val barcodeHash = 99999
+
+        val description = viewModel.getDescription(barcodeHash)
+
+        assertEquals(null, description)
+    }
+
+    @Test
+    fun isLoadingDescription_nonExistentBarcode_returnsFalse() {
+        val barcodeHash = 99999
+
+        val isLoading = viewModel.isLoadingDescription(barcodeHash)
+
+        assertFalse(isLoading)
+    }
+
+    @Test
+    fun getDescriptionError_nonExistentBarcode_returnsNull() {
+        val barcodeHash = 99999
+
+        val error = viewModel.getDescriptionError(barcodeHash)
+
+        assertEquals(null, error)
+    }
+
+    @Test
+    fun barcodeState_includesDescriptionFields() {
+        val state = viewModel.uiState.value
+
+        assertNotNull(state.barcodeDescriptions)
+        assertNotNull(state.isLoadingDescriptions)
+        assertNotNull(state.descriptionErrors)
+    }
+
+    @Test
+    fun barcodeState_descriptionsInitiallyEmpty() {
+        val state = viewModel.uiState.value
+
+        assertTrue(state.barcodeDescriptions.isEmpty())
+        assertTrue(state.isLoadingDescriptions.isEmpty())
+        assertTrue(state.descriptionErrors.isEmpty())
     }
 }
