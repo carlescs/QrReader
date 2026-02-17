@@ -146,11 +146,12 @@ fun getVersionCode(project: Project): Int {
    - Production releases maintain sequential numbering
 
 4. **Version Code Ranges**: Understand the ranges
-   - Master: 1 to 99,999 (typical range, assuming < 100k commits)
+   - Master: 1+ (no upper limit, grows with commit count)
    - Feature branches: 100,000 to 999,999,999 (offset range: 0-9999 * 100,000 + commits)
-   - Maximum offset: 999,900,000 (when hash % 10000 = 9999)
-   - This prevents any overlap between master and feature branches in typical use
-   - **Note**: If master exceeds 100k commits, there's still no collision risk as feature branch offsets start at 100,000 minimum. However, if approaching 999M commits (highly unlikely), consider migrating to a new major version or adjusting the multiplier in `buildSrc/src/main/kotlin/GitVersioning.kt`
+   - Maximum feature branch offset: 999,900,000 (when hash % 10000 = 9999)
+   - **Collision-free range**: Master can safely grow to ~999M commits before any risk of collision with feature branches
+   - **Practical range**: Most projects stay under 100k commits, making collisions extremely unlikely
+   - **Note**: If approaching 999M commits (highly unlikely), consider migrating to a new major version or adjusting the multiplier in `buildSrc/src/main/kotlin/GitVersioning.kt`
 
 ## Troubleshooting
 

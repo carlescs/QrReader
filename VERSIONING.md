@@ -174,7 +174,7 @@ Branch: feature/ai-descriptions     → Version: offset1 + 456 commits
 Branch: feature/tag-suggestions      → Version: offset2 + 460 commits
 Branch: feature/improved-scanner     → Version: offset3 + 458 commits
 
-# Actual values depend on hash(branchName) % 10000 * 100000
+# Actual values depend on (hash(branchName) % 10000) * 100000
 # For example: 
 #   hash("feature/ai-descriptions") % 10000 = 1234 → offset = 123400000
 #   Plus 456 commits = version code 123400456
