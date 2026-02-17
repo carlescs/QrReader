@@ -78,29 +78,6 @@ This document defines a comprehensive CI/CD strategy for the QR Reader Android a
 - Creates GitHub releases with artifacts
 - Automated versioning from Git
 
-#### ⚠️ Azure Pipelines (Legacy/Alternative)
-**Location:** `devops/azure-pipelines.yml`
-
-**Status:** Currently maintained but GitHub Actions is the primary CI/CD
-**Capabilities:**
-- Test and build stages
-- SonarCloud integration
-- Google Play publishing
-- Production promotion
-
-**Recommendation:** Deprecate or maintain as backup only
-
-#### ⚠️ Advanced Security Pipeline
-**Location:** `devops/code-security.yml`
-
-**Status:** Basic security scanning
-**Capabilities:**
-- CodeQL analysis
-- SonarCloud integration
-- Currently uses Java 17 (outdated)
-
-**Recommendation:** Migrate security scanning to main GitHub Actions workflow
-
 ### Versioning Strategy
 
 #### ✅ Git-Based Automatic Versioning
