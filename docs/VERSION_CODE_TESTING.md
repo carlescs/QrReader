@@ -145,9 +145,10 @@ fun getVersionCode(project: Project): Int {
    - Production releases maintain sequential numbering
 
 4. **Version Code Ranges**: Understand the ranges
-   - Master: 1 - 99,999 (assuming < 100k commits)
+   - Master: 1 - 99,999 (typical range, assuming < 100k commits)
    - Feature branches: 100,000+ (with branch-specific offsets)
    - This prevents any overlap between master and feature branches
+   - **Note**: If master exceeds 100k commits, consider migrating to a new major version tag to reset the counter or adjust the offset multiplier in GitVersioning.kt
 
 ## Troubleshooting
 
