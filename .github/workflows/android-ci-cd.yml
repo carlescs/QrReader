@@ -14,6 +14,11 @@ on:
         required: false
         type: boolean
         default: false
+      use_beta_track:
+        description: 'Use Beta track before Production (3-tier: Alpha → Beta → Production)'
+        required: false
+        type: boolean
+        default: false
 
 # Required permissions for the workflow
 permissions:
@@ -223,15 +228,15 @@ jobs:
           track: alpha
           status: completed
 
-  promote:
-    name: Promote to Production
+  beta:
+    name: Promote to Beta (Optional)
     runs-on: ubuntu-latest
     needs: release
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    # Only run if use_beta_track is enabled via workflow_dispatch
+    if: github.event_name == 'workflow_dispatch' && inputs.use_beta_track == true
     environment:
-      name: PlayStore
-      # Configure required reviewers in GitHub Settings → Environments → PlayStore
-      # This creates a manual approval gate before the job executes
+      name: PlayStore-Beta
+      # Configure required reviewers in GitHub Settings → Environments → PlayStore-Beta
 
     steps:
       - name: Checkout code
@@ -256,11 +261,11 @@ jobs:
         run: |
           pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
 
-      - name: Promote to production track
+      - name: Promote Alpha to Beta track
         env:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
-          cat > promote.py << 'EOF'
+          cat > promote_to_beta.py << 'EOF'
           import json
           import os
           from google.oauth2 import service_account
@@ -296,6 +301,123 @@ jobs:
                   version_codes = latest_release.get('versionCodes', [])
                   
                   if version_codes:
+                      # Promote to beta
+                      service.edits().tracks().update(
+                          editId=edit_id,
+                          packageName=package_name,
+                          track='beta',
+                          body={
+                              'releases': [{
+                                  'versionCodes': version_codes,
+                                  'status': 'completed'
+                              }]
+                          }
+                      ).execute()
+                      
+                      # Commit the edit
+                      commit_request = service.edits().commit(
+                          editId=edit_id,
+                          packageName=package_name
+                      )
+                      commit_request.execute()
+                      print(f'Successfully promoted version codes {version_codes} to beta track')
+                  else:
+                      print('No version codes found in alpha track')
+              else:
+                  print('No releases found in alpha track')
+          except Exception as e:
+              print(f'Error promoting to beta: {e}')
+              raise
+          EOF
+          
+          python promote_to_beta.py
+
+  promote:
+    name: Promote to Production
+    runs-on: ubuntu-latest
+    needs: [release, beta]
+    # Run after release (2-tier: Alpha → Production) OR after beta (3-tier: Alpha → Beta → Production)
+    # Skip beta if it didn't run (always() allows this job even if beta was skipped)
+    if: |
+      always() && 
+      needs.release.result == 'success' &&
+      (needs.beta.result == 'success' || needs.beta.result == 'skipped') &&
+      github.ref == 'refs/heads/master'
+    environment:
+      name: PlayStore
+      # Configure required reviewers in GitHub Settings → Environments → PlayStore
+      # This creates a manual approval gate before the job executes
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for required secrets
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret is not set"
+            exit 1
+          fi
+          echo "Service account secret is configured"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Google Play API dependencies
+        run: |
+          pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+
+      - name: Promote to production track
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          USE_BETA_TRACK: ${{ github.event.inputs.use_beta_track || 'false' }}
+        run: |
+          cat > promote.py << 'EOF'
+          import json
+          import os
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+          
+          # Load service account credentials
+          credentials_json = os.environ['GOOGLE_PLAY_SERVICE_ACCOUNT_JSON']
+          credentials_dict = json.loads(credentials_json)
+          credentials = service_account.Credentials.from_service_account_info(
+              credentials_dict,
+              scopes=['https://www.googleapis.com/auth/androidpublisher']
+          )
+          
+          # Build the service
+          service = build('androidpublisher', 'v3', credentials=credentials)
+          package_name = 'cat.company.qrreader'
+          
+          # Determine source track based on whether beta was used
+          use_beta = os.environ.get('USE_BETA_TRACK', 'false').lower() == 'true'
+          source_track = 'beta' if use_beta else 'alpha'
+          
+          print(f'Promoting from {source_track} track to production')
+          
+          # Start an edit
+          edit_request = service.edits().insert(body={}, packageName=package_name)
+          edit_response = edit_request.execute()
+          edit_id = edit_response['id']
+          
+          try:
+              # Get the latest version from source track (alpha or beta)
+              tracks_result = service.edits().tracks().get(
+                  editId=edit_id,
+                  packageName=package_name,
+                  track=source_track
+              ).execute()
+              
+              if tracks_result.get('releases'):
+                  latest_release = tracks_result['releases'][0]
+                  version_codes = latest_release.get('versionCodes', [])
+                  
+                  if version_codes:
                       # Promote to production
                       service.edits().tracks().update(
                           editId=edit_id,
@@ -315,11 +437,11 @@ jobs:
                           packageName=package_name
                       )
                       commit_request.execute()
-                      print(f'Successfully promoted version codes {version_codes} to production')
+                      print(f'Successfully promoted version codes {version_codes} from {source_track} to production')
                   else:
-                      print('No version codes found in alpha track')
+                      print(f'No version codes found in {source_track} track')
               else:
-                  print('No releases found in alpha track')
+                  print(f'No releases found in {source_track} track')
           except Exception as e:
               print(f'Error promoting to production: {e}')
               raise

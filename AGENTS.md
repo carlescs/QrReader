@@ -537,19 +537,6 @@ Primary CI/CD configured in `.github/workflows/android-ci-cd.yml`:
 
 See [.github/CICD.md](.github/CICD.md) for detailed setup instructions and best practices.
 
-### Azure Pipelines (Legacy)
-
-Alternative CI/CD configured in `devops/azure-pipelines.yml`:
-- **Test Stage**: Runs unit tests, generates JaCoCo coverage
-- **Build Stage**: Builds APK
-- **Triggers**: On push to master branch
-- **VM Image**: ubuntu-latest
-- **Java Version**: 21
-
-### Code Security
-
-Advanced security scanning configured in `devops/code-security.yml`
-
 ## Common Tasks for AI Assistants
 
 ### Adding a New Feature
