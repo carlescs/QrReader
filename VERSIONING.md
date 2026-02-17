@@ -2,6 +2,8 @@
 
 This project uses **Git-based automatic versioning** following semantic versioning principles.
 
+For detailed technical information about version code testing and troubleshooting, see [Version Code Testing Guide](docs/VERSION_CODE_TESTING.md).
+
 ## How It Works
 
 ### Version Code
