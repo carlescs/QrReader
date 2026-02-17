@@ -371,7 +371,7 @@ jobs:
                               'status': 'completed',
                               'releaseNotes': release_notes if release_notes else [{
                                   'language': 'en-US',
-                                  'text': f'Version {version_name} (Build {version_code})\n\nProduction release with latest updates and improvements.'
+                                  'text': f'Version {version_name} (Build {version_code})\n\nWhat\'s new in this release:\n- Latest updates and improvements\n- Bug fixes and performance enhancements'
                               }]
                           }]
                       }

@@ -183,7 +183,7 @@ To update the default template:
 
 ## References
 
-- Original Issue: [Problem Statement]
 - Git-based Versioning: `VERSIONING.md`
 - CI/CD Documentation: `.github/CICD.md`
 - r0adkll/upload-google-play Action: https://github.com/r0adkll/upload-google-play
+- GitVersioning Implementation: `buildSrc/src/main/kotlin/GitVersioning.kt`
