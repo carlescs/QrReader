@@ -53,13 +53,74 @@ Publishes to Google Play Alpha track:
 - Validates bundle and secrets
 - Uploads to Google Play Console Alpha track
 
-### 4. Promote Job (**MANUAL APPROVAL REQUIRED**)
-Promotes from Alpha to Production track:
-- **Runs automatically after release job** on master branch pushes
+### 4. Beta Job (Optional - 3-Tier Flow)
+Promotes from Alpha to Beta track (OPTIONAL):
+- **Only runs when**: `use_beta_track` input is set to `true` via workflow_dispatch
+- **Purpose**: Enables 3-tier deployment flow (Alpha → Beta → Production)
+- **Trigger**: Manual workflow dispatch with "Use Beta track" checkbox enabled
+- **Approval**: Requires manual approval via PlayStore-Beta environment
+- Downloads latest version from Alpha track
+- Promotes to Beta track for external beta testing
+- See "Deployment Flows" section below for when to use Beta
+
+### 5. Promote Job (**MANUAL APPROVAL REQUIRED**)
+Promotes to Production track (supports both flows):
+- **2-Tier Flow** (default): Promotes directly from Alpha to Production
+- **3-Tier Flow** (optional): Promotes from Beta to Production (when Beta job ran)
+- **Runs automatically after release job** (or after Beta if 3-tier)
 - **Pauses and waits for manual approval** before executing (via GitHub Environment protection)
-- Requires at least one reviewer to approve in the Actions UI
-- Uses Google Play API to promote the release from Alpha to Production
+- Requires at least 2 reviewers to approve in the Actions UI
+- Intelligently detects source track (Alpha or Beta) based on workflow inputs
+- Uses Google Play API to promote the release to Production
 - See "Manual Approval for Production Promotion" section below for setup and usage instructions
+
+## Deployment Flows
+
+The CI/CD pipeline supports **two flexible deployment paths** to accommodate different release scenarios:
+
+### Flow 1: Fast-Track (2-Tier) - **DEFAULT**
+```
+Code → CI → Alpha (Internal) → Production (Public)
+```
+
+**When to Use:**
+- ✅ Hotfixes and critical bug fixes
+- ✅ Minor updates and patches
+- ✅ Changes with thorough CI/CD testing
+- ✅ Low-risk releases
+- ✅ When speed is important
+
+**Timeline:** 2-3 days (Alpha testing + Production approval)
+
+**How to Trigger:**
+1. Push to master branch (automatic Alpha deployment)
+2. Wait for Alpha testing validation
+3. Approve Production promotion (2 reviewers required)
+
+### Flow 2: Cautious (3-Tier) - **OPT-IN**
+```
+Code → CI → Alpha (Internal) → Beta (External) → Production (Public)
+```
+
+**When to Use:**
+- ✅ Major feature releases
+- ✅ Significant architectural changes
+- ✅ High-risk updates
+- ✅ Need external beta tester feedback
+- ✅ Regulatory/compliance-sensitive releases
+- ✅ When extra validation is needed
+
+**Timeline:** 5-8 days (Alpha 2-3d + Beta 3-5d + Production approval)
+
+**How to Trigger:**
+1. Navigate to: GitHub → Actions → "Android CI/CD"
+2. Click "Run workflow" button
+3. Select branch (usually master)
+4. ✅ Check "Upload to Google Play Alpha"
+5. ✅ Check "Use Beta track before Production" ← **KEY STEP**
+6. Click "Run workflow"
+7. Approve Beta promotion (1 reviewer)
+8. Approve Production promotion (2 reviewers)
 
 ## Required Secrets
 
@@ -239,6 +300,79 @@ export SONAR_TOKEN=your-token-here
 
 View results at: https://sonarcloud.io/project/overview?id=carles-cs_QrReader
 
+## CodeQL Security Scanning
+
+This project uses CodeQL for automated security vulnerability detection. CodeQL analyzes the code for common security issues and coding errors.
+
+### Workflow Configuration
+
+CodeQL scanning is configured in `.github/workflows/codeql.yml` and runs:
+- **On every push** to master branch
+- **On every pull request** to master branch
+- **Weekly** on Mondays at 00:00 UTC (scheduled scan)
+
+### What CodeQL Scans For
+
+- **Security vulnerabilities**: SQL injection, XSS, path traversal, etc.
+- **Code quality issues**: Code smells, anti-patterns
+- **Android-specific issues**: Security best practices for Android apps
+- **Kotlin/Java issues**: Language-specific vulnerabilities
+
+### Key Features
+
+- **Automated Analysis**: Runs automatically on code changes
+- **Security Alerts**: Creates security alerts in GitHub Security tab
+- **Pull Request Integration**: Shows findings directly in PR reviews
+- **Weekly Scans**: Regular scheduled scans catch new vulnerabilities
+- **Extended Query Set**: Uses `security-extended` and `security-and-quality` query packs
+
+### Viewing Results
+
+1. Navigate to repository → **Security** tab
+2. Click **Code scanning alerts**
+3. Review any findings and remediate as needed
+4. CodeQL provides detailed explanations and fix suggestions
+
+### Build Integration
+
+CodeQL builds the project during analysis to understand the code:
+```yaml
+- name: Build project
+  run: ./gradlew assembleDebug --no-configuration-cache
+```
+
+This ensures accurate analysis of compiled languages like Kotlin/Java.
+
+### No Additional Setup Required
+
+CodeQL is fully configured and requires no secrets or tokens. It uses GitHub's built-in integration and runs automatically.
+
+## Dependabot Dependency Updates
+
+Automated dependency updates are configured via `.github/dependabot.yml`:
+
+### What Dependabot Monitors
+
+1. **GitHub Actions**: Weekly checks for action updates
+2. **Gradle Dependencies**: Weekly checks for library updates
+
+### Configuration Highlights
+
+- **Weekly Schedule**: Runs every Monday
+- **Pull Request Limits**: Max 5 for actions, 10 for Gradle
+- **Grouped Patch Updates**: Minor patches grouped into single PR
+- **Smart Ignoring**: Ignores Kotlin major version bumps (requires manual review)
+- **Auto-labeling**: PRs labeled with "dependencies" for easy filtering
+
+### Review Process
+
+1. Dependabot creates PRs for dependency updates
+2. CI/CD runs automatically on the PR
+3. Review changes and test results
+4. Merge if tests pass and changes are acceptable
+
+No additional configuration needed - Dependabot is ready to use!
+
 ## Setting Up Google Play Publishing
 
 ### Prerequisites
@@ -384,17 +518,66 @@ When a workflow is waiting for approval:
 
 ⚠️ **Important**: Environment protection rules must be configured for the approval gate to work.
 
+#### Required Environments
+
+The workflow uses three GitHub Environments for deployment control:
+
+1. **PlayStore-Alpha** (No protection required)
+   - Used for automatic Alpha track deployments
+   - No approval needed (automatic from master branch)
+   - Configure in: Repository Settings → Environments
+
+2. **PlayStore-Beta** (Optional - For 3-tier flow)
+   - Used when deploying via Beta track
+   - Recommend: 1 reviewer required
+   - Only needed if using 3-tier deployment flow
+   - Configure in: Repository Settings → Environments
+
+3. **PlayStore** (Production - **CRITICAL**)
+   - Used for Production track deployments
+   - **MUST** have "Required reviewers" configured
+   - Recommend: At least 2 reviewers for redundancy
+   - Configure in: Repository Settings → Environments
+
+#### Setup Instructions
+
 1. Go to repository **Settings → Environments**
-2. **If "PlayStore" environment doesn't exist**:
+
+2. **Create PlayStore-Alpha environment** (if doesn't exist):
+   - Click **"New environment"**
+   - Name it **"PlayStore-Alpha"** (exact name, case-sensitive)
+   - Click **"Configure environment"**
+   - No protection rules needed (leave empty)
+   - Click **"Save protection rules"**
+
+3. **Create PlayStore-Beta environment** (if doesn't exist - optional):
+   - Click **"New environment"**
+   - Name it **"PlayStore-Beta"** (exact name, case-sensitive)
+   - Click **"Configure environment"**
+   - Under **Environment protection rules**, check **"Required reviewers"**
+   - **Add reviewers**: Select 1 team member (e.g., Product Owner or Tech Lead)
+   - (Optional) Configure **Wait timer**: Add a delay (e.g., 5 minutes)
+   - Click **"Save protection rules"**
+
+4. **Create PlayStore environment** (if doesn't exist - **REQUIRED**):
    - Click **"New environment"**
    - Name it **"PlayStore"** (exact name, case-sensitive)
-3. Click on **PlayStore** environment
-4. Under **Environment protection rules**, check **"Required reviewers"**
-5. **Add reviewers**: Click **"Add reviewers"** and select team members who can approve production deployments
-   - Recommend: Add at least 2 reviewers for redundancy
-   - Only selected reviewers can approve deployments
-6. (Optional) Configure **Wait timer**: Add a delay (e.g., 5 minutes) to give time for review
-7. **Click "Save protection rules"**
+   - Click **"Configure environment"**
+   - Under **Environment protection rules**, check **"Required reviewers"**
+   - **Add reviewers**: Click **"Add reviewers"** and select team members who can approve production deployments
+     - Recommend: Add at least 2 reviewers for redundancy
+     - Only selected reviewers can approve deployments
+   - (Optional) Configure **Wait timer**: Add a delay (e.g., 10 minutes) to give time for review
+   - Click **"Save protection rules"**
+
+#### Verification
+
+After setup, verify environments exist:
+- Navigate to: Repository → Settings → Environments
+- You should see:
+  - ✅ PlayStore-Alpha (no protection)
+  - ✅ PlayStore-Beta (1 reviewer - optional)
+  - ✅ PlayStore (2+ reviewers - required)
 
 ### What Happens During Promotion
 
@@ -429,7 +612,21 @@ Reviewers can approve from:
 The workflow uses GitHub Environments for deployment gates:
 
 - **PlayStore-Alpha**: Automatically deploys to alpha track (no protection rules required)
-- **PlayStore**: Used for production promotion (**MUST** be configured with required reviewers for manual approval)
+  - Used for: Internal testing deployments
+  - Trigger: Automatic on master push, or manual workflow dispatch
+  - Approval: None (deploys automatically)
+
+- **PlayStore-Beta** (Optional): Used for beta track promotion in 3-tier flow
+  - Used for: External beta testing (optional deployment path)
+  - Trigger: Manual workflow dispatch with "Use Beta track" enabled
+  - Approval: Recommended 1 reviewer
+  - Only needed if using 3-tier deployment flow
+
+- **PlayStore** (Production): Used for production promotion (**CRITICAL**)
+  - Used for: Production releases to all users
+  - Trigger: After Alpha (2-tier) or Beta (3-tier) deployment
+  - Approval: **REQUIRED** - At least 2 reviewers must be configured
+  - Without reviewers configured, promote job will run automatically (NOT RECOMMENDED)
 
 **Critical**: The PlayStore environment **must** have "Required reviewers" configured for the manual approval gate to work. Without this configuration, the promote job will run automatically without waiting for approval.
 
