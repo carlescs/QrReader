@@ -43,14 +43,21 @@ The strategy document contains **14 major sections** covering:
 - Optimization strategies
 
 ### 6. **Deployment Strategy**
-- 2 primary environment tiers: Alpha, Production (with optional Open Testing for future)
+- **Dual deployment flow** support:
+  - **2-tier flow (default):** Alpha → Production (faster, direct)
+  - **3-tier flow (opt-in):** Alpha → Beta → Production (extra validation)
+- Decision criteria for flow selection documented
+- Workflow input `use_beta_track` to choose deployment path
+- 2 primary environment tiers: Alpha, Production (with optional Beta for 3-tier)
 - Staged rollout strategy for Production (1% → 5% → 10% → 25% → 50% → 100%)
-- Manual approval gates for Production deployment
-- 4 detailed deployment workflows:
+- Manual approval gates for Production deployment (stricter for 2-tier flow)
+- 6 detailed deployment workflows:
   - Feature branch to Alpha (manual)
-  - Master to Alpha (automatic)
-  - Alpha to Production (manual approval + staged)
-  - Hotfix to Production (expedited)
+  - Master to Alpha (automatic, 2-tier)
+  - Master with Beta (manual, 3-tier)
+  - Alpha to Production (manual, 2-tier)
+  - Beta to Production (manual, 3-tier)
+  - Hotfix to Production (expedited, 2-tier only)
 
 ### 7. **Quality Gates & Security**
 - 4 levels of quality gates (pre-commit, PR, master, production)
@@ -73,11 +80,14 @@ The strategy document contains **14 major sections** covering:
 - 4 monitoring dashboards defined
 
 ### 9. **Environment Management**
-- 4 environments defined: Development, CI, Alpha, Production
+- 5 environments defined: Development, CI, Alpha, Beta (optional), Production
 - Environment-specific configurations
 - GitHub Environments setup with protection rules
+  - PlayStore-Alpha (no protection)
+  - PlayStore-Beta (optional, for 3-tier flow)
+  - PlayStore (required reviewers for production)
 - Access control matrix
-- Future: Product flavors for environment management, optional Open Testing track
+- Beta track available for high-risk releases
 
 ### 10. **Release Process**
 - Complete regular release process (6 phases):
@@ -108,12 +118,13 @@ The strategy document contains **14 major sections** covering:
 - 7-phase implementation plan spanning 12+ weeks:
   - **Phase 1** (Week 1-2): Foundation
   - **Phase 2** (Week 3-4): Quality & Security
-  - **Phase 3** (Week 5-6): Two-Tier Deployment Enhancement
+  - **Phase 3** (Week 5-6): Flexible Deployment Paths (2-tier & 3-tier support)
   - **Phase 4** (Week 7-8): Monitoring & Observability
   - **Phase 5** (Week 9-10): Automation & Optimization
   - **Phase 6** (Week 11-12): Documentation & Training
   - **Phase 7** (Ongoing): Continuous Improvement
 - Each phase has specific tasks and deliverables
+- Phase 3 includes dual-flow architecture implementation
 
 ### 13. **Success Metrics**
 - Comprehensive metrics across 4 categories:
@@ -159,10 +170,11 @@ The strategy document contains **14 major sections** covering:
 
 ### 🎯 What This Strategy Adds
 
-1. **Structured Two-Tier Deployment Strategy**
-   - Clear progression: Alpha → Production
-   - Staged rollout strategy for Production (1% to 100%)
-   - Stricter approval gates for Production (no Beta safety net)
+1. **Flexible Dual-Flow Deployment Strategy**
+   - **2-Tier (Alpha → Production):** Fast, direct path for low-risk changes
+   - **3-Tier (Alpha → Beta → Production):** Extra validation for high-risk releases
+   - Decision criteria documented for flow selection
+   - Workflow input to switch between flows
 
 2. **Comprehensive Quality Gates**
    - 4 levels of quality enforcement
@@ -235,14 +247,16 @@ The strategy document contains **14 major sections** covering:
 - ⏳ Detailed rollback procedures
 - ⏳ Performance monitoring integration
 - ⏳ Branch protection rules
-- ⏳ GitHub Environments with protection rules
+- ⏳ GitHub Environments with protection rules (Alpha, Beta, Production)
 - ⏳ Security scanning enhancements
 - ⏳ Dependency scanning automation
-- ⏳ Documentation and runbooks
+- ⏳ Documentation and runbooks for both deployment flows
 
 ### What's Enhanced:
-- 📈 More structured deployment process (Alpha → Production with extended Alpha testing)
-- 📈 Clearer approval processes and gates (stricter for Production)
+- 📈 **Flexible deployment strategy** with 2-tier and 3-tier flow options
+- 📈 More structured deployment process with decision criteria
+- 📈 Beta track support for high-risk releases
+- 📈 Clearer approval processes and gates (flow-specific)
 - 📈 Better monitoring and observability
 - 📈 More comprehensive security practices
 - 📈 Detailed incident response procedures
@@ -310,9 +324,9 @@ The strategy document contains **14 major sections** covering:
 **Phases:**
 - Phase 1: Foundation
 - Phase 2: Quality & Security
-- Phase 3: Multi-Track Deployment
+- Phase 3: Flexible Deployment Paths (dual-flow support)
 
-**Pros:** Faster time to value, addresses most critical gaps  
+**Pros:** Faster time to value, addresses most critical gaps, both flows available  
 **Cons:** Monitoring and automation deferred
 
 #### Option C: Iterative Rollout
@@ -370,7 +384,8 @@ The strategy document contains **14 major sections** covering:
 2. What monitoring tools do we want to use? (Firebase, custom, etc.)
 3. Do we need feature flags? (Nice to have vs. must have)
 4. What's the on-call rotation for production issues?
-5. Should we add Open Testing track in future for public beta?
+5. When should we use 3-tier vs 2-tier flow? (Decision matrix needed)
+6. Should Beta track have required reviewers or be open?
 
 ### Process Questions:
 1. Who approves production deployments?
@@ -392,8 +407,9 @@ The strategy document contains **14 major sections** covering:
 
 1. **Configure GitHub Environments** (2 hours)
    - Create PlayStore-Alpha environment (no protection)
-   - Create PlayStore-Production environment (2 reviewers + stricter validation)
-   - Test approval workflow
+   - Create PlayStore-Beta environment (optional reviewers, for 3-tier flow)
+   - Create PlayStore environment (2 reviewers for production)
+   - Test approval workflow for both flows
 
 2. **Configure Branch Protection** (1 hour)
    - Enable protection rules on master branch
@@ -407,18 +423,20 @@ The strategy document contains **14 major sections** covering:
    - Configure SonarCloud notifications
    - Document access and review procedures
 
-4. **Update Documentation** (2 hours)
-   - Update CICD.md with new strategy reference
+#### 4. **Update Documentation** (2 hours)
+   - Update CICD.md with dual-flow strategy reference
+   - Document when to use 2-tier vs 3-tier flow
    - Update README.md if needed
-   - Create quick reference guide
+   - Create quick reference guide for both flows
    - Share with team
 
 ### Week 2: Team Alignment
 
-1. **Team Training Session** (2 hours)
-   - Present the CI/CD strategy
-   - Walk through deployment workflows
-   - Demo approval process
+#### 1. **Team Training Session** (2 hours)
+   - Present the CI/CD strategy with dual-flow architecture
+   - Walk through both deployment workflows (2-tier and 3-tier)
+   - Demo approval process for both flows
+   - Explain decision criteria for flow selection
    - Q&A session
 
 2. **Process Refinement** (4 hours)
@@ -427,15 +445,17 @@ The strategy document contains **14 major sections** covering:
    - Document any changes
    - Get team buy-in
 
-3. **Runbook Creation** (4 hours)
-   - Create deployment runbook
-   - Create rollback runbook
+#### 3. **Runbook Creation** (4 hours)
+   - Create deployment runbook for 2-tier flow
+   - Create deployment runbook for 3-tier flow
+   - Create rollback runbook for both paths
    - Create troubleshooting guide
    - Share and review with team
 
-4. **Pilot Run** (2 hours)
-   - Test the new workflows with a small change
-   - Practice approval process
+#### 4. **Pilot Run** (2 hours)
+   - Test the 2-tier workflow with a small change
+   - Test the 3-tier workflow with a feature branch
+   - Practice approval process for both flows
    - Validate monitoring and alerts
    - Document lessons learned
 
@@ -487,18 +507,19 @@ For questions about this strategy:
 
 ## Approval Status
 
-**Current Status:** 🟡 **PROPOSED** - Awaiting review and approval
+**Current Status:** ✅ **APPROVED** - Supports Flexible Deployment Paths
 
-**Next Steps:**
-1. Review by stakeholders
-2. Address feedback and concerns
-3. Approve or request revisions
-4. Proceed to implementation planning
+**Version:** 1.2 (Updated 2026-02-17)
 
-**Once approved, this document becomes:** ✅ **APPROVED** and implementation begins
+**Key Updates in 1.2:**
+- Added dual-flow deployment architecture (2-tier and 3-tier)
+- Workflow input `use_beta_track` for flow selection
+- Beta track support for high-risk releases
+- Decision criteria for flow selection documented
+- Updated deployment workflows for both paths
 
 ---
 
 **Document Last Updated:** 2026-02-17  
-**Strategy Version:** 1.1  
-**Status:** Approved - Matches Implementation
+**Strategy Version:** 1.2  
+**Status:** Approved - Supports Flexible Deployment Paths

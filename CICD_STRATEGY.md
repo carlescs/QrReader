@@ -1,8 +1,8 @@
 # CI/CD Strategy for QR Reader Android Application
 
-**Version:** 1.1  
+**Version:** 1.2  
 **Date:** 2026-02-17  
-**Status:** APPROVED (Matches Implementation)
+**Status:** APPROVED - Supports Flexible Deployment Paths
 
 ---
 
@@ -29,7 +29,7 @@ This document defines a comprehensive CI/CD strategy for the QR Reader Android a
 - **Automate** the entire build, test, and deployment pipeline
 - **Ensure quality** through automated testing and code analysis
 - **Enable rapid delivery** while maintaining stability
-- **Support multiple environments** (Alpha, Production)
+- **Support flexible deployment paths** (2-tier or 3-tier)
 - **Provide safety nets** with manual approval gates for production
 - **Maintain security** through automated scanning and secret management
 
@@ -444,13 +444,46 @@ Jobs:
 
 ## Deployment Strategy
 
+### Deployment Flow Options
+
+The CI/CD pipeline supports **two deployment flows** to balance speed and risk:
+
+#### **Flow 1: 2-Tier (Alpha → Production)** [DEFAULT]
+**Path:** Alpha → Production  
+**Speed:** Faster (direct promotion)  
+**Testing Scope:** Internal team testing only  
+**Trigger:** Automatic (master branch pushes)
+
+#### **Flow 2: 3-Tier (Alpha → Beta → Production)** [OPT-IN]
+**Path:** Alpha → Beta → Production  
+**Speed:** Slower (additional validation stage)  
+**Testing Scope:** Internal + external beta testers  
+**Trigger:** Manual (workflow_dispatch with `use_beta_track: true`)
+
+### When to Use Each Flow
+
+#### Use 2-Tier (Alpha → Production):
+- ✅ **Hotfixes and critical bug fixes** - Speed is essential
+- ✅ **Minor updates and patches** - Low-risk changes
+- ✅ **Changes with thorough CI/CD testing** - High confidence in automated tests
+- ✅ **Low-risk releases** - Minor UI tweaks, copy changes
+- ✅ **When speed is important** - Quick turnaround needed
+
+#### Use 3-Tier (Alpha → Beta → Production):
+- ✅ **Major feature releases** - Significant new functionality
+- ✅ **Significant architectural changes** - Core refactoring or redesigns
+- ✅ **High-risk updates** - Potential for widespread impact
+- ✅ **Need external beta tester feedback** - Broader user validation required
+- ✅ **Regulatory or compliance-sensitive releases** - Extra validation needed
+- ✅ **When extra validation is needed** - Peace of mind before full rollout
+
 ### Environment Tiers
 
 #### 1. Alpha (Internal Testing)
 **Purpose:** Internal testing by development team and stakeholders
 
 **Deployment:**
-- **Trigger:** Automatic on master branch push
+- **Trigger:** Automatic on master branch push (2-tier flow)
 - **Trigger:** Manual on feature branch (workflow_dispatch)
 - **Approval:** None required
 - **Rollout:** 100% immediate
@@ -463,7 +496,9 @@ Jobs:
 
 **Version:** Development versions or release candidates
 
-**Testing Duration:** 2-3 days minimum (extended since this is the only pre-production tier)
+**Testing Duration:** 
+- **2-tier flow:** 2-3 days minimum (extended validation required)
+- **3-tier flow:** 1-2 days (lighter validation, Beta provides additional testing)
 
 **Rollback:** Manual via Google Play Console or deploy previous version
 
@@ -474,12 +509,45 @@ Jobs:
 - Key user flows tested
 - Security validation passed
 
-#### 2. Production (Public Release)
+#### 2. Beta (External Testing) [OPTIONAL]
+**Purpose:** External testing with broader audience before production
+
+**When Used:** Only in 3-tier deployment flow (manual opt-in)
+
+**Deployment:**
+- **Trigger:** Manual promotion from Alpha (requires `use_beta_track: true` in workflow_dispatch)
+- **Approval:** Optional (can be configured via PlayStore-Beta environment)
+- **Rollout:** 100% to beta testers
+
+**Audience:**
+- External beta testers (opted-in users)
+- Power users and early adopters
+- Community testers
+- Partner organizations
+
+**Version:** Release candidates (same as Alpha)
+
+**Testing Duration:** 3-7 days (or longer for major releases)
+
+**Rollback:** Manual via Google Play Console
+
+**Exit Criteria:**
+- Beta tester feedback reviewed
+- No critical bugs reported from beta testing
+- Performance metrics stable across diverse devices
+- Key user flows validated by external users
+- Positive sentiment from beta community
+
+#### 3. Production (Public Release)
 **Purpose:** General availability to all users
 
 **Deployment:**
-- **Trigger:** Manual promotion from Alpha
-- **Approval:** Required (product owner + 2 reviewers) - Stricter due to no Beta safety net
+- **Source Track:** 
+  - **2-tier flow:** Promoted from Alpha
+  - **3-tier flow:** Promoted from Beta
+- **Approval:** Required (product owner + 2 reviewers)
+  - **2-tier:** Stricter review (no Beta safety net)
+  - **3-tier:** Standard review (Beta validated)
 - **Rollout:** Staged rollout (configurable percentages)
 
 **Rollout Stages:**
@@ -507,16 +575,6 @@ Day 6: 100% of users → Full rollout
 
 **Rollback:** Immediate halt of rollout, revert to previous version
 
-#### 3. Open Testing (Optional Future Enhancement)
-**Purpose:** Broader public testing before production (not in current deployment flow)
-
-**Status:** Not currently implemented - can be added in future if needed for:
-- Large feature releases requiring broader testing
-- A/B testing capabilities
-- Community engagement programs
-
-**Deployment:** Would require manual promotion from Alpha if implemented
-
 ### Deployment Workflows
 
 #### Workflow 1: Feature Branch to Alpha (Manual)
@@ -526,26 +584,47 @@ Developer → Push feature branch to GitHub
          → Click "Run workflow"
          → Select feature branch
          → Check "Upload to Google Play Alpha"
+         → Optionally check "Use Beta track" (for testing 3-tier flow)
          → Click "Run workflow"
          → [Pipeline] Test → Build → Sign → Deploy to Alpha
+         → (Optional) If Beta enabled: Alpha → Beta promotion
 ```
 
-#### Workflow 2: Master to Alpha (Automatic)
+#### Workflow 2: Master to Alpha (Automatic - 2-Tier Flow)
 ```
 Developer → Create PR from feature branch
          → [Pipeline] Test → Code Review
          → Merge PR to master
          → [Pipeline] Test → Build → Sign → Deploy to Alpha (automatic)
+         → [Waits] Manual approval gate for Production promotion
+         → [Manual] Approve Production deployment
+         → [Pipeline] Promote Alpha → Production (staged rollout)
 ```
 
-#### Workflow 3: Alpha to Production (Manual Approval + Staged)
+#### Workflow 3: Master with Beta (Manual - 3-Tier Flow)
+```
+Developer → Navigate to Actions → "Android CI/CD"
+         → Click "Run workflow"
+         → Select "master" branch
+         → Check "Upload to Google Play Alpha"
+         → Check "Use Beta track" ✅
+         → Click "Run workflow"
+         → [Pipeline] Test → Build → Sign → Deploy to Alpha
+         → [Manual] Approve Beta promotion (via PlayStore-Beta environment)
+         → [Pipeline] Promote Alpha → Beta
+         → [Testing] Beta testing period (3-7 days)
+         → [Manual] Approve Production promotion (via PlayStore environment)
+         → [Pipeline] Promote Beta → Production (staged rollout)
+```
+
+#### Workflow 4: Alpha to Production (Manual - 2-Tier)
 ```
 Product Owner → Review Alpha testing results (2-3 days minimum)
               → Validate all quality gates passed
               → Navigate to Actions → Latest master workflow
-              → Find "Deploy to Production" job (waiting for approval)
+              → Find "Promote to Production" job (waiting for approval)
               → Click "Review deployments"
-              → Check "PlayStore-Production" environment
+              → Check "PlayStore" environment
               → Add approval comment with rollout plan
               → Click "Approve and deploy" (requires 2 approvers)
               → [Pipeline] Promote Alpha → Production (1% rollout)
@@ -553,7 +632,22 @@ Product Owner → Review Alpha testing results (2-3 days minimum)
               → [Manual] Increase rollout via Google Play Console
 ```
 
-#### Workflow 4: Hotfix to Production (Expedited)
+#### Workflow 5: Beta to Production (Manual - 3-Tier)
+```
+Product Owner → Review Beta testing results (3-7 days)
+              → Validate external tester feedback
+              → Navigate to Actions → Workflow run with Beta
+              → Find "Promote to Production" job (waiting for approval)
+              → Click "Review deployments"
+              → Check "PlayStore" environment
+              → Add approval comment with rollout plan
+              → Click "Approve and deploy" (requires 2 approvers)
+              → [Pipeline] Promote Beta → Production (1% rollout)
+              → Monitor for 24 hours
+              → [Manual] Increase rollout via Google Play Console
+```
+
+#### Workflow 6: Hotfix to Production (Expedited - 2-Tier Only)
 ```
 Developer → Create hotfix branch from production tag
          → Implement fix → Commit
@@ -567,6 +661,31 @@ Developer → Create hotfix branch from production tag
          → [Manual] 10% → 50% → 100% rollout (accelerated)
          → Merge hotfix to master
 ```
+
+### How to Trigger 3-Tier Flow
+
+**Via GitHub Actions UI:**
+1. Navigate to **Actions** tab in GitHub repository
+2. Select **"Android CI/CD"** workflow
+3. Click **"Run workflow"** button
+4. Configure inputs:
+   - **Branch:** Select `master` (or feature branch)
+   - ✅ **Upload to Google Play Alpha:** Check this box
+   - ✅ **Use Beta track:** Check this box (enables 3-tier flow)
+5. Click **"Run workflow"** to start
+
+**What Happens:**
+- Pipeline runs: Test → Build → Release to Alpha
+- **Beta job** is triggered (only when `use_beta_track: true`)
+- Beta job requires approval via **PlayStore-Beta** environment
+- After Beta approval, app is promoted: Alpha → Beta
+- After Beta testing, **Promote** job requires approval via **PlayStore** environment
+- Production promotion uses Beta as source track (Beta → Production)
+
+**Default Behavior (2-Tier):**
+- Master branch pushes automatically use 2-tier flow
+- Beta track is **skipped** by default
+- Production promotes directly from Alpha track
 
 ### Deployment Checklist
 
@@ -973,7 +1092,29 @@ Notification:
 
 **Distribution:** Google Play Store (Alpha track)
 
-#### 4. Production (Google Play Production Track)
+**Used In:** Both 2-tier and 3-tier deployment flows
+
+#### 4. Beta (Google Play Beta Track) [OPTIONAL]
+**Purpose:** External testing with broader audience
+
+**Configuration:**
+- Release build type
+- Production API endpoints
+- Crash reporting enabled
+- Analytics enabled
+- Debug logging disabled
+- Beta feedback channels enabled
+
+**Access:**
+- External beta testers (Google Play Console)
+- Opt-in via beta testing link
+- Community testers
+
+**Distribution:** Google Play Store (Beta track)
+
+**Used In:** 3-tier deployment flow only (manual opt-in)
+
+#### 5. Production (Google Play Production Track)
 **Purpose:** Public release
 
 **Configuration:**
@@ -1041,13 +1182,24 @@ Environments:
      - Protection rules: None
      - Secrets: None (uses repository secrets)
      - Purpose: Internal testing deployment
+     - Used in: Both 2-tier and 3-tier flows
      
-  2. PlayStore-Production
+  2. PlayStore-Beta [OPTIONAL]
+     - Protection rules:
+       ✓ Required reviewers: [Optional - can add reviewers if desired]
+       ✓ Wait timer: Optional
+     - Secrets: None (uses repository secrets)
+     - Purpose: Beta track promotion gate
+     - Used in: 3-tier flow only (when use_beta_track: true)
+     
+  3. PlayStore
      - Protection rules:
        ✓ Required reviewers: [Product Owner, 2x Tech Leads]
-       ✓ Wait timer: 10 minutes (stricter due to no Beta safety net)
+       ✓ Wait timer: 10 minutes
+       ✓ Review requirements stricter for 2-tier flow
      - Secrets: None (uses repository secrets)
      - Purpose: Production deployment gate
+     - Used in: Both flows (promotes from Alpha or Beta)
      - Notes: Extra validation required since no intermediate Beta tier
 ```
 
@@ -1582,30 +1734,43 @@ Template:
 - Quality gate enforcement
 - Coverage thresholds enforced
 
-### Phase 3: Two-Tier Deployment Enhancement (Week 5-6)
-**Goal:** Strengthen Alpha testing and Production deployment process
+### Phase 3: Flexible Deployment Paths (Week 5-6)
+**Goal:** Support both 2-tier and 3-tier deployment flows
 
 **Tasks:**
-- [ ] Enhance Alpha track testing procedures
-  - [ ] Extended Alpha testing duration (2-3 days)
+- [x] Implement dual-flow architecture in GitHub Actions workflow
+  - [x] Add `use_beta_track` workflow input for flow selection
+  - [x] Create optional Beta job (conditional execution)
+  - [x] Update Promote job to support both Alpha and Beta sources
+- [ ] Configure GitHub Environments
+  - [ ] PlayStore-Alpha (no protection)
+  - [ ] PlayStore-Beta (optional reviewers)
+  - [ ] PlayStore (2 reviewers required)
+- [ ] Enhance Alpha testing procedures
+  - [ ] 2-tier: Extended Alpha testing (2-3 days minimum)
+  - [ ] 3-tier: Lighter Alpha testing (1-2 days)
   - [ ] Comprehensive test coverage validation
   - [ ] Additional quality checkpoints
 - [ ] Implement staged Production rollout
   - [ ] 1% → 5% → 10% → 25% → 50% → 100%
   - [ ] Automated monitoring between stages
-  - [ ] Stricter approval requirements (2 reviewers)
-- [ ] Create deployment runbooks
-- [ ] Test rollback procedures
-- [ ] Document decision criteria for Production promotion
+  - [ ] Approval requirements based on flow type
+- [ ] Create deployment runbooks for both flows
+- [ ] Test rollback procedures for both paths
+- [ ] Document decision criteria for flow selection
 
 **Deliverables:**
-- Enhanced Alpha testing procedures
-- Staged production rollout
-- Deployment runbooks
-- Tested rollback procedures
-- Production promotion criteria document
+- ✅ Dual-flow CI/CD pipeline implementation
+- ⏳ Configured GitHub environments for all tracks
+- ⏳ Flow-specific testing procedures
+- ⏳ Staged production rollout process
+- ⏳ Deployment runbooks for 2-tier and 3-tier
+- ⏳ Tested rollback procedures
+- ⏳ Flow selection decision guide
 
-**Note:** Open Testing track can be added as optional Phase 3B in future if needed.
+**Decision Guide Created:**
+- 2-Tier for: Hotfixes, minor updates, low-risk changes, speed priority
+- 3-Tier for: Major features, high-risk updates, external validation, extra safety
 
 ### Phase 4: Monitoring & Observability (Week 7-8)
 **Goal:** Implement comprehensive monitoring
