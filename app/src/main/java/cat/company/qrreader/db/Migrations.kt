@@ -25,5 +25,10 @@ class Migrations {
                 db.execSQL("CREATE TABLE barcode_tag_cross_ref(barcodeId INTEGER NOT NULL, tagId INTEGER NOT NULL, PRIMARY KEY(barcodeId, tagId), FOREIGN KEY(barcodeId) REFERENCES saved_barcodes(id) ON DELETE CASCADE, FOREIGN KEY(tagId) REFERENCES tags(id) ON DELETE CASCADE)")
             }
         }
+        val MIGRATION_4_5 = object : Migration(4,5){
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE saved_barcodes ADD aiGeneratedDescription VARCHAR(200)")
+            }
+        }
     }
 }

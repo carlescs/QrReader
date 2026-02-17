@@ -35,6 +35,7 @@ fun EditBarcodeDialog(
 ) {
     var text by remember { mutableStateOf(TextFieldValue(savedBarcode.title?:"")) }
     var description by remember { mutableStateOf(TextFieldValue(savedBarcode.description?:"")) }
+    var aiDescription by remember { mutableStateOf(TextFieldValue(savedBarcode.aiGeneratedDescription?:"")) }
     Dialog(
         onDismissRequest = { onRequestClose()},
     ) {
@@ -55,6 +56,13 @@ fun EditBarcodeDialog(
                     TextField(modifier = Modifier.padding(vertical = 5.dp), value = description, onValueChange = {description=it}, label = { Text(
                         text = "Description"
                     )})
+                    TextField(
+                        modifier = Modifier.padding(vertical = 5.dp), 
+                        value = aiDescription, 
+                        onValueChange = {aiDescription=it}, 
+                        label = { Text(text = "AI Description") },
+                        enabled = savedBarcode.aiGeneratedDescription != null
+                    )
                     Row(modifier = Modifier.align(Alignment.End)){
                         TextButton(onClick = {
                             onRequestClose()
@@ -62,7 +70,11 @@ fun EditBarcodeDialog(
                             Text(text = "Cancel")
                         }
                         TextButton(onClick = {
-                            val updatedBarcode = savedBarcode.copy(title = text.text, description = description.text)
+                            val updatedBarcode = savedBarcode.copy(
+                                title = text.text, 
+                                description = description.text,
+                                aiGeneratedDescription = if (savedBarcode.aiGeneratedDescription != null) aiDescription.text else null
+                            )
                             viewModel.updateBarcode(updatedBarcode)
                             onRequestClose()
                         }) {

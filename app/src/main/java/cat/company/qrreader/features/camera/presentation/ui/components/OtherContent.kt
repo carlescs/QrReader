@@ -33,7 +33,8 @@ import java.util.Date
 @Composable
 fun OtherContent(
     barcode: Barcode,
-    selectedTagNames: List<String> = emptyList()
+    selectedTagNames: List<String> = emptyList(),
+    aiGeneratedDescription: String? = null
 ){
     val uriHandler = LocalUriHandler.current
     val saveBarcodeWithTagsUseCase: SaveBarcodeWithTagsUseCase = koinInject()
@@ -82,7 +83,7 @@ fun OtherContent(
             }
             
             // Save barcode with tags
-            saveBarcodeWithTagsUseCase(barcodeModel, tags)
+            saveBarcodeWithTagsUseCase(barcodeModel, tags, aiGeneratedDescription)
         }
         saved.value=true
     }, enabled = !saved.value) {
