@@ -52,6 +52,23 @@ object GitVersioning {
                 "Ensure repository is not a shallow clone.")
             return 1
         }
+        
+        // For feature branches, add a branch-specific offset to prevent version code collisions
+        // when multiple feature branches are deployed to the alpha track in parallel
+        val branchProvider = gitCommand(project, listOf("git", "rev-parse", "--abbrev-ref", "HEAD"))
+        val branch = branchProvider.orNull?.trim() ?: "master"
+        
+        // Only apply offset for non-master/main branches
+        if (branch != "master" && branch != "main" && branch != "HEAD") {
+            // Generate a consistent hash from the branch name
+            // Handle Int.MIN_VALUE edge case by converting to Long first
+            val branchHash = (kotlin.math.abs(branch.hashCode().toLong()) % 10000).toInt()
+            project.logger.lifecycle("Feature branch detected: $branch, adding offset: $branchHash")
+            // Add offset to create unique version code for this branch
+            // The offset is multiplied by 100000 to ensure it doesn't conflict with commit count
+            return count + (branchHash * 100000)
+        }
+        
         return count
     }
 
