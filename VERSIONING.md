@@ -12,7 +12,9 @@ For detailed technical information about version code testing and troubleshootin
 - Example: 259, 260, 261...
 - **Feature branches**: Additional branch-specific offset added to prevent collisions
   - Ensures each feature branch has unique version codes when deployed to Alpha track
-  - Example: Branch "feature/new-scanner" with 260 commits might use: 456260 (branch offset 456000 + 260 commits)
+  - Example: A feature branch with 260 commits gets an offset based on branch name hash
+  - Formula: version_code = 260 + (hash % 10000) * 100000
+  - Result could be 45600260 if hash yields offset value of 456
 
 ### Version Name
 - Derived from Git tags following semantic versioning (major.minor.patch)
@@ -164,12 +166,18 @@ When deploying multiple feature branches to the Alpha track:
 2. **Independent Testing**: Deploy any branch to Alpha track for testing
 3. **Sequential Promotion**: Only promote tested branches to Production one at a time
 
-**Example Scenario:**
+**Example Scenario (illustrative offsets):**
 ```bash
 # Three developers working on different features
-Branch: feature/ai-descriptions     → Version: 123000 + 456 commits = 123456
-Branch: feature/tag-suggestions      → Version: 789000 + 460 commits = 789460
-Branch: feature/improved-scanner     → Version: 345000 + 458 commits = 345458
+# Each branch gets a deterministic offset based on its name hash
+Branch: feature/ai-descriptions     → Version: offset1 + 456 commits
+Branch: feature/tag-suggestions      → Version: offset2 + 460 commits
+Branch: feature/improved-scanner     → Version: offset3 + 458 commits
+
+# Actual values depend on hash(branchName) % 10000 * 100000
+# For example: 
+#   hash("feature/ai-descriptions") % 10000 = 1234 → offset = 123400000
+#   Plus 456 commits = version code 123400456
 
 # All can be deployed to Alpha simultaneously without conflicts
 ```

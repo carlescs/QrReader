@@ -11,8 +11,9 @@ This document explains how the version code system works and how to test it for 
 
 ### Feature Branches
 - **Formula**: `version_code = commit_count + (branch_hash * 100000)`
-- **Example**: "feature/scanner" with 260 commits → version code 456260
-  - Where 456000 is the deterministic offset for this branch name
+- **Example (illustrative)**: A feature branch with 260 commits
+  - Branch hash could be any value 0-9999 depending on branch name
+  - If hash = 456, version code = 260 + (456 * 100000) = 45600260
 - **Use case**: Alpha track testing for feature branches
 
 ## Why This Matters
@@ -28,8 +29,8 @@ Branch B: feature/tags        → 260 commits → Version code: 260
 
 ### With Offsets (✅ Solution)
 ```
-Branch A: feature/scanner    → 260 commits → Version code: 456260
-Branch B: feature/tags        → 260 commits → Version code: 789260
+Branch A: feature/scanner    → 260 commits → Version code: hash1 * 100000 + 260
+Branch B: feature/tags        → 260 commits → Version code: hash2 * 100000 + 260
                                              ✓ Unique version codes!
 ```
 
@@ -120,10 +121,8 @@ fun getVersionCode(project: Project): Int {
     // Only apply offset for non-master/main branches
     if (branch != "master" && branch != "main" && branch != "HEAD") {
         // Generate a consistent hash from the branch name
-        // Handle Int.MIN_VALUE edge case by converting to Long first
-        val branchHash = branch.hashCode().toLong().let { hash ->
-            kotlin.math.abs(hash).toInt() % 10000
-        }
+        // Handle edge cases by converting to Long and applying modulo before converting back
+        val branchHash = (kotlin.math.abs(branch.hashCode().toLong()) % 10000).toInt()
         return count + (branchHash * 100000)
     }
     
@@ -148,9 +147,10 @@ fun getVersionCode(project: Project): Int {
 
 4. **Version Code Ranges**: Understand the ranges
    - Master: 1 to 99,999 (typical range, assuming < 100k commits)
-   - Feature branches: 100,000+ (with branch-specific offsets)
-   - This prevents any overlap between master and feature branches
-   - **Note**: If master exceeds 100k commits, consider migrating to a new major version tag to reset the counter or adjust the offset multiplier in `buildSrc/src/main/kotlin/GitVersioning.kt`
+   - Feature branches: 100,000 to 999,999,999 (offset range: 0-9999 * 100,000 + commits)
+   - Maximum offset: 999,900,000 (when hash % 10000 = 9999)
+   - This prevents any overlap between master and feature branches in typical use
+   - **Note**: If master exceeds 100k commits, there's still no collision risk as feature branch offsets start at 100,000 minimum. However, if approaching 999M commits (highly unlikely), consider migrating to a new major version or adjusting the multiplier in `buildSrc/src/main/kotlin/GitVersioning.kt`
 
 ## Troubleshooting
 

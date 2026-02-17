@@ -62,9 +62,7 @@ object GitVersioning {
         if (branch != "master" && branch != "main" && branch != "HEAD") {
             // Generate a consistent hash from the branch name
             // Handle Int.MIN_VALUE edge case by converting to Long first
-            val branchHash = branch.hashCode().toLong().let { hash ->
-                kotlin.math.abs(hash).toInt() % 10000
-            }
+            val branchHash = (kotlin.math.abs(branch.hashCode().toLong()) % 10000).toInt()
             project.logger.lifecycle("Feature branch detected: $branch, adding offset: $branchHash")
             // Add offset to create unique version code for this branch
             // The offset is multiplied by 100000 to ensure it doesn't conflict with commit count
