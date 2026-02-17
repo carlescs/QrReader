@@ -50,17 +50,8 @@ This document provides visual representations of the CI/CD strategy flows for qu
 │         │ (Internal) │                                              │
 │         └─────┬──────┘                                              │
 │               │                                                     │
-│               │ Testing (1-2 days)                                  │
-│               │ Manual Approval Required                            │
-│               ▼                                                     │
-│         ┌────────────┐                                              │
-│         │    Beta    │                                              │
-│         │ Environment│                                              │
-│         │ (External) │                                              │
-│         └─────┬──────┘                                              │
-│               │                                                     │
-│               │ Testing (3-5 days)                                  │
-│               │ Manual Approval Required (Product Owner)            │
+│               │ Testing (2-3 days)                                  │
+│               │ Manual Approval Required (2 reviewers)              │
 │               ▼                                                     │
 │         ┌────────────┐                                              │
 │         │ Production │                                              │
@@ -181,37 +172,11 @@ Trigger: Merge to master or Git tag
    │  begins immediately  │
    └──────────┬───────────┘
               │
-              │ 1-2 days
+              │ 2-3 days (extended)
               │ monitoring
               ▼
    ┌──────────────────────┐
-   │  ⏸ APPROVAL GATE 1   │
-   │                      │
-   │  Reviewers:          │
-   │  • Product Owner     │
-   │  OR                  │
-   │  • Tech Lead         │
-   │                      │
-   │  Decision:           │
-   │  ✓ Approve → Beta    │
-   │  ✗ Reject → Stop     │
-   └──────────┬───────────┘
-              │
-              │ Approved
-              ▼
-   ┌──────────────────────┐
-   │  Deploy to Beta      │
-   │  (After approval)    │
-   │                      │
-   │  External beta users │
-   │  testing begins      │
-   └──────────┬───────────┘
-              │
-              │ 3-5 days
-              │ monitoring
-              ▼
-   ┌──────────────────────┐
-   │  ⏸ APPROVAL GATE 2   │
+   │  ⏸ APPROVAL GATE      │
    │                      │
    │  Reviewers:          │
    │  • Product Owner     │
@@ -219,10 +184,11 @@ Trigger: Merge to master or Git tag
    │  • 2x Tech Lead      │
    │                      │
    │  Checks:             │
-   │  ✓ Beta test OK      │
+   │  ✓ Alpha test OK      │
    │  ✓ Crash rate < 1%   │
    │  ✓ No critical bugs  │
-   │  ✓ Feedback positive │
+   │  ✓ Key flows tested  │
+   │  ✓ Performance OK │
    │                      │
    │  Decision:           │
    │  ✓ Approve → Prod    │
@@ -329,14 +295,14 @@ Trigger: Critical production issue
               │ Approved
               ▼
    ┌──────────────────────┐
-   │  Deploy to Beta      │
+   │  Deploy to Alpha     │
    │  (Expedited)         │
    │                      │
-   │  Monitor: 4-8 hours  │
-   │  (vs normal: 3-5 days│
+   │  Monitor: 24 hours   │
+   │  (vs normal: 2-3 days│
    └──────────┬───────────┘
-              │
-              │ Beta OK
+               │
+               │ Alpha OK
               ▼
    ┌──────────────────────┐
    │  ⏸ Production        │
@@ -501,14 +467,15 @@ Level 3: MASTER BRANCH
 Level 4: PRODUCTION GATE
 ┌─────────────────────────────────┐
 │ Manual Review:                  │
-│ ✓ Alpha testing complete (1-2d) │
-│ ✓ Beta testing complete (3-5d)  │
+│ ✓ Alpha testing complete (2-3d) │
 │ ✓ No critical bugs              │
 │ ✓ Performance OK                │
 │ ✓ User feedback positive        │
 │ ✓ Stakeholder approval          │
+│ ✓ All quality gates passed      │
 │                                 │
 │ Requires 2+ approvals           │
+│ (Stricter - no Beta tier)       │
 └──────────┬──────────────────────┘
            │
            │ Approved
@@ -546,24 +513,12 @@ Environment Tier Progression:
                          ▼
 ┌──────────────────────────────────────────────────────────────┐
 │                   ALPHA (Internal)                           │
-│  Purpose: Internal testing                                   │
+│  Purpose: Internal testing & validation                      │
 │  Access: Dev team, QA, stakeholders (10-50 users)          │
 │  Config: Release build, production APIs                     │
 │  Testing: Manual, exploratory, integration                  │
-│  Duration: 1-2 days                                         │
+│  Duration: 2-3 days (extended - only pre-production tier)  │
 │  Approval: None (automatic deployment)                      │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-                         │ Manual approval
-                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│                   BETA (External)                            │
-│  Purpose: External beta testing                              │
-│  Access: Beta testers opt-in (100-1000 users)               │
-│  Config: Release build, production APIs                     │
-│  Testing: Real-world usage, diverse devices                 │
-│  Duration: 3-5 days                                         │
-│  Approval: 1 reviewer (Product Owner or Tech Lead)          │
 └────────────────────────┬─────────────────────────────────────┘
                          │
                          │ Manual approval (2 reviewers)
@@ -578,13 +533,23 @@ Environment Tier Progression:
 │  Duration: 5-7 days                                         │
 │  Approval: 2 reviewers (Product Owner + Tech Leads)         │
 │  Monitoring: Crash rate, ANR, performance, ratings         │
+│  Note: Stricter approval needed (no Beta safety net)       │
+└──────────────────────────────────────────────────────────────┘
+
+Optional Future Enhancement:
+────────────────────────────
+┌──────────────────────────────────────────────────────────────┐
+│              OPEN TESTING (Not Currently Used)               │
+│  Purpose: Public beta program                                │
+│  Access: Public opt-in testers                              │
+│  Config: Release build, production APIs                     │
+│  Status: Can be added if broader testing needed             │
 └──────────────────────────────────────────────────────────────┘
 
 Success Criteria at Each Level:
 ────────────────────────────────
 CI:         All automated tests pass
-Alpha:      No blocking bugs, team sign-off
-Beta:       Crash rate < 1%, positive feedback
+Alpha:      No blocking bugs, team sign-off, extended validation
 Production: Crash rate < 1%, ANR < 0.5%, ratings stable
 ```
 
@@ -697,21 +662,19 @@ Symbols Used:
 ║  DEVELOPMENT WORKFLOW                                      ║
 ║  ├─ Feature branch → Auto CI → Optional Alpha deploy      ║
 ║  ├─ Pull Request → Code review → Merge to master          ║
-║  └─ Master → Auto Alpha → Manual Beta → Manual Production ║
+║  └─ Master → Auto Alpha → Manual Production               ║
 ║                                                            ║
-║  ENVIRONMENTS                                              ║
-║  ├─ Alpha:      Internal (auto from master)               ║
-║  ├─ Beta:       External (1 approval, 3-5 days)           ║
+║  ENVIRONMENTS (2-Tier)                                     ║
+║  ├─ Alpha:      Internal (auto from master, 2-3 days)     ║
 ║  └─ Production: Public (2 approvals, staged 1-100%)       ║
 ║                                                            ║
 ║  APPROVAL GATES                                            ║
-║  ├─ Alpha → Beta:       1 reviewer                        ║
-║  └─ Beta → Production:  2 reviewers                       ║
+║  └─ Alpha → Production:  2 reviewers (stricter)           ║
 ║                                                            ║
 ║  EMERGENCY HOTFIX                                          ║
 ║  ├─ Create hotfix branch from prod tag                    ║
 ║  ├─ Implement & test (< 4h)                               ║
-║  ├─ Deploy to Beta (expedited approval)                   ║
+║  ├─ Deploy to Alpha (expedited validation, 24h)           ║
 ║  └─ Deploy to Production (accelerated rollout)            ║
 ║                                                            ║
 ║  ROLLBACK TRIGGERS                                         ║
@@ -724,6 +687,8 @@ Symbols Used:
 ║  ├─ Code coverage: ≥ 70%                                  ║
 ║  ├─ Crash rate: < 1%                                      ║
 ║  └─ Lead time: < 1 week                                   ║
+║                                                            ║
+║  OPTIONAL FUTURE: Open Testing track for public beta      ║
 ║                                                            ║
 ╚════════════════════════════════════════════════════════════╝
 ```

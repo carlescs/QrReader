@@ -1,8 +1,8 @@
 # CI/CD Strategy for QR Reader Android Application
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Date:** 2026-02-17  
-**Status:** PROPOSED (Pending Approval)
+**Status:** APPROVED (Matches Implementation)
 
 ---
 
@@ -29,7 +29,7 @@ This document defines a comprehensive CI/CD strategy for the QR Reader Android a
 - **Automate** the entire build, test, and deployment pipeline
 - **Ensure quality** through automated testing and code analysis
 - **Enable rapid delivery** while maintaining stability
-- **Support multiple environments** (Alpha, Beta, Production)
+- **Support multiple environments** (Alpha, Production)
 - **Provide safety nets** with manual approval gates for production
 - **Maintain security** through automated scanning and secret management
 
@@ -133,10 +133,10 @@ This document defines a comprehensive CI/CD strategy for the QR Reader Android a
 1. **Alpha** - Automatic (master) + Manual (feature branches)
 2. **Production** - Manual promotion with approval gate
 
-#### Missing Tracks:
-- **Internal Testing** - Not currently used
-- **Beta/Closed Testing** - Not currently used
-- **Staged Rollout** - Not configured
+#### Optional Future Enhancements:
+- **Internal Testing Track** - Not currently needed (covered by Alpha)
+- **Open Testing (Public Beta)** - Optional for broader testing if needed
+- **Staged Rollout** - To be configured for Production deployments
 
 ---
 
@@ -177,8 +177,8 @@ This document defines a comprehensive CI/CD strategy for the QR Reader Android a
                     └───────┬────────┘
                             │
         ┌──────────────────┼──────────────────┐
-        │                  │                  │
-        ▼                  ▼                  ▼
+        │                 │                  │
+        ▼                 ▼                  ▼
 ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
 │   Master     │  │   Feature    │  │   Release    │
 │   Branch     │  │   Branches   │  │   Tags       │
@@ -191,14 +191,7 @@ This document defines a comprehensive CI/CD strategy for the QR Reader Android a
 │  (Internal)  │  │  (Testing)   │  │   Release    │
 └──────┬───────┘  └──────────────┘  └──────────────┘
        │
-       │ (Manual Approval Required)
-       ▼
-┌──────────────┐
-│  Beta Track  │
-│  (External)  │
-└──────┬───────┘
-       │
-       │ (Manual Approval Required)
+       │ (Manual Approval Required - 2 reviewers)
        ▼
 ┌──────────────┐
 │ Production   │
@@ -232,7 +225,6 @@ This document defines a comprehensive CI/CD strategy for the QR Reader Android a
   - ✅ Run SonarCloud analysis
   - ✅ Build signed release bundle
   - ✅ Auto-deploy to Alpha track
-  - ⏸️ Wait for manual approval for Beta
   - ⏸️ Wait for manual approval for Production
 - **Versioning**: Development versions (`5.2.0-dev.3+abc1234`) or tagged releases
 
@@ -265,7 +257,7 @@ This document defines a comprehensive CI/CD strategy for the QR Reader Android a
 - **CI/CD Behavior**:
   - ✅ Fast-track testing
   - ✅ Immediate deployment capability
-  - ✅ Deploy to Beta for rapid testing
+  - ✅ Deploy to Alpha for rapid testing
   - ⏸️ Expedited approval for Production
 - **Versioning**: Patch version increment (e.g., `5.2.0` → `5.2.1`)
 - **Post-deploy**: Merge back to master
@@ -275,8 +267,8 @@ This document defines a comprehensive CI/CD strategy for the QR Reader Android a
 - **Naming**: `release/v5.2.0`
 - **Protection**: Only bug fixes allowed
 - **CI/CD Behavior**:
-  - ✅ Deploy to Beta track
-  - ✅ Extended testing period
+  - ✅ Deploy to Alpha track for extended testing
+  - ✅ Extended testing period (2-3 days)
 - **Versioning**: Release candidate (`5.2.0-rc.1`)
 - **Lifetime**: Delete after production release and merge to master
 
@@ -319,7 +311,7 @@ Hotfix Flow:
 tag: v5.2.0
   └─ hotfix/critical-bug
        ├─ Fix → CI: Test, Build ✓
-       ├─ Deploy to Beta → Manual Testing
+       ├─ Deploy to Alpha → Rapid Testing
        ├─ Manual Approval → Production
        └─ Merge to master
 
@@ -329,7 +321,6 @@ master
   └─ Tag v5.2.0 → CI: Build, Sign
                 → Create GitHub Release
                 → Auto-deploy to Alpha
-                → Manual Approval → Beta
                 → Manual Approval → Production (Staged Rollout)
 ```
 
@@ -427,7 +418,6 @@ Jobs:
 ```yaml
 Jobs:
   - deploy-alpha        # Google Play Alpha track
-  - deploy-beta         # Google Play Beta track (manual approval)
   - deploy-production   # Google Play Production (manual approval + staged)
 ```
 
@@ -473,60 +463,23 @@ Jobs:
 
 **Version:** Development versions or release candidates
 
-**Testing Duration:** 1-2 days minimum
+**Testing Duration:** 2-3 days minimum (extended since this is the only pre-production tier)
 
 **Rollback:** Manual via Google Play Console or deploy previous version
 
-#### 2. Beta (Closed Testing)
-**Purpose:** External beta testing with trusted users
-
-**Deployment:**
-- **Trigger:** Manual promotion from Alpha (workflow_dispatch)
-- **Approval:** Required (at least 1 reviewer)
-- **Rollout:** 100% immediate to beta users
-
-**Audience:**
-- Beta testers (opt-in via Play Store)
-- Power users
-- Community moderators
-- Approximately 100-1000 users
-
-**Version:** Release candidates only
-
-**Testing Duration:** 3-5 days minimum
-
-**Rollback:** Manual via Google Play Console
-
-**Promotion Criteria:**
-- Alpha testing completed successfully
+**Exit Criteria:**
+- All critical functionality validated
 - No critical bugs reported
-- Key features tested and validated
 - Performance metrics acceptable
+- Key user flows tested
+- Security validation passed
 
-#### 3. Open Testing (Optional)
-**Purpose:** Broader testing before production
-
-**Deployment:**
-- **Trigger:** Manual promotion from Beta
-- **Approval:** Required (product owner + 1 reviewer)
-- **Rollout:** 100% to open testers
-
-**Audience:**
-- Anyone can join via Play Store
-- Approximately 1,000-10,000 users
-
-**Version:** Release candidates
-
-**Testing Duration:** 5-7 days minimum
-
-**Rollback:** Manual via Google Play Console
-
-#### 4. Production (Public Release)
+#### 2. Production (Public Release)
 **Purpose:** General availability to all users
 
 **Deployment:**
-- **Trigger:** Manual promotion from Beta/Open Testing
-- **Approval:** Required (product owner + 2 reviewers)
+- **Trigger:** Manual promotion from Alpha
+- **Approval:** Required (product owner + 2 reviewers) - Stricter due to no Beta safety net
 - **Rollout:** Staged rollout (configurable percentages)
 
 **Rollout Stages:**
@@ -554,6 +507,16 @@ Day 6: 100% of users → Full rollout
 
 **Rollback:** Immediate halt of rollout, revert to previous version
 
+#### 3. Open Testing (Optional Future Enhancement)
+**Purpose:** Broader public testing before production (not in current deployment flow)
+
+**Status:** Not currently implemented - can be added in future if needed for:
+- Large feature releases requiring broader testing
+- A/B testing capabilities
+- Community engagement programs
+
+**Deployment:** Would require manual promotion from Alpha if implemented
+
 ### Deployment Workflows
 
 #### Workflow 1: Feature Branch to Alpha (Manual)
@@ -575,33 +538,22 @@ Developer → Create PR from feature branch
          → [Pipeline] Test → Build → Sign → Deploy to Alpha (automatic)
 ```
 
-#### Workflow 3: Alpha to Beta (Manual Approval)
+#### Workflow 3: Alpha to Production (Manual Approval + Staged)
 ```
-Product Owner → Review Alpha testing results
-              → Navigate to Actions → Latest master workflow
-              → Find "Deploy to Beta" job (waiting for approval)
-              → Click "Review deployments"
-              → Check "PlayStore-Beta" environment
-              → Add approval comment
-              → Click "Approve and deploy"
-              → [Pipeline] Promote Alpha → Beta
-```
-
-#### Workflow 4: Beta to Production (Manual Approval + Staged)
-```
-Product Owner → Review Beta testing results
+Product Owner → Review Alpha testing results (2-3 days minimum)
+              → Validate all quality gates passed
               → Navigate to Actions → Latest master workflow
               → Find "Deploy to Production" job (waiting for approval)
               → Click "Review deployments"
               → Check "PlayStore-Production" environment
               → Add approval comment with rollout plan
-              → Click "Approve and deploy"
-              → [Pipeline] Promote Beta → Production (1% rollout)
+              → Click "Approve and deploy" (requires 2 approvers)
+              → [Pipeline] Promote Alpha → Production (1% rollout)
               → Monitor for 24 hours
               → [Manual] Increase rollout via Google Play Console
 ```
 
-#### Workflow 5: Hotfix to Production (Expedited)
+#### Workflow 4: Hotfix to Production (Expedited)
 ```
 Developer → Create hotfix branch from production tag
          → Implement fix → Commit
@@ -610,8 +562,7 @@ Developer → Create hotfix branch from production tag
          → Merge to hotfix branch
          → Tag hotfix version (e.g., v5.2.1)
          → [Pipeline] Build → Sign
-         → Deploy to Beta (expedited approval)
-         → [Manual] 24-hour monitoring
+         → Deploy to Alpha (expedited validation - 24 hours)
          → Deploy to Production (expedited approval)
          → [Manual] 10% → 50% → 100% rollout (accelerated)
          → Merge hotfix to master
@@ -689,17 +640,18 @@ Developer → Create hotfix branch from production tag
 
 #### Level 4: Production Promotion
 **Manual Review Required:**
-- ✅ Alpha testing completed (minimum 1-2 days)
-- ✅ Beta testing completed (minimum 3-5 days)
+- ✅ Alpha testing completed (minimum 2-3 days, extended validation)
 - ✅ No critical bugs reported
 - ✅ Performance metrics acceptable
 - ✅ User feedback positive
 - ✅ Stakeholder approval obtained
+- ✅ All quality gates passed
 
 **Approval Process:**
 - Product Owner reviews testing results
 - Technical Lead reviews metrics
-- At least 2 approvals required
+- At least 2 approvals required (stricter due to no Beta tier)
+- Additional validation checklist reviewed
 - Deployment proceeds with staged rollout
 
 ### Security Strategy
@@ -805,8 +757,7 @@ Optional Secrets:
 
 #### Deployment Frequency:
 - **Target**: Multiple deployments per week to Alpha
-- **Target**: 1-2 deployments per week to Beta
-- **Target**: 1-2 deployments per month to Production
+- **Target**: 1-2 deployments per month to Production (after Alpha validation)
 
 **Tracking:** GitHub Actions deployment history
 
@@ -1022,23 +973,7 @@ Notification:
 
 **Distribution:** Google Play Store (Alpha track)
 
-#### 4. Beta (Google Play Beta Track)
-**Purpose:** External beta testing
-
-**Configuration:**
-- Release build type
-- Production API endpoints
-- Crash reporting enabled
-- Analytics enabled
-- Performance monitoring enabled
-
-**Access:**
-- External beta testers (Google Play Console)
-- Opt-in via beta testing link
-
-**Distribution:** Google Play Store (Beta track)
-
-#### 5. Production (Google Play Production Track)
+#### 4. Production (Google Play Production Track)
 **Purpose:** Public release
 
 **Configuration:**
@@ -1107,20 +1042,16 @@ Environments:
      - Secrets: None (uses repository secrets)
      - Purpose: Internal testing deployment
      
-  2. PlayStore-Beta
-     - Protection rules:
-       ✓ Required reviewers: [Product Owner, Tech Lead]
-       ✓ Wait timer: 5 minutes
-     - Secrets: None (uses repository secrets)
-     - Purpose: Beta deployment gate
-     
-  3. PlayStore-Production
+  2. PlayStore-Production
      - Protection rules:
        ✓ Required reviewers: [Product Owner, 2x Tech Leads]
-       ✓ Wait timer: 10 minutes
+       ✓ Wait timer: 10 minutes (stricter due to no Beta safety net)
      - Secrets: None (uses repository secrets)
      - Purpose: Production deployment gate
+     - Notes: Extra validation required since no intermediate Beta tier
 ```
+
+**Note:** Open Testing track can be added in future as an optional intermediate tier if needed.
 
 ### Access Control
 
@@ -1205,21 +1136,22 @@ Branch Protection:
 - Alpha testing successful
 
 #### 4. Release Candidate
-**Duration:** 3-5 days
+**Duration:** 2-3 days (Extended Alpha testing)
 
 **Activities:**
 - [ ] Create release tag (e.g., `v5.2.0-rc.1`)
-- [ ] Deploy to Beta track (manual approval)
-- [ ] Extended testing by beta testers
-- [ ] Monitor crash/ANR rates
-- [ ] Collect user feedback
+- [ ] Deploy to Alpha track for extended validation
+- [ ] Comprehensive internal testing
+- [ ] Monitor crash/ANR rates closely
+- [ ] Validate all key features and flows
 - [ ] Fix critical bugs if found (create rc.2, rc.3, etc.)
 
 **Success Criteria:**
 - Crash rate < 1%
 - ANR rate < 0.5%
 - No critical bugs reported
-- Beta user feedback positive
+- All key flows validated
+- Internal team sign-off
 
 #### 5. Production Release
 **Duration:** 5-7 days (staged rollout)
@@ -1262,17 +1194,16 @@ Branch Protection:
 
 #### Recommended Schedule:
 - **Alpha releases**: Multiple times per week (automatic)
-- **Beta releases**: 1-2 times per week (as needed)
-- **Production releases**: 1-2 times per month
+- **Production releases**: 1-2 times per month (after extended Alpha validation)
 - **Hotfixes**: As needed (expedited process)
 
 #### Release Calendar Example:
 ```
-Week 1: Feature development → Alpha testing
-Week 2: Feature development → Alpha testing
-Week 3: Feature freeze → Beta release
-Week 4: Beta testing → Production release
-Week 5: Staged rollout → Monitoring
+Week 1: Feature development → Continuous Alpha testing
+Week 2: Feature development → Continuous Alpha testing
+Week 3: Feature freeze → Extended Alpha validation (2-3 days)
+Week 4: Production release → Staged rollout
+Week 5: Monitor rollout → Complete deployment
 Week 6: (Start next release cycle)
 ```
 
@@ -1291,14 +1222,13 @@ Detection → Triage (< 1 hour)
          → Create hotfix branch from production tag
          → Implement fix (< 4 hours)
          → Fast-track testing (< 1 hour)
-         → Deploy to Beta (expedited approval)
-         → Monitor Beta (4-8 hours)
+         → Deploy to Alpha (expedited validation, 24 hours)
          → Deploy to Production (expedited approval)
          → Accelerated rollout: 10% → 50% → 100%
          → Monitor closely
          → Merge hotfix to master
 
-Total time: 8-24 hours (critical issues)
+Total time: 24-48 hours (critical issues)
 ```
 
 #### Hotfix Approval:
@@ -1330,7 +1260,7 @@ Total time: 8-24 hours (critical issues)
 #### Release Candidates:
 - Format: `{version}-rc.{number}`
 - Example: `5.2.0-rc.1`, `5.2.0-rc.2`
-- Used for: Beta track testing before production
+- Used for: Extended Alpha track testing before production
 
 ---
 
@@ -1411,7 +1341,7 @@ Total time: 8-24 hours (critical issues)
 **Detection:**
 - User reports
 - Internal testing
-- Beta tester feedback
+- Alpha tester feedback
 
 **Resolution:**
 1. **Assess Severity:**
@@ -1432,7 +1362,7 @@ Total time: 8-24 hours (critical issues)
 
 **Prevention:**
 - Comprehensive test coverage
-- Beta testing with real users
+- Extended Alpha testing with internal users
 - Feature flags for gradual rollout
 - Regression test suite
 
@@ -1622,8 +1552,7 @@ Template:
 - [ ] Review and optimize existing GitHub Actions workflows
 - [ ] Configure GitHub environments with protection rules
   - [ ] PlayStore-Alpha (no protection)
-  - [ ] PlayStore-Beta (1 reviewer required)
-  - [ ] PlayStore-Production (2 reviewers required)
+  - [ ] PlayStore-Production (2 reviewers required, stricter validation)
 - [ ] Set up monitoring dashboards
 - [ ] Configure automated alerts
 - [ ] Update documentation
@@ -1653,26 +1582,30 @@ Template:
 - Quality gate enforcement
 - Coverage thresholds enforced
 
-### Phase 3: Multi-Track Deployment (Week 5-6)
-**Goal:** Implement Beta and staged Production deployments
+### Phase 3: Two-Tier Deployment Enhancement (Week 5-6)
+**Goal:** Strengthen Alpha testing and Production deployment process
 
 **Tasks:**
-- [ ] Add Beta deployment workflow
-  - [ ] Manual promotion from Alpha to Beta
-  - [ ] Approval gate configuration
-  - [ ] Beta tester management
+- [ ] Enhance Alpha track testing procedures
+  - [ ] Extended Alpha testing duration (2-3 days)
+  - [ ] Comprehensive test coverage validation
+  - [ ] Additional quality checkpoints
 - [ ] Implement staged Production rollout
   - [ ] 1% → 5% → 10% → 25% → 50% → 100%
   - [ ] Automated monitoring between stages
-  - [ ] Manual approval at each stage (optional)
+  - [ ] Stricter approval requirements (2 reviewers)
 - [ ] Create deployment runbooks
 - [ ] Test rollback procedures
+- [ ] Document decision criteria for Production promotion
 
 **Deliverables:**
-- Beta deployment workflow
+- Enhanced Alpha testing procedures
 - Staged production rollout
 - Deployment runbooks
 - Tested rollback procedures
+- Production promotion criteria document
+
+**Note:** Open Testing track can be added as optional Phase 3B in future if needed.
 
 ### Phase 4: Monitoring & Observability (Week 7-8)
 **Goal:** Implement comprehensive monitoring
@@ -1868,12 +1801,12 @@ Template:
 **AAB**: Android App Bundle, Google's publishing format  
 **Alpha**: Internal testing track on Google Play  
 **ANR**: Application Not Responding error  
-**Beta**: Closed testing track on Google Play  
 **CI/CD**: Continuous Integration / Continuous Deployment  
 **DAU**: Daily Active Users  
 **MAU**: Monthly Active Users  
 **MTTR**: Mean Time To Recovery  
 **MTTD**: Mean Time To Detection  
+**Open Testing**: Optional public beta testing track (not currently used)  
 **PR**: Pull Request  
 **SAST**: Static Application Security Testing  
 **SonarCloud**: Code quality and security analysis platform  
