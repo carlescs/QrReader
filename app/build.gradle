@@ -194,3 +194,10 @@ tasks.register("printVersionName") {
         println(android.defaultConfig.versionName)
     }
 }
+
+// Task to print version code for CI/CD
+tasks.register("printVersionCode") {
+    doLast {
+        println(android.defaultConfig.versionCode)
+    }
+}

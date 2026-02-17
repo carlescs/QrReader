@@ -49,15 +49,19 @@ Runs after tests pass:
 Publishes to Google Play Alpha track:
 - **Automatic**: On master branch push
 - **Manual**: Via workflow_dispatch from any branch (must check "Upload to Google Play Alpha")
+- **Gets version information**: Extracts version name and version code from Git-based versioning
+- **Generates release notes**: Creates localized release notes with version information
 - Downloads signed bundle
 - Validates bundle and secrets
-- Uploads to Google Play Console Alpha track
+- Uploads to Google Play Console Alpha track with release notes
 
 ### 4. Promote Job (**MANUAL APPROVAL REQUIRED**)
 Promotes from Alpha to Production track:
 - **Runs automatically after release job** on master branch pushes
 - **Pauses and waits for manual approval** before executing (via GitHub Environment protection)
 - Requires at least one reviewer to approve in the Actions UI
+- **Gets version information**: Extracts version name and version code for release notes
+- **Copies release notes**: Transfers release notes from Alpha to Production, or creates new ones
 - Uses Google Play API to promote the release from Alpha to Production
 - See "Manual Approval for Production Promotion" section below for setup and usage instructions
 
@@ -400,10 +404,17 @@ When a workflow is waiting for approval:
 
 The promote job will:
 1. Wait for manual approval from designated reviewers
-2. Connect to Google Play Console using service account credentials
-3. Fetch the latest version from the Alpha track
-4. Promote that version to the Production track
-5. Mark the release as "completed" (fully rolled out)
+2. Extract version name and version code from Git-based versioning
+3. Connect to Google Play Console using service account credentials
+4. Fetch the latest version from the Alpha track (including release notes)
+5. Promote that version to the Production track with release notes
+6. Mark the release as "completed" (fully rolled out)
+
+**Version Information in Release Notes:**
+- The workflow automatically extracts version name and version code using `printVersionName` and `printVersionCode` Gradle tasks
+- Release notes include: `Version X.X.X (Build XXX)`
+- Alpha track: Release notes are generated from a template and include version information
+- Production track: Release notes are copied from the Alpha track, or new ones are generated if not available
 
 ### Prerequisites
 
@@ -436,6 +447,58 @@ The workflow uses GitHub Environments for deployment gates:
 See "Setting Up Environment Protection" in the "Manual Approval for Production Promotion" section above for detailed setup instructions.
 
 Configure environments in repository **Settings → Environments**.
+
+## Release Notes and Version Information
+
+The CI/CD pipeline automatically includes version information in release notes for both Alpha and Production deployments.
+
+### Automatic Version Extraction
+
+The workflow extracts version information from Git-based versioning:
+- **Version Name**: Retrieved using `./gradlew -q printVersionName`
+  - Example: `5.2.0` (tagged release) or `5.2.0-dev.3+abc1234` (development build)
+- **Version Code**: Retrieved using `./gradlew -q printVersionCode`
+  - Example: `250` (based on Git commit count)
+
+### Release Notes Format
+
+**Alpha Track:**
+```
+Version 5.2.0 (Build 250)
+
+What's new in this release:
+- Latest updates and improvements
+- Bug fixes and performance enhancements
+```
+
+**Production Track:**
+- Copies release notes from Alpha track automatically
+- Falls back to generated notes if Alpha notes are unavailable
+
+### Customizing Release Notes
+
+To customize release notes for a specific release:
+
+1. **Option 1: Modify the workflow (recommended for consistent changes)**
+   - Edit `.github/workflows/android-ci-cd.yml`
+   - Locate the "Generate release notes" step in the `release` job
+   - Modify the template text
+
+2. **Option 2: Create release notes files (for one-time or localized notes)**
+   - Create `distribution/whatsnew/` directory
+   - Add files: `whatsnew-en-US`, `whatsnew-es-ES`, etc. (BCP 47 format)
+   - Commit and push before the release
+   - The workflow will use these files if present
+
+### Testing Version Extraction Locally
+
+```bash
+# Test version name extraction
+./gradlew -q printVersionName
+
+# Test version code extraction
+./gradlew -q printVersionCode
+```
 
 ## Local Testing
 
