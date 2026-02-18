@@ -107,7 +107,6 @@ python3 scripts/fetch_play_version.py
 - **Comprehensive Guide:** `docs/GOOGLE_PLAY_VERSIONING.md`
 - **Implementation Details:** `IMPLEMENTATION_SUMMARY.md`
 - **Versioning Guide:** `VERSIONING.md`
-- **Build Notes:** `BUILD_ENVIRONMENT_NOTES.md`
 
 ## 🚀 Ready to Deploy?
 

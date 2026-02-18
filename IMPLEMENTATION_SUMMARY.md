@@ -188,7 +188,6 @@ python3 scripts/fetch_play_version.py
 5. `VERSIONING.md` - Updated
 6. `README.md` - Updated
 7. `docs/VERSION_CODE_APPROACHES.md` - Decision log
-8. `gradle/libs.versions.toml` - AGP version fix (8.5.2)
 
 ## Next Steps
 
