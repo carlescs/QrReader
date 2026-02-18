@@ -7,14 +7,18 @@ For detailed technical information about version code testing and troubleshootin
 ## How It Works
 
 ### Version Code
-- Automatically calculated from the total number of Git commits
+- Automatically calculated from the total number of Git commits plus a base offset
+- **Base offset**: A historical offset of 25 is added to maintain consistency with existing Google Play versions
+  - This accounts for repository restructuring that occurred in the past
+  - Ensures monotonically increasing version codes that don't conflict with existing Play Store versions
 - Increments with every commit on master branch
-- Example: 259, 260, 261...
+- **Formula for master/main branches**: `version_code = commit_count + 25`
+- Example: With 323 commits → version code 348 (323 + 25)
 - **Feature branches**: Additional branch-specific offset added to prevent collisions
   - Ensures each feature branch has unique version codes when deployed to Alpha track
   - Example: A feature branch with 260 commits gets an offset based on branch name hash
-  - Formula: version_code = 260 + (hash % 10000) * 100000
-  - Result could be 45600260 if hash yields offset value of 456
+  - Formula: `version_code = (commit_count + 25) + (hash % 10000) * 100000`
+  - Result could be 45600285 if hash yields offset value of 456 and commit count is 260
 
 ### Version Name
 - Derived from Git tags following semantic versioning (major.minor.patch)

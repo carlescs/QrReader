@@ -41,6 +41,24 @@ abstract class GitCommandValueSource : ValueSource<String, GitCommandValueSource
 }
 
 object GitVersioning {
+    /**
+     * Base version code offset to maintain consistency with Google Play.
+     * 
+     * Historical context:
+     * - The repository was restructured at some point, causing a mismatch between
+     *   the git commit count and the actual version codes in Google Play.
+     * - The last known version code in Google Play was 348.
+     * - The git commit count at that time was 323.
+     * - This offset (348 - 323 = 25) ensures version codes remain monotonically increasing
+     *   and consistent with Google Play's expectations.
+     * 
+     * This offset is added to all version code calculations to ensure:
+     * 1. No conflicts with existing Google Play versions
+     * 2. Monotonically increasing version codes
+     * 3. Consistent versioning going forward
+     */
+    private const val BASE_VERSION_CODE_OFFSET = 25
+    
     @JvmStatic
     fun getVersionCode(project: Project): Int {
         // Note: Requires full Git history (not a shallow clone)
@@ -58,7 +76,10 @@ object GitVersioning {
         val branchProvider = gitCommand(project, listOf("git", "rev-parse", "--abbrev-ref", "HEAD"))
         val branch = branchProvider.orNull?.trim() ?: "master"
         
-        // Only apply offset for non-master/main branches
+        // Calculate the base version code with the historical offset
+        val baseVersionCode = count + BASE_VERSION_CODE_OFFSET
+        
+        // Only apply branch offset for non-master/main branches
         if (branch != "master" && branch != "main" && branch != "HEAD") {
             // Generate a consistent hash from the branch name
             // Handle Int.MIN_VALUE edge case by converting to Long first
@@ -66,10 +87,10 @@ object GitVersioning {
             project.logger.lifecycle("Feature branch detected: $branch, adding offset: $branchHash")
             // Add offset to create unique version code for this branch
             // The offset is multiplied by 100000 to ensure it doesn't conflict with commit count
-            return count + (branchHash * 100000)
+            return baseVersionCode + (branchHash * 100000)
         }
         
-        return count
+        return baseVersionCode
     }
 
     @JvmStatic
