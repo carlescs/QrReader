@@ -32,14 +32,18 @@ Next version code: 351
 If Google Play API is unavailable (no internet, missing credentials), the system automatically falls back to git-based calculation:
 
 ```
-version_code = commit_count + 25 (+ branch_offset for feature branches)
+version_code = commit_count + 25
 ```
 
 **Base offset**: 25 (maintains consistency with historical Play Store versions)
 
-**Feature branches**: Additional branch-specific offset to prevent collisions
-- Formula: `(commit_count + 25) + (hash % 10000) * 100000`
-- Only applies when using fallback method
+**Important**: Branch offsets have been removed to prevent extremely large version codes. All branches now use the same simple formula.
+
+**Example**:
+```
+Master branch:   326 commits + 25 = 351
+Feature branch:  326 commits + 25 = 351
+```
 
 ### Version Name
 - Derived from Git tags following semantic versioning (major.minor.patch)
@@ -60,29 +64,38 @@ version_code = commit_count + 25 (+ branch_offset for feature branches)
 
 ### Why This Change?
 
-Previously, feature branches generated extremely large version codes (e.g., 891400363) due to branch-specific offsets. This caused:
+Previously, feature branches generated extremely large version codes (e.g., 891,400,363) when using the fallback git-based versioning due to branch-specific offsets. This caused:
 - **Confusion**: Version codes didn't match expectations (~350 expected)
 - **Complexity**: Difficult to understand and debug
 - **Unnecessary**: Play Store is the authoritative source
 
+**Fix Applied**: Branch offsets have been removed from the fallback method. Now all branches use the simple formula `commit_count + 25`, ensuring version codes remain reasonable (~350) even when the Google Play API is unavailable.
+
 ### Benefits
 
-1. **Accurate Version Codes**: Always matches Play Store state
-2. **No Branch Inflation**: Feature branches get reasonable version codes
-3. **Simplified Logic**: No complex branch hash calculations needed
+1. **Accurate Version Codes**: Always matches Play Store state (with API)
+2. **No Branch Inflation**: Feature branches get reasonable version codes (~350, not 891M)
+3. **Simplified Logic**: No complex branch hash calculations
 4. **Robust**: Handles git history changes, merges, rebases
 5. **Self-Healing**: Automatically adapts to Play Store state
 
 ### Example Comparison
 
-**Old System (Git-based with branch offset):**
+**Old System (Git-based fallback with branch offset):**
 ```
 Feature branch "copilot/explore-barcode-description":
-Version code: 891400363
-(326 commits + 25 offset + 8914 branch hash × 100000)
+Version code: 891,400,363
+(326 commits + 25 offset + 8914 branch hash × 100,000)
 ```
 
-**New System (Google Play fetch):**
+**New System (Git-based fallback without branch offset):**
+```
+Feature branch "copilot/get-latest-version-code":
+Version code: 351
+(326 commits + 25 offset)
+```
+
+**With Google Play API (Primary Method):**
 ```
 Any branch:
 Version code: 351

@@ -136,6 +136,14 @@ object GitVersioning {
     /**
      * Git-based version code calculation (fallback method).
      * This is used when Google Play API fetch fails.
+     * 
+     * Uses simple formula: commit_count + BASE_VERSION_CODE_OFFSET
+     * This ensures version codes remain reasonable (e.g., ~350) rather than
+     * becoming extremely large (e.g., 891,400,363) on feature branches.
+     * 
+     * Note: Branch offsets were removed to prevent large version codes.
+     * The primary Google Play API fetch method should be used when multiple
+     * feature branches need to deploy to Alpha track simultaneously.
      */
     private fun getGitBasedVersionCode(project: Project): Int {
         // Note: Requires full Git history (not a shallow clone)
@@ -148,26 +156,13 @@ object GitVersioning {
             return 1
         }
         
-        // For feature branches, add a branch-specific offset to prevent version code collisions
-        // when multiple feature branches are deployed to the alpha track in parallel
-        val branchProvider = gitCommand(project, listOf("git", "rev-parse", "--abbrev-ref", "HEAD"))
-        val branch = branchProvider.orNull?.trim() ?: "master"
+        // Calculate version code: commit count + base offset
+        // Simple formula prevents extremely large version codes on feature branches
+        val versionCode = count + BASE_VERSION_CODE_OFFSET
         
-        // Calculate the base version code with the historical offset
-        val baseVersionCode = count + BASE_VERSION_CODE_OFFSET
+        project.logger.lifecycle("Git-based version code: $versionCode (commits: $count + offset: $BASE_VERSION_CODE_OFFSET)")
         
-        // Only apply branch offset for non-master/main branches
-        if (branch != "master" && branch != "main" && branch != "HEAD") {
-            // Generate a consistent hash from the branch name
-            // Handle Int.MIN_VALUE edge case by converting to Long first
-            val branchHash = (kotlin.math.abs(branch.hashCode().toLong()) % 10000).toInt()
-            project.logger.lifecycle("Feature branch detected: $branch, adding offset: $branchHash")
-            // Add offset to create unique version code for this branch
-            // The offset is multiplied by 100000 to ensure it doesn't conflict with commit count
-            return baseVersionCode + (branchHash * 100000)
-        }
-        
-        return baseVersionCode
+        return versionCode
     }
 
     @JvmStatic
