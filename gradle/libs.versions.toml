@@ -8,7 +8,7 @@ targetSdk = "36"
 # versionName = "5.2.0"  # Last manual version - now from git tags
 
 # Plugins
-agp = "9.0.1"
+agp = "8.5.2"
 kotlin = "2.3.10"
 ksp = "2.3.2"
 sonarqube = "7.2.2.6593"
