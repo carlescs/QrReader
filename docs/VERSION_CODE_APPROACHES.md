@@ -354,22 +354,41 @@ ENABLE_API_FETCH = true // in production builds only
 
 ## Decision Log
 
-### 2026-02-18: Chose Static Offset Approach
+### 2026-02-18: Chose Static Offset Approach (Initial Implementation)
 - **Decision**: Implement static `BASE_VERSION_CODE_OFFSET = 25`
 - **Reason**: Simplicity, speed, reliability outweigh the marginal accuracy benefit
 - **Alternative considered**: Dynamic Google Play API fetch
 - **Trade-off**: Manual offset calculation vs. API complexity
 - **Result**: Successfully implemented, version codes now consistent
 
+### 2026-02-18 (Later): Switched to Dynamic Google Play API Fetch
+- **Decision**: Implement Dynamic Google Play API fetch as primary method
+- **Reason**: Feature branch offsets were creating extremely large version codes (891400363)
+  - Confusing for developers and stakeholders
+  - Difficult to debug and understand
+  - Unnecessary complexity when Play Store is the source of truth
+- **Implementation**: 
+  - Primary: Google Play API fetch (latest + 1)
+  - Fallback: Static offset approach (for local development without credentials)
+- **Benefits**:
+  - Accurate version codes matching Play Store (~350 instead of 891400363)
+  - No branch-specific inflation
+  - Self-healing if Play Store version changes
+  - Graceful fallback for local development
+- **Result**: Successfully implemented with comprehensive documentation and CI/CD integration
+
 ---
 
 ## References
 
-### Static Offset Approach
-- Implementation: `buildSrc/src/main/kotlin/GitVersioning.kt`
+### Static Offset Approach (Fallback)
+- Implementation: `buildSrc/src/main/kotlin/GitVersioning.kt` (getGitBasedVersionCode method)
 - Documentation: `VERSIONING.md`, `VERSION_CODE_TESTING.md`
 
-### Dynamic API Approach
+### Dynamic API Approach (Primary Method)
+- Implementation: `buildSrc/src/main/kotlin/GitVersioning.kt` (fetchFromGooglePlay method)
+- Script: `scripts/fetch_play_version.py`
+- Documentation: `docs/GOOGLE_PLAY_VERSIONING.md`
 - [Google Play Developer API](https://developers.google.com/android-publisher/)
 - [Gradle Play Publisher Plugin](https://github.com/Triple-T/gradle-play-publisher)
 - [API Authentication](https://developers.google.com/android-publisher/getting_started)
@@ -378,5 +397,5 @@ ENABLE_API_FETCH = true // in production builds only
 ---
 
 **Last Updated**: 2026-02-18  
-**Status**: ✓ Static Offset Implemented  
-**Dynamic API**: Documented for future consideration
+**Status**: ✅ Dynamic Google Play API Fetch Implemented (Primary)  
+**Fallback**: ✓ Static Offset Available (for local development)

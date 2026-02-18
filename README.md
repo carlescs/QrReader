@@ -4,7 +4,12 @@ A simple Qr code reader for Android. Written with Jetpack Compose and uses Camer
 
 ## Versioning
 
-This project uses Git-based automatic versioning. See [VERSIONING.md](VERSIONING.md) for details.
+This project uses **Google Play API-based versioning** as the primary method, with automatic fallback to git-based versioning. 
+
+**Version Code:** Fetched from Google Play Store (latest + 1)  
+**Version Name:** From Git tags (semantic versioning)
+
+See [VERSIONING.md](VERSIONING.md) and [Google Play Versioning Guide](docs/GOOGLE_PLAY_VERSIONING.md) for details.
 
 **Creating a release:**
 ```bash
