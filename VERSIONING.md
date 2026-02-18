@@ -2,12 +2,23 @@
 
 This project uses **Git-based automatic versioning** following semantic versioning principles.
 
+For detailed technical information about version code testing and troubleshooting, see [Version Code Testing Guide](docs/VERSION_CODE_TESTING.md).
+
 ## How It Works
 
 ### Version Code
-- Automatically calculated from the total number of Git commits
-- Increments with every commit
-- Example: 259, 260, 261...
+- Automatically calculated from the total number of Git commits plus a base offset
+- **Base offset**: A historical offset of 25 is added to maintain consistency with existing Google Play versions
+  - This accounts for repository restructuring that occurred in the past
+  - Ensures monotonically increasing version codes that don't conflict with existing Play Store versions
+- Increments with every commit on master branch
+- **Formula for master/main branches**: `version_code = commit_count + 25`
+- Example: With 323 commits → version code 348 (323 + 25)
+- **Feature branches**: Additional branch-specific offset added to prevent collisions
+  - Ensures each feature branch has unique version codes when deployed to Alpha track
+  - Example: A feature branch with 260 commits gets an offset based on branch name hash
+  - Formula: `version_code = (commit_count + 25) + (hash % 10000) * 100000`
+  - Result could be 45600285 if hash yields offset value of 456 and commit count is 260
 
 ### Version Name
 - Derived from Git tags following semantic versioning (major.minor.patch)
@@ -40,7 +51,8 @@ Versions are calculated automatically.
 When working on feature branches, the system automatically generates development versions:
 
 **Example on feature branch `feature/new-scanner`:**
-- Version Code: Current commit count (e.g., 267)
+- Version Code: Commit count + branch-specific offset (e.g., 100267)
+  - Prevents conflicts when deploying multiple feature branches to Alpha
 - Version Name: `5.1.8-dev.8+a1b2c3d` 
   - Based on last tag `v5.1.8`
   - `8` commits since that tag
@@ -136,13 +148,49 @@ The build will use the dev version from your branch (e.g., `5.1.8-dev.8+a1b2c3d`
 ### Dev Version Benefits
 
 Each dev version is unique and traceable:
-- **Version Code**: Monotonically increasing (commit count)
+- **Version Code**: Unique per branch (commit count + branch offset for feature branches)
 - **Version Name**: Includes commit hash for traceability
 - **Examples**:
-  - `5.1.8-dev.5+abc1234` - 5 commits after tag v5.1.8
-  - `5.2.0-dev.12+def5678` - 12 commits after tag v5.2.0
+  - Master: `5.1.8-dev.5+abc1234` (version code: 5)
+  - Feature branch: `5.2.0-dev.12+def5678` (version code: 456012 with offset)
 
 This allows multiple feature branches to be tested in parallel without version conflicts.
+
+### Feature Branch Deployment Strategy
+
+When deploying multiple feature branches to the Alpha track:
+
+**Automatic Protection:**
+- Each feature branch gets a unique version code based on branch name + commit count
+- Prevents Google Play upload rejections due to version code conflicts
+- Branch offset is deterministic (same branch name always gets the same offset)
+
+**Recommended Workflow:**
+1. **Parallel Development**: Work on multiple feature branches simultaneously
+2. **Independent Testing**: Deploy any branch to Alpha track for testing
+3. **Sequential Promotion**: Only promote tested branches to Production one at a time
+
+**Example Scenario (illustrative offsets):**
+```bash
+# Three developers working on different features
+# Each branch gets a deterministic offset based on its name hash
+Branch: feature/ai-descriptions     → Version: offset1 + 456 commits
+Branch: feature/tag-suggestions      → Version: offset2 + 460 commits
+Branch: feature/improved-scanner     → Version: offset3 + 458 commits
+
+# Actual values depend on (hash(branchName) % 10000) * 100000
+# For example: 
+#   hash("feature/ai-descriptions") % 10000 = 1234 → offset = 123400000
+#   Plus 456 commits = version code 123400456
+
+# All can be deployed to Alpha simultaneously without conflicts
+```
+
+**Important Notes:**
+- Master branch deployments use simple commit count (no offset)
+- Feature branches should be merged to master before Production promotion
+- After merging to master, the version code resets to the master commit count
+- This ensures Production releases have clean, sequential version codes
 
 ### GitHub Secrets
 No additional secrets needed for automatic versioning. Existing secrets for Google Play publishing remain unchanged.
@@ -175,13 +223,27 @@ git push origin v5.2.0
 
 ### Will different feature branches have version conflicts?
 
-**No.** Each feature branch has a unique version name because:
-- The commit hash is different for each branch
+**No.** The system now prevents version code conflicts:
+
+**Version Code Protection:**
+- Each feature branch gets a unique offset based on the branch name
+- Example: 
+  - Master: version code 260 (just commit count)
+  - Branch A (`feature/scanner`): version code 456260 (456000 offset + 260 commits)
+  - Branch B (`feature/tags`): version code 789260 (789000 offset + 260 commits)
+- Google Play requires unique, monotonically increasing version codes
+- The branch offset ensures no collisions when deploying multiple branches to Alpha
+
+**Version Name Uniqueness:**
+- Version names include the commit hash, making them unique
 - Example: 
   - Branch A: `5.1.8-dev.5+abc1234`
-  - Branch B: `5.1.8-dev.3+def5678`
+  - Branch B: `5.1.8-dev.5+def5678`
 
-The version code (commit count) might be similar, but Google Play accepts this for Alpha/Beta tracks.
+**Best Practice:** While collisions are now prevented, it's still recommended to:
+- Deploy feature branches to Alpha track sequentially when possible
+- Test each feature branch separately before promoting to Production
+- Use the Beta track for more extensive testing of feature branches before Production
 
 ### Should I use dev versions for production releases?
 
