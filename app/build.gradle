@@ -188,7 +188,13 @@ tasks.register('jacocoTestReport', JacocoReport) {
     ]))
 }
 
-// Task to print version name for CI/CD
+// Tasks to print version info for CI/CD
+tasks.register("printVersionCode") {
+    doLast {
+        println(android.defaultConfig.versionCode)
+    }
+}
+
 tasks.register("printVersionName") {
     doLast {
         println(android.defaultConfig.versionName)

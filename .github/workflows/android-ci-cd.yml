@@ -193,6 +193,34 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Print Version Code and Version Name
+        run: |
+          echo "==========================================="
+          echo "📱 Version Information"
+          echo "==========================================="
+          VERSION_CODE=$(./gradlew -q printVersionCode)
+          VERSION_NAME=$(./gradlew -q printVersionName)
+          echo "Version Code: $VERSION_CODE"
+          echo "Version Name: $VERSION_NAME"
+          echo "==========================================="
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "==========================================="
 
       - name: Check for required secrets
         env:
@@ -241,6 +269,34 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Print Version Code and Version Name
+        run: |
+          echo "==========================================="
+          echo "📱 Version Information (Beta Promotion)"
+          echo "==========================================="
+          VERSION_CODE=$(./gradlew -q printVersionCode)
+          VERSION_NAME=$(./gradlew -q printVersionName)
+          echo "Version Code: $VERSION_CODE"
+          echo "Version Name: $VERSION_NAME"
+          echo "==========================================="
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "==========================================="
 
       - name: Check for required secrets
         env:
@@ -351,6 +407,34 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Print Version Code and Version Name
+        run: |
+          echo "==========================================="
+          echo "📱 Version Information (Production Promotion)"
+          echo "==========================================="
+          VERSION_CODE=$(./gradlew -q printVersionCode)
+          VERSION_NAME=$(./gradlew -q printVersionName)
+          echo "Version Code: $VERSION_CODE"
+          echo "Version Name: $VERSION_NAME"
+          echo "==========================================="
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "==========================================="
 
       - name: Check for required secrets
         env:
