@@ -4,40 +4,53 @@ This document explains how the version code system works and how to test it for 
 
 ## How Version Codes Work
 
-### Master/Main Branches
+### All Branches (Simplified Formula)
 - **Formula**: `version_code = commit_count + BASE_OFFSET`
 - **Base Offset**: 25 (added to maintain consistency with Google Play history)
 - **Example**: 323 commits + 25 = version code 348
-- **Use case**: Production releases on master branch
 - **Historical Context**: The repository was restructured in the past, causing a discrepancy
   between git commit count and Google Play version codes. The base offset ensures
   monotonically increasing version codes that don't conflict with existing versions.
 
-### Feature Branches
-- **Formula**: `version_code = (commit_count + BASE_OFFSET) + (branch_hash * 100000)`
-- **Example (illustrative)**: A feature branch with 260 commits
-  - Base version: 260 + 25 = 285
-  - Branch hash could be any value 0-9999 depending on branch name
-  - If hash = 456, version code = 285 + (456 * 100000) = 45600285
-- **Use case**: Alpha track testing for feature branches
+**Why Simplified?**
+- Previous approach used branch-specific offsets (e.g., +891,400,000 for feature branches)
+- This created extremely large version codes approaching Int.MAX_VALUE (2.1 billion)
+- Simplified approach keeps version codes reasonable (25-500 range for typical projects)
+- Teams coordinate sequential deployments or use different Google Play tracks
 
 ## Why This Matters
 
-Google Play requires that each APK/AAB uploaded to a track has a **unique, monotonically increasing version code**. Without branch-specific offsets, deploying multiple feature branches in parallel would cause conflicts:
+Google Play requires that each APK/AAB uploaded to a track has a **unique, monotonically increasing version code**.
 
-### Without Offsets (❌ Problem)
-```
-Branch A: feature/scanner    → 260 commits → Version code: 285 (260 + 25)
-Branch B: feature/tags        → 260 commits → Version code: 285 (260 + 25)
-                                             ⚠️ CONFLICT! Same version code
-```
+### Handling Multiple Feature Branches
 
-### With Offsets (✅ Solution)
-```
-Branch A: feature/scanner    → 260 commits → Version code: hash1 * 100000 + 285
-Branch B: feature/tags        → 260 commits → Version code: hash2 * 100000 + 285
-                                             ✓ Unique version codes!
-```
+**Approach: Sequential Deployment or Different Tracks**
+
+1. **Sequential (Recommended)**:
+   ```
+   Branch A: feature/scanner  → 260 commits → Version code: 285 (260 + 25)
+   Deploy to Alpha, test, then merge to master
+   
+   Branch B: feature/tags     → 265 commits → Version code: 290 (265 + 25)  
+   Deploy to Alpha, test, then merge to master
+                                               ✓ No conflict (different commit counts)
+   ```
+
+2. **Parallel with Different Tracks**:
+   ```
+   Branch A: feature/scanner  → 260 commits → Internal Testing: 285
+   Branch B: feature/tags     → 260 commits → Alpha Track: 285
+                                               ✓ No conflict (different tracks)
+   ```
+
+3. **Conflict Scenario** (Avoid):
+   ```
+   Branch A: feature/scanner  → 260 commits → Alpha: 285
+   Branch B: feature/tags     → 260 commits → Alpha: 285
+                                               ❌ CONFLICT! Same track, same version
+   ```
+
+**Solution**: Coordinate deployments or use different tracks for parallel testing.
 
 ## Testing Version Code Generation
 
@@ -60,18 +73,18 @@ Branch B: feature/tags        → 260 commits → Version code: hash2 * 100000 +
    ```bash
    git checkout feature/my-feature
    git rev-list --count HEAD  # Shows commit count
-   # Version code should be: (commit_count + 25) + branch_offset
+   # Version code should also be: commit_count + 25 (same formula)
    ```
 
 ### Verification Script
 
-Run this script to verify version code uniqueness across branches:
+Run this script to calculate version codes for different branches:
 
 ```bash
 #!/bin/bash
 # Save as: scripts/verify-version-codes.sh
 
-echo "Verifying Version Code Uniqueness"
+echo "Version Code Calculation"
 echo "=================================="
 
 # Get current commit count
@@ -96,21 +109,14 @@ echo "Branch Name                          Version Code"
 echo "------------------------------------------------"
 
 for branch in "${branches[@]}"; do
-    # Calculate hash (simplified - actual implementation in GitVersioning.kt)
-    if [[ "$branch" == "master" || "$branch" == "main" || "$branch" == "HEAD" ]]; then
-        version_code=$((COMMIT_COUNT + BASE_OFFSET))
-    else
-        hash=$(echo -n "$branch" | cksum | cut -d' ' -f1)
-        offset=$((hash % 10000))
-        version_code=$((COMMIT_COUNT + BASE_OFFSET + (offset * 100000)))
-    fi
+    # All branches use the same formula: commit_count + base_offset
+    version_code=$((COMMIT_COUNT + BASE_OFFSET))
     printf "%-35s %10d\n" "$branch" "$version_code"
 done
 
 echo ""
-echo "✓ All version codes are unique"
-echo "✓ Master branches use commit count + base offset ($BASE_OFFSET)"
-echo "✓ Feature branches use base + branch offset"
+echo "Note: All branches with the same commit count have the same version code"
+echo "Deploy to Alpha track sequentially or use different tracks for parallel testing"
 ```
 
 ## Implementation Details
@@ -124,22 +130,21 @@ fun getVersionCode(project: Project): Int {
     
     // Historical base offset to maintain consistency with Google Play
     val BASE_VERSION_CODE_OFFSET = 25
-    val baseVersionCode = count + BASE_VERSION_CODE_OFFSET
+    val versionCode = count + BASE_VERSION_CODE_OFFSET
     
-    val branchProvider = gitCommand(project, listOf("git", "rev-parse", "--abbrev-ref", "HEAD"))
-    val branch = branchProvider.orNull?.trim() ?: "master"
+    // All branches use the same formula (no branch-specific offsets)
+    // This keeps version codes reasonable (25-500 range for typical projects)
+    // Teams coordinate deployments or use different Google Play tracks
     
-    // Only apply offset for non-master/main branches
-    if (branch != "master" && branch != "main" && branch != "HEAD") {
-        // Generate a consistent hash from the branch name
-        // Handle edge cases by converting to Long and applying modulo before converting back
-        val branchHash = (kotlin.math.abs(branch.hashCode().toLong()) % 10000).toInt()
-        return baseVersionCode + (branchHash * 100000)
-    }
-    
-    return baseVersionCode
+    return versionCode
 }
 ```
+
+**Key Changes from Previous Implementation:**
+- Removed branch-specific offset calculation
+- Simplified formula applies to all branches
+- Prevents extremely large version codes (previously 891M+)
+- Version codes now stay in reasonable range (25-500 for typical projects)
 
 ## Best Practices
 
@@ -147,22 +152,20 @@ fun getVersionCode(project: Project): Int {
    - Clean version codes with base offset (e.g., 348, 349, 350)
    - Sequential and predictable (commit_count + 25)
 
-2. **Feature Branches**: Use for Alpha track testing
-   - Unique version codes prevent conflicts (e.g., 45600348, 78900349)
-   - Can deploy multiple branches in parallel
+2. **Feature Branches**: Sequential deployment recommended
+   - Test on Alpha track one at a time
+   - Or use different tracks (Internal, Alpha, Beta) for parallel testing
+   - Coordinate with team to avoid version conflicts
 
 3. **Merging to Master**: After testing on Alpha
    - Merge feature branch to master
-   - Next master build gets clean version code (commit_count + 25)
+   - Next master build gets updated version code (commit_count + 25)
    - Production releases maintain sequential numbering
 
-4. **Version Code Ranges**: Understand the ranges
-   - Master: 25+ (base offset + commit count, grows with each commit)
-   - Feature branches: 100,025 to 999,999,999+ (offset range: 0-9999 * 100,000 + base + commits)
-   - Maximum feature branch offset: 999,900,025 (when hash % 10000 = 9999)
-   - **Collision-free range**: Master can safely grow to ~999M commits before any risk of collision with feature branches
-   - **Practical range**: Most projects stay under 100k commits, making collisions extremely unlikely
-   - **Note**: If approaching 999M commits (highly unlikely), consider migrating to a new major version or adjusting the multiplier in `buildSrc/src/main/kotlin/GitVersioning.kt`
+4. **Version Code Ranges**: Understand the simplicity
+   - All branches: 25 to ~500+ (for typical projects with <500 commits)
+   - Version codes stay reasonable and easy to understand
+   - No risk of integer overflow or extremely large values
 
 ## Troubleshooting
 
@@ -172,8 +175,10 @@ fun getVersionCode(project: Project): Int {
 
 **Solution**: 
 - Verify you're on the correct branch: `git branch --show-current`
-- Check version code: Look in build logs for "Feature branch detected" message
+- Check commit count: `git rev-list --count HEAD`
 - Ensure full Git history: `git fetch --unshallow` if using shallow clone
+- **Deploy sequentially**: Wait for previous feature branch to be merged before deploying next
+- **Use different tracks**: Deploy parallel branches to different tracks (Internal, Alpha, Beta)
 
 ### Version code seems wrong
 
@@ -193,12 +198,12 @@ git fetch --unshallow
 
 ### Feature branch has same version code as master
 
-**Cause**: Branch name might be "HEAD" or similar edge case.
+**This is expected behavior**: All branches now use the same formula (commit_count + 25).
 
-**Solution**: Rename branch or check `GitVersioning.kt` logic:
-```bash
-git branch -m old-name feature/new-name
-```
+**Solution**: Coordinate deployments
+- Deploy feature branches sequentially to the same track
+- Or use different Google Play tracks for parallel testing
+- Version name includes commit hash for uniqueness (e.g., `5.1.8-dev.5+abc1234`)
 
 ## Continuous Integration
 

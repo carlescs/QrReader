@@ -476,10 +476,13 @@ class FakeGenerateTagSuggestionsUseCase : GenerateTagSuggestionsUseCase() {
 
 App versioning is Git-based and automatic:
 - **Version Code**: Calculated as `commit_count + 25` (base offset for historical consistency with Google Play)
-- **Version Name**: Derived from Git tags (e.g., `v5.2.0`)
+- **Version Name**: Derived from Git tags with branch-aware formatting:
+  - **Master/main branch**: Clean version from last tag (e.g., `5.2.0`) - no `-dev` suffix
+  - **Feature branches**: Development version with commit info (e.g., `5.2.0-dev.3+abc1234`)
+  - **Tagged commits**: Clean version on all branches (e.g., `5.2.0`)
 - Configured in `buildSrc/src/main/kotlin/GitVersioning.kt`
 - Base offset of 25 accounts for historical repository restructuring
-- Feature branches get additional offsets to prevent version code collisions
+- All branches use same version code formula (no branch offsets)
 
 All dependency versions are managed in `gradle/libs.versions.toml`:
 - Update versions in `[versions]` section
