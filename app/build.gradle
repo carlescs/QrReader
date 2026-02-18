@@ -190,14 +190,18 @@ tasks.register('jacocoTestReport', JacocoReport) {
 
 // Tasks to print version info for CI/CD
 // Access version information directly from GitVersioning (same source as android.defaultConfig)
+// Capture values at configuration time for configuration cache compatibility
+def versionCode = GitVersioning.getVersionCode(project)
+def versionName = GitVersioning.getVersionName(project)
+
 tasks.register("printVersionCode") {
     doLast {
-        println(GitVersioning.getVersionCode(project))
+        println(versionCode)
     }
 }
 
 tasks.register("printVersionName") {
     doLast {
-        println(GitVersioning.getVersionName(project))
+        println(versionName)
     }
 }
