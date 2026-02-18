@@ -53,7 +53,7 @@ The strategy document contains **14 major sections** covering:
 - Manual approval gates for Production deployment (stricter for 2-tier flow)
 - 6 detailed deployment workflows:
   - Feature branch to Alpha (manual)
-  - Master to Alpha (automatic, 2-tier)
+  - Master to Alpha (manual trigger, 2-tier)
   - Master with Beta (manual, 3-tier)
   - Alpha to Production (manual, 2-tier)
   - Beta to Production (manual, 3-tier)
@@ -148,7 +148,7 @@ The strategy document contains **14 major sections** covering:
 
 1. **GitHub Actions Primary CI/CD**
    - Comprehensive workflow with 4 jobs (test, build, release, promote)
-   - Automated deployment to Alpha track
+   - Manual deployment to Alpha track
    - Manual approval gates for production
    - Modern caching with Gradle Actions v4
 
