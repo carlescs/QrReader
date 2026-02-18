@@ -71,26 +71,24 @@ object GitVersioning {
             return 1
         }
         
-        // For feature branches, add a branch-specific offset to prevent version code collisions
-        // when multiple feature branches are deployed to the alpha track in parallel
+        // Calculate version code: commit count + base offset
+        // Base offset maintains consistency with historical Google Play versions
+        //
+        // Note: Branch-specific offsets were removed to prevent extremely large version codes.
+        // Previously, feature branches would get offsets like 891,400,000 which approached
+        // Int.MAX_VALUE (2,147,483,647) and made debugging difficult.
+        //
+        // For parallel feature branch deployments to Alpha track, teams should:
+        // - Deploy feature branches sequentially (recommended)
+        // - Use different Google Play tracks (Internal Testing, Alpha, Beta)
+        // - Manually coordinate version codes if truly needed
+        val versionCode = count + BASE_VERSION_CODE_OFFSET
+        
         val branchProvider = gitCommand(project, listOf("git", "rev-parse", "--abbrev-ref", "HEAD"))
-        val branch = branchProvider.orNull?.trim() ?: "master"
+        val branch = branchProvider.orNull?.trim() ?: "unknown"
+        project.logger.lifecycle("Branch: $branch, Version Code: $versionCode")
         
-        // Calculate the base version code with the historical offset
-        val baseVersionCode = count + BASE_VERSION_CODE_OFFSET
-        
-        // Only apply branch offset for non-master/main branches
-        if (branch != "master" && branch != "main" && branch != "HEAD") {
-            // Generate a consistent hash from the branch name
-            // Handle Int.MIN_VALUE edge case by converting to Long first
-            val branchHash = (kotlin.math.abs(branch.hashCode().toLong()) % 10000).toInt()
-            project.logger.lifecycle("Feature branch detected: $branch, adding offset: $branchHash")
-            // Add offset to create unique version code for this branch
-            // The offset is multiplied by 100000 to ensure it doesn't conflict with commit count
-            return baseVersionCode + (branchHash * 100000)
-        }
-        
-        return baseVersionCode
+        return versionCode
     }
 
     @JvmStatic

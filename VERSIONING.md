@@ -11,14 +11,13 @@ For detailed technical information about version code testing and troubleshootin
 - **Base offset**: A historical offset of 25 is added to maintain consistency with existing Google Play versions
   - This accounts for repository restructuring that occurred in the past
   - Ensures monotonically increasing version codes that don't conflict with existing Play Store versions
-- Increments with every commit on master branch
-- **Formula for master/main branches**: `version_code = commit_count + 25`
+- Increments with every commit (on any branch)
+- **Formula**: `version_code = commit_count + 25`
 - Example: With 323 commits → version code 348 (323 + 25)
-- **Feature branches**: Additional branch-specific offset added to prevent collisions
-  - Ensures each feature branch has unique version codes when deployed to Alpha track
-  - Example: A feature branch with 260 commits gets an offset based on branch name hash
-  - Formula: `version_code = (commit_count + 25) + (hash % 10000) * 100000`
-  - Result could be 45600285 if hash yields offset value of 456 and commit count is 260
+- **All branches use the same formula** - no branch-specific offsets
+  - Simplified approach keeps version codes reasonable (300-400 range for typical projects)
+  - Teams should deploy feature branches to Alpha track sequentially to avoid conflicts
+  - Alternative: Use different Google Play tracks (Internal Testing, Alpha, Beta) for parallel testing
 
 ### Version Name
 - Derived from Git tags following semantic versioning (major.minor.patch)
@@ -51,8 +50,8 @@ Versions are calculated automatically.
 When working on feature branches, the system automatically generates development versions:
 
 **Example on feature branch `feature/new-scanner`:**
-- Version Code: Commit count + branch-specific offset (e.g., 100267)
-  - Prevents conflicts when deploying multiple feature branches to Alpha
+- Version Code: Commit count + base offset (e.g., 285 for 260 commits)
+  - **Note**: Deploy feature branches sequentially to avoid version code conflicts
 - Version Name: `5.1.8-dev.8+a1b2c3d` 
   - Based on last tag `v5.1.8`
   - `8` commits since that tag
@@ -74,6 +73,11 @@ When working on feature branches, the system automatically generates development
 5. Click "Run workflow"
 
 This uploads your dev version (e.g., `5.1.8-dev.8+a1b2c3d`) to the Alpha track for testing.
+
+**Important: Sequential Deployment**
+- Since all branches use the same version code formula, deploy feature branches to Alpha one at a time
+- Or use different tracks (Internal Testing for Branch A, Alpha for Branch B)
+- Avoids version code conflicts when multiple branches have the same commit count
 
 **Why use manual upload for feature branches?**
 - Safety: Prevents accidental uploads from every feature branch push
@@ -170,27 +174,26 @@ When deploying multiple feature branches to the Alpha track:
 2. **Independent Testing**: Deploy any branch to Alpha track for testing
 3. **Sequential Promotion**: Only promote tested branches to Production one at a time
 
-**Example Scenario (illustrative offsets):**
-```bash
-# Three developers working on different features
-# Each branch gets a deterministic offset based on its name hash
-Branch: feature/ai-descriptions     → Version: offset1 + 456 commits
-Branch: feature/tag-suggestions      → Version: offset2 + 460 commits
-Branch: feature/improved-scanner     → Version: offset3 + 458 commits
+**Example on feature branch `feature/new-scanner`:**
 
-# Actual values depend on (hash(branchName) % 10000) * 100000
-# For example: 
-#   hash("feature/ai-descriptions") % 10000 = 1234 → offset = 123400000
-#   Plus 456 commits = version code 123400456
+Deploy feature branches to Play Store Alpha one at a time to avoid version code conflicts:
 
-# All can be deployed to Alpha simultaneously without conflicts
-```
+1. **Sequential Deployment (Recommended)**:
+   - Deploy and test Branch A first
+   - Merge Branch A to master
+   - Then deploy Branch B
+   
+2. **Parallel Testing with Different Tracks**:
+   - Branch A → Internal Testing track
+   - Branch B → Alpha track
+   - Branch C → Beta track (if available)
 
-**Important Notes:**
-- Master branch deployments use simple commit count (no offset)
-- Feature branches should be merged to master before Production promotion
-- After merging to master, the version code resets to the master commit count
-- This ensures Production releases have clean, sequential version codes
+3. **Version Uniqueness**:
+   - Version Code: Same for branches with equal commit count
+   - Version Name: Unique due to commit hash (e.g., `5.1.8-dev.8+a1b2c3d`)
+   - Google Play track selection prevents conflicts
+
+This allows independent testing while avoiding version code collisions.
 
 ### GitHub Secrets
 No additional secrets needed for automatic versioning. Existing secrets for Google Play publishing remain unchanged.
@@ -223,27 +226,43 @@ git push origin v5.2.0
 
 ### Will different feature branches have version conflicts?
 
-**No.** The system now prevents version code conflicts:
+**Possibly** - Teams should coordinate deployments:
 
-**Version Code Protection:**
-- Each feature branch gets a unique offset based on the branch name
+**Version Code Behavior:**
+- All branches use: `version_code = commit_count + 25`
 - Example: 
-  - Master: version code 260 (just commit count)
-  - Branch A (`feature/scanner`): version code 456260 (456000 offset + 260 commits)
-  - Branch B (`feature/tags`): version code 789260 (789000 offset + 260 commits)
-- Google Play requires unique, monotonically increasing version codes
-- The branch offset ensures no collisions when deploying multiple branches to Alpha
+  - Master: version code 285 (260 commits + 25)
+  - Branch A: version code 285 (260 commits + 25) ← Same!
+  - Branch B: version code 285 (260 commits + 25) ← Same!
+
+**Solutions to Avoid Conflicts:**
+
+1. **Sequential Deployment** (Recommended):
+   - Test Branch A on Alpha → Merge to master
+   - Then test Branch B on Alpha → Merge to master
+   - Simplest approach, works for most projects
+
+2. **Use Different Tracks**:
+   - Branch A → Internal Testing track
+   - Branch B → Alpha track  
+   - Branch C → Beta track
+   - Google Play allows one version per track
+
+3. **Coordinate Timing**:
+   - Short-lived feature branches rarely conflict
+   - By the time Branch B is ready, Branch A is likely merged (increasing commit count)
 
 **Version Name Uniqueness:**
-- Version names include the commit hash, making them unique
-- Example: 
+- Version names include commit hash, making them unique:
   - Branch A: `5.1.8-dev.5+abc1234`
   - Branch B: `5.1.8-dev.5+def5678`
+- Helpful for tracking which build is deployed
 
-**Best Practice:** While collisions are now prevented, it's still recommended to:
-- Deploy feature branches to Alpha track sequentially when possible
-- Test each feature branch separately before promoting to Production
-- Use the Beta track for more extensive testing of feature branches before Production
+**Why This Approach?**
+- Keeps version codes simple and reasonable (300-400 range)
+- Avoids extremely large version codes (891M+ was the problem)
+- Most projects don't need parallel Alpha deployments
+- Teams can easily coordinate when needed
 
 ### Should I use dev versions for production releases?
 
