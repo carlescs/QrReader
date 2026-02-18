@@ -23,7 +23,13 @@ For detailed technical information about version code testing and troubleshootin
 - Derived from Git tags following semantic versioning (major.minor.patch)
 - Format: `v5.2.0`, `v5.2.1`, etc.
 
-**Development builds** (untagged commits):
+**Master/main branch builds**:
+- Format: `5.2.0` (clean version without -dev suffix)
+- Uses the latest tag version
+- Ensures production deployments have proper version names
+- Example: If last tag is `v5.2.0`, all commits on master use `5.2.0`
+
+**Feature branch builds** (development branches):
 - Format: `5.2.0-dev.3+abc1234`
 - Where:
   - `5.2.0` = last tag version
@@ -33,6 +39,7 @@ For detailed technical information about version code testing and troubleshootin
 **Release builds** (tagged commits):
 - Format: `5.2.0`
 - Clean version number from the tag
+- Same on all branches when on a tagged commit
 
 ## Creating a New Release
 
@@ -138,7 +145,7 @@ Feature branches generate unique dev versions that can be uploaded for testing:
 
 **Automatic (Master only):**
 - Every push to master automatically uploads to Play Store Alpha track
-- Version: Either a tagged release or a dev version
+- Version: Clean version from last tag (e.g., `5.2.0`) or tagged release
 
 **Manual (Any branch):**
 1. Navigate to: GitHub → Actions → "Android CI/CD" workflow
@@ -152,10 +159,10 @@ The build will use the dev version from your branch (e.g., `5.1.8-dev.8+a1b2c3d`
 ### Dev Version Benefits
 
 Each dev version is unique and traceable:
-- **Version Code**: Unique per branch (commit count + branch offset for feature branches)
-- **Version Name**: Includes commit hash for traceability
+- **Version Code**: Unique per branch (commit count + base offset)
+- **Version Name**: Includes commit hash for traceability on feature branches
 - **Examples**:
-  - Master: `5.1.8-dev.5+abc1234` (version code: 5)
+  - Master: `5.2.0` (clean version, no dev suffix)
   - Feature branch: `5.2.0-dev.12+def5678` (version code: 456012 with offset)
 
 This allows multiple feature branches to be tested in parallel without version conflicts.
@@ -266,10 +273,12 @@ git push origin v5.2.0
 
 ### Should I use dev versions for production releases?
 
-**No.** Production releases should always use clean tag versions:
+**Master branch automatically uses clean versions** (without -dev suffix), so production deployments from master are always properly versioned. However, for official releases, it's still best practice to tag commits:
 - Tag the commit: `git tag v5.2.0`
 - Push the tag: `git push origin v5.2.0`
-- This creates version `5.2.0` (without `-dev` suffix)
+- This creates a formal release point with version `5.2.0`
+
+Tags provide clear release milestones and make it easy to track which commits represent official releases.
 
 ## Migration Notes
 
