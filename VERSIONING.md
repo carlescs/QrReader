@@ -145,7 +145,7 @@ Feature branches generate unique dev versions that can be uploaded for testing:
 
 **Automatic (Master only):**
 - Every push to master automatically uploads to Play Store Alpha track
-- Version: Either a tagged release or a dev version
+- Version: Clean version from last tag (e.g., `5.2.0`) or tagged release
 
 **Manual (Any branch):**
 1. Navigate to: GitHub → Actions → "Android CI/CD" workflow
@@ -159,10 +159,10 @@ The build will use the dev version from your branch (e.g., `5.1.8-dev.8+a1b2c3d`
 ### Dev Version Benefits
 
 Each dev version is unique and traceable:
-- **Version Code**: Unique per branch (commit count + branch offset for feature branches)
-- **Version Name**: Includes commit hash for traceability
+- **Version Code**: Unique per branch (commit count + base offset)
+- **Version Name**: Includes commit hash for traceability on feature branches
 - **Examples**:
-  - Master: `5.1.8-dev.5+abc1234` (version code: 5)
+  - Master: `5.2.0` (clean version, no dev suffix)
   - Feature branch: `5.2.0-dev.12+def5678` (version code: 456012 with offset)
 
 This allows multiple feature branches to be tested in parallel without version conflicts.
@@ -273,10 +273,12 @@ git push origin v5.2.0
 
 ### Should I use dev versions for production releases?
 
-**No.** Production releases should always use clean tag versions:
+**Master branch automatically uses clean versions** (without -dev suffix), so production deployments from master are always properly versioned. However, for official releases, it's still best practice to tag commits:
 - Tag the commit: `git tag v5.2.0`
 - Push the tag: `git push origin v5.2.0`
-- This creates version `5.2.0` (without `-dev` suffix)
+- This creates a formal release point with version `5.2.0`
+
+Tags provide clear release milestones and make it easy to track which commits represent official releases.
 
 ## Migration Notes
 
