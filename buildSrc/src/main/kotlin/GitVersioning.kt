@@ -56,11 +56,88 @@ object GitVersioning {
      * 1. No conflicts with existing Google Play versions
      * 2. Monotonically increasing version codes
      * 3. Consistent versioning going forward
+     * 
+     * NOTE: This is now used only as a fallback when Google Play API fetch fails.
      */
     private const val BASE_VERSION_CODE_OFFSET = 25
     
     @JvmStatic
     fun getVersionCode(project: Project): Int {
+        // Try to fetch version code from Google Play first
+        val playStoreVersion = fetchFromGooglePlay(project)
+        if (playStoreVersion != null) {
+            project.logger.lifecycle("Using Google Play version code: $playStoreVersion")
+            return playStoreVersion
+        }
+        
+        // Fallback to git-based versioning
+        project.logger.warn("Google Play API fetch failed, falling back to git-based versioning")
+        return getGitBasedVersionCode(project)
+    }
+    
+    /**
+     * Fetches the latest version code from Google Play and returns the next version code (latest + 1).
+     * 
+     * Requirements:
+     * - Python 3 must be available
+     * - service-account.json must exist in the project root
+     * - Google API packages must be installed (google-api-python-client, google-auth)
+     * 
+     * @return The next version code to use, or null if the fetch failed
+     */
+    private fun fetchFromGooglePlay(project: Project): Int? {
+        val scriptPath = File(project.rootDir, "scripts/fetch_play_version.py")
+        val credentialsPath = File(project.rootDir, "service-account.json")
+        
+        // Check if required files exist
+        if (!scriptPath.exists()) {
+            project.logger.debug("Google Play version script not found at: ${scriptPath.absolutePath}")
+            return null
+        }
+        
+        if (!credentialsPath.exists()) {
+            project.logger.debug("Service account credentials not found at: ${credentialsPath.absolutePath}")
+            return null
+        }
+        
+        return try {
+            val output = ByteArrayOutputStream()
+            val errorStream = ByteArrayOutputStream()
+            
+            val execResult = project.exec {
+                commandLine("python3", scriptPath.absolutePath)
+                workingDir = project.rootDir
+                standardOutput = output
+                errorOutput = errorStream
+                isIgnoreExitValue = true
+            }
+            
+            if (execResult.exitValue == 0) {
+                val versionCode = output.toString().trim().toIntOrNull()
+                if (versionCode != null && versionCode > 0) {
+                    project.logger.lifecycle("Successfully fetched version code from Google Play: $versionCode")
+                    versionCode
+                } else {
+                    project.logger.warn("Invalid version code from Google Play: ${output.toString().trim()}")
+                    project.logger.debug("Error output: ${errorStream.toString()}")
+                    null
+                }
+            } else {
+                project.logger.warn("Failed to fetch version code from Google Play (exit code: ${execResult.exitValue})")
+                project.logger.debug("Error output: ${errorStream.toString()}")
+                null
+            }
+        } catch (e: Exception) {
+            project.logger.warn("Exception while fetching version code from Google Play: ${e.message}")
+            null
+        }
+    }
+    
+    /**
+     * Git-based version code calculation (fallback method).
+     * This is used when Google Play API fetch fails.
+     */
+    private fun getGitBasedVersionCode(project: Project): Int {
         // Note: Requires full Git history (not a shallow clone)
         // GitHub Actions workflows should use fetch-depth: 0
         val countProvider = gitCommand(project, listOf("git", "rev-list", "--count", "HEAD"))

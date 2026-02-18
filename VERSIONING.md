@@ -1,24 +1,45 @@
 # Versioning Guide
 
-This project uses **Git-based automatic versioning** following semantic versioning principles.
+This project uses **Google Play API-based versioning** as the primary method, with automatic fallback to git-based versioning.
 
-For detailed technical information about version code testing and troubleshooting, see [Version Code Testing Guide](docs/VERSION_CODE_TESTING.md).
+For detailed technical information, see:
+- [Google Play Versioning Guide](docs/GOOGLE_PLAY_VERSIONING.md) - Primary versioning method
+- [Version Code Testing Guide](docs/VERSION_CODE_TESTING.md) - Testing and troubleshooting
 
 ## How It Works
 
-### Version Code
-- Automatically calculated from the total number of Git commits plus a base offset
-- **Base offset**: A historical offset of 25 is added to maintain consistency with existing Google Play versions
-  - This accounts for repository restructuring that occurred in the past
-  - Ensures monotonically increasing version codes that don't conflict with existing Play Store versions
-- Increments with every commit on master branch
-- **Formula for master/main branches**: `version_code = commit_count + 25`
-- Example: With 323 commits → version code 348 (323 + 25)
-- **Feature branches**: Additional branch-specific offset added to prevent collisions
-  - Ensures each feature branch has unique version codes when deployed to Alpha track
-  - Example: A feature branch with 260 commits gets an offset based on branch name hash
-  - Formula: `version_code = (commit_count + 25) + (hash % 10000) * 100000`
-  - Result could be 45600285 if hash yields offset value of 456 and commit count is 260
+### Version Code - Primary Method: Google Play API
+
+The build system fetches the latest version code from Google Play Store and increments it by 1:
+
+```
+version_code = google_play_latest + 1
+```
+
+**Requirements:**
+- Python 3 installed
+- `service-account.json` in project root
+- Google Play Developer API access
+
+**Example:**
+```
+Latest in Play Store: 350
+Next version code: 351
+```
+
+### Version Code - Fallback Method: Git-based
+
+If Google Play API is unavailable (no internet, missing credentials), the system automatically falls back to git-based calculation:
+
+```
+version_code = commit_count + 25 (+ branch_offset for feature branches)
+```
+
+**Base offset**: 25 (maintains consistency with historical Play Store versions)
+
+**Feature branches**: Additional branch-specific offset to prevent collisions
+- Formula: `(commit_count + 25) + (hash % 10000) * 100000`
+- Only applies when using fallback method
 
 ### Version Name
 - Derived from Git tags following semantic versioning (major.minor.patch)
@@ -34,6 +55,66 @@ For detailed technical information about version code testing and troubleshootin
 **Release builds** (tagged commits):
 - Format: `5.2.0`
 - Clean version number from the tag
+
+## Advantages of Google Play Versioning
+
+### Why This Change?
+
+Previously, feature branches generated extremely large version codes (e.g., 891400363) due to branch-specific offsets. This caused:
+- **Confusion**: Version codes didn't match expectations (~350 expected)
+- **Complexity**: Difficult to understand and debug
+- **Unnecessary**: Play Store is the authoritative source
+
+### Benefits
+
+1. **Accurate Version Codes**: Always matches Play Store state
+2. **No Branch Inflation**: Feature branches get reasonable version codes
+3. **Simplified Logic**: No complex branch hash calculations needed
+4. **Robust**: Handles git history changes, merges, rebases
+5. **Self-Healing**: Automatically adapts to Play Store state
+
+### Example Comparison
+
+**Old System (Git-based with branch offset):**
+```
+Feature branch "copilot/explore-barcode-description":
+Version code: 891400363
+(326 commits + 25 offset + 8914 branch hash × 100000)
+```
+
+**New System (Google Play fetch):**
+```
+Any branch:
+Version code: 351
+(Latest from Play Store: 350, next: 351)
+```
+
+## Setup Requirements
+
+### For CI/CD (Required)
+
+1. **Store Service Account Credentials** as GitHub Secret:
+   - Secret name: `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`
+   - Value: Contents of service account JSON file
+
+2. **CI Workflow** automatically writes credentials during build
+
+See [Google Play Versioning Guide](docs/GOOGLE_PLAY_VERSIONING.md) for detailed setup instructions.
+
+### For Local Development (Optional)
+
+**With credentials:**
+```bash
+# Place service-account.json in project root
+./gradlew assembleRelease
+# Uses Google Play fetch
+```
+
+**Without credentials:**
+```bash
+./gradlew assembleDebug
+# Automatically falls back to git-based versioning
+```
 
 ## Creating a New Release
 
