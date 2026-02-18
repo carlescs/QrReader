@@ -152,8 +152,8 @@ jobs:
       - name: Decode keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        # Sign bundle when deploying to Play Store (master auto-deploy or manual trigger from any branch)
-        if: ((github.ref == 'refs/heads/master' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true)) && env.KEYSTORE_BASE64 != ''
+        # Sign bundle when deploying to Play Store (manual trigger only)
+        if: (github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true) && env.KEYSTORE_BASE64 != ''
         run: |
           echo "$KEYSTORE_BASE64" | base64 -d > ${{ runner.temp }}/debugkeystore.jks
 
@@ -162,8 +162,8 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        # Sign bundle when deploying to Play Store (master auto-deploy or manual trigger from any branch)
-        if: ((github.ref == 'refs/heads/master' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true)) && env.KEYSTORE_BASE64 != ''
+        # Sign bundle when deploying to Play Store (manual trigger only)
+        if: (github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true) && env.KEYSTORE_BASE64 != ''
         run: |
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
             -keystore ${{ runner.temp }}/debugkeystore.jks \
@@ -174,8 +174,8 @@ jobs:
       - name: Upload signed bundle
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        # Upload signed bundle when deploying to Play Store (master auto-deploy or manual trigger from any branch)
-        if: ((github.ref == 'refs/heads/master' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true)) && env.KEYSTORE_BASE64 != ''
+        # Upload signed bundle when deploying to Play Store (manual trigger only)
+        if: (github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true) && env.KEYSTORE_BASE64 != ''
         uses: actions/upload-artifact@v4
         with:
           name: app-bundle-signed
@@ -185,8 +185,8 @@ jobs:
     name: Release to Google Play (Alpha)
     runs-on: ubuntu-latest
     needs: build
-    # Run on master branch push OR manual workflow dispatch with upload enabled
-    if: (github.ref == 'refs/heads/master' && github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true)
+    # Run ONLY on manual workflow dispatch with upload enabled (no automatic deployment on master push)
+    if: github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true
     environment:
       name: PlayStore-Alpha
 
@@ -394,11 +394,12 @@ jobs:
     needs: [release, beta]
     # Run after release (2-tier: Alpha → Production) OR after beta (3-tier: Alpha → Beta → Production)
     # Skip beta if it didn't run (always() allows this job even if beta was skipped)
+    # Only runs when workflow_dispatch triggered (no automatic promotion)
     if: |
       always() && 
       needs.release.result == 'success' &&
       (needs.beta.result == 'success' || needs.beta.result == 'skipped') &&
-      github.ref == 'refs/heads/master'
+      github.event_name == 'workflow_dispatch'
     environment:
       name: PlayStore
       # Configure required reviewers in GitHub Settings → Environments → PlayStore

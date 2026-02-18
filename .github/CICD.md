@@ -12,12 +12,12 @@ This document describes the CI/CD pipeline configuration for the QR Reader Andro
    - Provides a final safety check before production
 
 2. **Simplified Flow**: Use the default 2-tier flow (Alpha → Production)
-   - Push to master → automatic Alpha deployment
+   - Manually trigger deployment via workflow_dispatch → Alpha deployment
    - Self-approve Production promotion when ready
    - No need for Beta track or multiple reviewers
 
 3. **Optional**: Skip approval gates entirely by not configuring environment protection
-   - Deployments will proceed automatically
+   - Deployments will proceed automatically after manual trigger
    - **Not recommended** for production apps (no safety gate)
 
 See "Setting Up Environment Protection" below for configuration instructions.
@@ -62,13 +62,13 @@ Runs after tests pass:
   - Configuration centralized in `sonar-project.properties`
   - Uses Gradle SonarQube plugin for Android project analysis
   - Automatically uploads coverage reports from test job
-- Signs the bundle when deploying to Play Store (master auto-deploy or manual trigger from any branch, requires secrets)
+- Signs the bundle when manually triggered for deployment (requires secrets)
 - Uploads artifacts (both unsigned and signed bundles)
 
 ### 3. Release Job (Alpha Track)
 Publishes to Google Play Alpha track:
-- **Automatic**: On master branch push
-- **Manual**: Via workflow_dispatch from any branch (must check "Upload to Google Play Alpha")
+- **Manual Only**: Via workflow_dispatch from any branch (must check "Upload to Google Play Alpha")
+- **No longer automatic** on master branch push
 - Downloads signed bundle
 - Validates bundle and secrets
 - Uploads to Google Play Console Alpha track
@@ -87,7 +87,7 @@ Promotes from Alpha to Beta track (OPTIONAL):
 Promotes to Production track (supports both flows):
 - **2-Tier Flow** (default): Promotes directly from Alpha to Production
 - **3-Tier Flow** (optional): Promotes from Beta to Production (when Beta job ran)
-- **Runs automatically after release job** (or after Beta if 3-tier)
+- **Runs after release job** (or after Beta if 3-tier) when manually triggered
 - **Pauses and waits for manual approval** before executing (via GitHub Environment protection)
 - **Approval requirements**: Configurable based on team size
   - Solo developers: Can add themselves as single reviewer for self-approval
@@ -115,9 +115,13 @@ Code → CI → Alpha (Internal) → Production (Public)
 **Timeline:** 2-3 days (Alpha testing + Production approval)
 
 **How to Trigger:**
-1. Push to master branch (automatic Alpha deployment)
-2. Wait for Alpha testing validation
-3. Approve Production promotion (self-approve if solo developer, or wait for team reviewers)
+1. Navigate to: GitHub → Actions → "Android CI/CD"
+2. Click "Run workflow" button
+3. Select branch (usually master)
+4. ✅ Check "Upload to Google Play Alpha"
+5. Click "Run workflow"
+6. Wait for Alpha testing validation
+7. Approve Production promotion (self-approve if solo developer, or wait for team reviewers)
 
 ### Flow 2: Cautious (3-Tier) - **OPT-IN**
 ```
@@ -445,18 +449,18 @@ No additional configuration needed - Dependabot is ready to use!
 - The release and promote jobs will fail with clear error messages if secrets are missing
 - Add the required secrets following the instructions above
 
-## Deploying from Feature Branches
+## Deploying to Alpha Track
 
-The workflow supports deploying development versions from any branch to the Alpha track for testing. This is useful for:
+The workflow supports deploying versions from any branch to the Alpha track for testing via manual workflow trigger. This is useful for:
 - Testing features in production-like environment before merging
-- QA testing of specific feature branches
+- QA testing of specific feature branches or master
 - Beta testing with stakeholders
 
-### How to Deploy a Feature Branch to Alpha
+### How to Deploy to Alpha
 
-1. **Push your feature branch to GitHub**:
+1. **Push your branch to GitHub** (if not already pushed):
    ```bash
-   git push origin feature/my-new-feature
+   git push origin feature/my-new-feature  # or master
    ```
 
 2. **Trigger the workflow manually**:
@@ -464,7 +468,7 @@ The workflow supports deploying development versions from any branch to the Alph
    - Select **"Android CI/CD"** workflow from the left sidebar
    - Click **"Run workflow"** button (top right)
    - In the dropdown:
-     - **Branch**: Select your feature branch (e.g., `feature/my-new-feature`)
+     - **Branch**: Select your branch (e.g., `feature/my-new-feature` or `master`)
      - **Upload to Google Play Alpha**: ✅ Check this box
    - Click **"Run workflow"** button
 
@@ -477,9 +481,9 @@ The workflow supports deploying development versions from any branch to the Alph
 
 ✅ **Test job**: Runs unit tests and generates coverage
 ✅ **Build job**: Builds release bundle (AAB)
-✅ **Sign bundle**: Signs the bundle using keystore secrets (same as master)
+✅ **Sign bundle**: Signs the bundle using keystore secrets
 ✅ **Release to Alpha**: Uploads to Google Play Alpha track
-❌ **Promote to Production**: Does NOT run (master only)
+✅ **Promote to Production**: Available with manual approval (any branch)
 
 ### Version Naming
 
@@ -511,22 +515,22 @@ This ensures each branch has a unique, traceable version that can be deployed in
 
 | Aspect | Master Branch | Feature Branch |
 |--------|--------------|----------------|
-| **Trigger** | Automatic on push | Manual via workflow_dispatch |
-| **Alpha Deploy** | ✅ Automatic | ✅ Manual (must check box) |
-| **Production Promote** | ✅ Available (with approval) | ❌ Not available |
+| **Trigger** | Manual via workflow_dispatch | Manual via workflow_dispatch |
+| **Alpha Deploy** | ✅ Manual (must check box) | ✅ Manual (must check box) |
+| **Production Promote** | ✅ Available (with approval) | ✅ Available (with approval) |
 | **Version Name** | Clean (e.g., `5.2.0`) or dev | Always dev (e.g., `5.2.0-dev.8+hash`) |
 | **Version Code** | Simple commit count (e.g., 260) | Commit count + branch offset (e.g., 456260) |
 
 ## Manual Approval for Production Promotion
 
-The promote job runs automatically after a successful alpha release but **pauses and waits for manual approval** before executing. This provides control over production deployments while keeping everything in a single pipeline run.
+The promote job runs after a successful alpha release (via manual workflow trigger) but **pauses and waits for manual approval** before executing. This provides control over production deployments while keeping everything in a single pipeline run.
 
 ### Pipeline Behavior
 
-When you push to master:
+When you manually trigger a deployment to Alpha:
 1. ✅ **Test job** runs automatically
 2. ✅ **Build job** runs automatically (after test)
-3. ✅ **Release job** runs automatically (publishes to Alpha track)
+3. ✅ **Release job** runs (publishes to Alpha track)
 4. ⏸️ **Promote job** starts but **waits for approval** before executing
 5. ✅ **After approval**: Promotes to Production track
 
@@ -646,10 +650,10 @@ Reviewers can approve from:
 
 The workflow uses GitHub Environments for deployment gates:
 
-- **PlayStore-Alpha**: Automatically deploys to alpha track (no protection rules required)
+- **PlayStore-Alpha**: Deploys to alpha track via manual workflow trigger (no protection rules required)
   - Used for: Internal testing deployments
-  - Trigger: Automatic on master push, or manual workflow dispatch
-  - Approval: None (deploys automatically)
+  - Trigger: Manual workflow dispatch only
+  - Approval: None (deploys after manual trigger)
 
 - **PlayStore-Beta** (Optional): Used for beta track promotion in 3-tier flow
   - Used for: External beta testing (optional deployment path)
@@ -659,7 +663,7 @@ The workflow uses GitHub Environments for deployment gates:
 
 - **PlayStore** (Production): Used for production promotion (**IMPORTANT**)
   - Used for: Production releases to all users
-  - Trigger: After Alpha (2-tier) or Beta (3-tier) deployment
+  - Trigger: After Alpha (2-tier) or Beta (3-tier) deployment via manual workflow dispatch
   - Approval: **Configurable** based on team size
     - **Solo developers**: Add yourself as reviewer (enables self-approval with safety gate)
     - **Small teams**: 1-2 reviewers
