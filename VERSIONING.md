@@ -23,7 +23,13 @@ For detailed technical information about version code testing and troubleshootin
 - Derived from Git tags following semantic versioning (major.minor.patch)
 - Format: `v5.2.0`, `v5.2.1`, etc.
 
-**Development builds** (untagged commits):
+**Master/main branch builds**:
+- Format: `5.2.0` (clean version without -dev suffix)
+- Uses the latest tag version
+- Ensures production deployments have proper version names
+- Example: If last tag is `v5.2.0`, all commits on master use `5.2.0`
+
+**Feature branch builds** (development branches):
 - Format: `5.2.0-dev.3+abc1234`
 - Where:
   - `5.2.0` = last tag version
@@ -33,6 +39,7 @@ For detailed technical information about version code testing and troubleshootin
 **Release builds** (tagged commits):
 - Format: `5.2.0`
 - Clean version number from the tag
+- Same on all branches when on a tagged commit
 
 ## Creating a New Release
 

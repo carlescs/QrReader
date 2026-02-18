@@ -93,6 +93,10 @@ object GitVersioning {
 
     @JvmStatic
     fun getVersionName(project: Project): String {
+        // Get current branch
+        val branchProvider = gitCommand(project, listOf("git", "rev-parse", "--abbrev-ref", "HEAD"))
+        val branch = branchProvider.orNull?.trim() ?: ""
+        
         // Try to get the latest tag
         val tagProvider = gitCommand(project, listOf("git", "describe", "--tags", "--abbrev=0"))
         val tag = tagProvider.orNull?.trim() ?: ""
@@ -105,10 +109,14 @@ object GitVersioning {
             val tagCommit = tagCommitProvider.orNull?.trim() ?: ""
 
             if (currentCommit == tagCommit && currentCommit.isNotEmpty()) {
-                // Clean release build
+                // Clean release build (tagged commit)
+                return tag.removePrefix("v")
+            } else if (branch == "master" || branch == "main") {
+                // Master/main branch: use clean version without -dev suffix
+                // This ensures production deployments from master have proper version names
                 return tag.removePrefix("v")
             } else {
-                // Development build with commit hash
+                // Development build with commit hash (for feature branches)
                 val shortHashProvider = gitCommand(project, listOf("git", "rev-parse", "--short", "HEAD"))
                 val shortHash = shortHashProvider.orNull?.trim() ?: "unknown"
                 val commitsSinceTagProvider = gitCommand(project, listOf("git", "rev-list", "$tag..HEAD", "--count"))
@@ -117,10 +125,16 @@ object GitVersioning {
             }
         }
         
-        // No tags found, use default
-        val shortHashProvider = gitCommand(project, listOf("git", "rev-parse", "--short", "HEAD"))
-        val shortHash = shortHashProvider.orNull?.trim() ?: "unknown"
-        return "0.0.1-dev+$shortHash"
+        // No tags found
+        if (branch == "master" || branch == "main") {
+            // Master/main branch: use simple version without -dev suffix
+            return "1.0.0"
+        } else {
+            // Development branch: use version with -dev suffix and commit hash
+            val shortHashProvider = gitCommand(project, listOf("git", "rev-parse", "--short", "HEAD"))
+            val shortHash = shortHashProvider.orNull?.trim() ?: "unknown"
+            return "0.0.1-dev+$shortHash"
+        }
     }
 
     private fun gitCommand(project: Project, command: List<String>): Provider<String> {
