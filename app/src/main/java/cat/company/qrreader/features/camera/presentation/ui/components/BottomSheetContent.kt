@@ -86,43 +86,21 @@ fun BottomSheetContent(
                             elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
                         ) {
                             Column(modifier = Modifier.padding(15.dp)) {
-                                // Show suggested tags for THIS specific barcode
-                                SuggestedTagsSection(
-                                    suggestedTags = suggestedTags,
-                                    isLoading = isLoading,
-                                    error = error,
-                                    onToggleTag = { tagName ->
-                                        onToggleTag(barcodeHash, tagName)
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 8.dp)
-                                )
-                                
-                                if (suggestedTags.isNotEmpty()) {
-                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                                }
-                                
-                                // Show AI-generated description
-                                BarcodeDescriptionSection(
-                                    description = aiDescription,
-                                    isLoading = isLoadingDescription,
-                                    error = descriptionError,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 8.dp)
-                                )
-                                
-                                if (aiDescription != null || isLoadingDescription) {
-                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                                }
-                                
                                 when (barcode.valueType) {
                                     Barcode.TYPE_URL -> {
                                         UrlBarcodeDisplay(
                                             barcode = barcode,
                                             selectedTagNames = selectedTagNames,
-                                            aiGeneratedDescription = aiDescription
+                                            aiGeneratedDescription = aiDescription,
+                                            suggestedTags = suggestedTags,
+                                            isLoadingTags = isLoading,
+                                            tagError = error,
+                                            description = aiDescription,
+                                            isLoadingDescription = isLoadingDescription,
+                                            descriptionError = descriptionError,
+                                            onToggleTag = { tagName ->
+                                                onToggleTag(barcodeHash, tagName)
+                                            }
                                         )
                                     }
                                     Barcode.TYPE_CONTACT_INFO -> {
@@ -132,7 +110,16 @@ fun BottomSheetContent(
                                         OtherContent(
                                             barcode = barcode,
                                             selectedTagNames = selectedTagNames,
-                                            aiGeneratedDescription = aiDescription
+                                            aiGeneratedDescription = aiDescription,
+                                            suggestedTags = suggestedTags,
+                                            isLoadingTags = isLoading,
+                                            tagError = error,
+                                            description = aiDescription,
+                                            isLoadingDescription = isLoadingDescription,
+                                            descriptionError = descriptionError,
+                                            onToggleTag = { tagName ->
+                                                onToggleTag(barcodeHash, tagName)
+                                            }
                                         )
                                     }
                                 }

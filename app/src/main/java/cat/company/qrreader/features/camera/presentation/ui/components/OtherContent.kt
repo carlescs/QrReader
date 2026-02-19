@@ -2,7 +2,10 @@ package cat.company.qrreader.features.camera.presentation.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,7 +37,14 @@ import java.util.Date
 fun OtherContent(
     barcode: Barcode,
     selectedTagNames: List<String> = emptyList(),
-    aiGeneratedDescription: String? = null
+    aiGeneratedDescription: String? = null,
+    suggestedTags: List<cat.company.qrreader.domain.model.SuggestedTagModel> = emptyList(),
+    isLoadingTags: Boolean = false,
+    tagError: String? = null,
+    description: String? = null,
+    isLoadingDescription: Boolean = false,
+    descriptionError: String? = null,
+    onToggleTag: (String) -> Unit = {}
 ){
     val uriHandler = LocalUriHandler.current
     val saveBarcodeWithTagsUseCase: SaveBarcodeWithTagsUseCase = koinInject()
@@ -66,6 +76,36 @@ fun OtherContent(
         }
     }
     Spacer(modifier = Modifier.height(20.dp))
+    
+    // Show suggested tags for THIS specific barcode
+    SuggestedTagsSection(
+        suggestedTags = suggestedTags,
+        isLoading = isLoadingTags,
+        error = tagError,
+        onToggleTag = onToggleTag,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+    )
+    
+    if (suggestedTags.isNotEmpty()) {
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+    }
+    
+    // Show AI-generated description
+    BarcodeDescriptionSection(
+        description = description,
+        isLoading = isLoadingDescription,
+        error = descriptionError,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+    )
+    
+    if (description != null || isLoadingDescription) {
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+    }
+    
     TextButton(onClick = {
         coroutineScope.launch {
             val barcodeModel = BarcodeModel(
