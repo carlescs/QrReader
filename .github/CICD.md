@@ -22,6 +22,35 @@ This document describes the CI/CD pipeline configuration for the QR Reader Andro
 
 See "Setting Up Environment Protection" below for configuration instructions.
 
+## Creating a GitHub Release
+
+The "Create Release" workflow (`.github/workflows/release.yml`) builds the APK and AAB, generates release notes from git history, and publishes a GitHub Release. It can be triggered in two ways:
+
+### Option 1: Manual Trigger (Recommended)
+
+Trigger directly from the GitHub Actions UI — no need to create the git tag yourself:
+
+1. Go to **Actions → "Create Release"**
+2. Click **"Run workflow"**
+3. Enter the version (e.g. `5.2.0` or `v5.2.0`) in the **Version** field
+4. Click **"Run workflow"**
+
+The workflow will:
+- Validate the version format (`MAJOR.MINOR.PATCH` or `vMAJOR.MINOR.PATCH`)
+- Create and push the git tag (e.g. `v5.2.0`) on the selected branch
+- Build the release APK and AAB
+- Generate release notes from commits since the previous tag
+- Publish a GitHub Release with the built artifacts
+
+### Option 2: Push a Tag Manually
+
+The workflow also fires automatically when a `v*.*.*` tag is pushed:
+
+```bash
+git tag v5.2.0
+git push origin v5.2.0
+```
+
 ## Overview
 
 The project uses GitHub Actions for continuous integration and deployment. The main workflow is defined in `.github/workflows/android-ci-cd.yml`.
