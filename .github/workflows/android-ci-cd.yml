@@ -19,6 +19,9 @@ on:
         required: false
         type: boolean
         default: false
+  workflow_run:
+    workflows: ["Create Release"]
+    types: [completed]
 
 # Required permissions for the workflow
 permissions:
@@ -35,6 +38,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
 
     steps:
       - name: Checkout code
@@ -152,8 +156,8 @@ jobs:
       - name: Decode keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        # Sign bundle when deploying to Play Store (manual trigger only)
-        if: (github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true) && env.KEYSTORE_BASE64 != ''
+        # Sign bundle when deploying to Play Store (manual trigger or after Create Release)
+        if: ((github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true) || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')) && env.KEYSTORE_BASE64 != ''
         run: |
           echo "$KEYSTORE_BASE64" | base64 -d > ${{ runner.temp }}/debugkeystore.jks
 
@@ -162,8 +166,8 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        # Sign bundle when deploying to Play Store (manual trigger only)
-        if: (github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true) && env.KEYSTORE_BASE64 != ''
+        # Sign bundle when deploying to Play Store (manual trigger or after Create Release)
+        if: ((github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true) || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')) && env.KEYSTORE_BASE64 != ''
         run: |
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
             -keystore ${{ runner.temp }}/debugkeystore.jks \
@@ -174,8 +178,8 @@ jobs:
       - name: Upload signed bundle
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        # Upload signed bundle when deploying to Play Store (manual trigger only)
-        if: (github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true) && env.KEYSTORE_BASE64 != ''
+        # Upload signed bundle when deploying to Play Store (manual trigger or after Create Release)
+        if: ((github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true) || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')) && env.KEYSTORE_BASE64 != ''
         uses: actions/upload-artifact@v4
         with:
           name: app-bundle-signed
@@ -185,8 +189,8 @@ jobs:
     name: Release to Google Play (Alpha)
     runs-on: ubuntu-latest
     needs: build
-    # Run ONLY on manual workflow dispatch with upload enabled (no automatic deployment on master push)
-    if: github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true
+    # Run on manual workflow dispatch with upload enabled, or automatically after Create Release
+    if: (github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store == true) || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     environment:
       name: PlayStore-Alpha
 
@@ -260,8 +264,8 @@ jobs:
     name: Promote to Beta (Optional)
     runs-on: ubuntu-latest
     needs: release
-    # Only run if use_beta_track is enabled via workflow_dispatch
-    if: github.event_name == 'workflow_dispatch' && inputs.use_beta_track == true
+    # Only run if use_beta_track is enabled via workflow_dispatch, or automatically after Create Release
+    if: (github.event_name == 'workflow_dispatch' && inputs.use_beta_track == true) || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     environment:
       name: PlayStore-Beta
       # Configure required reviewers in GitHub Settings → Environments → PlayStore-Beta
@@ -399,7 +403,7 @@ jobs:
       always() && 
       needs.release.result == 'success' &&
       (needs.beta.result == 'success' || needs.beta.result == 'skipped') &&
-      github.event_name == 'workflow_dispatch'
+      (github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'))
     environment:
       name: PlayStore
       # Configure required reviewers in GitHub Settings → Environments → PlayStore
@@ -459,7 +463,7 @@ jobs:
       - name: Promote to production track
         env:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-          USE_BETA_TRACK: ${{ github.event.inputs.use_beta_track || 'false' }}
+          USE_BETA_TRACK: ${{ github.event_name == 'workflow_run' && 'true' || (github.event.inputs.use_beta_track || 'false') }}
         run: |
           cat > promote.py << 'EOF'
           import json
