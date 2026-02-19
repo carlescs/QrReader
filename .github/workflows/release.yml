@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*.*.*'  # Triggers on version tags like v5.2.0
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 5.2.0 or v5.2.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -23,6 +29,34 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Create and push tag (manual trigger only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          # Ensure version starts with 'v'
+          if [[ "$VERSION" != v* ]]; then
+            VERSION="v$VERSION"
+          fi
+          # Validate version format: vMAJOR.MINOR.PATCH
+          if ! [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format '$VERSION'. Expected format: 1.2.3 or v1.2.3"
+            exit 1
+          fi
+          # Fail early if the tag already exists
+          if git tag -l "$VERSION" | grep -q "^$VERSION$"; then
+            echo "::error::Tag $VERSION already exists. Use a different version number."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$VERSION"
+          git push origin "$VERSION"
+          echo "TAG_NAME=$VERSION" >> $GITHUB_ENV
+
+      - name: Set tag name (push trigger)
+        if: github.event_name == 'push'
+        run: echo "TAG_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
@@ -56,7 +90,7 @@ jobs:
         id: release_notes
         run: |
           # Get the previous tag (excluding the current one)
-          CURRENT_TAG="${{ github.ref_name }}"
+          CURRENT_TAG="${{ env.TAG_NAME }}"
           # Use a compatible approach that works with older Git versions
           PREV_TAG=$(git tag --sort=-version:refname | grep -v "^$CURRENT_TAG$" | head -n 1)
           
@@ -73,7 +107,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          name: Release ${{ steps.version.version_name }}
+          tag_name: ${{ env.TAG_NAME }}
+          name: Release ${{ steps.version.outputs.version_name }}
           body: |
             ## What's Changed
             ${{ steps.release_notes.outputs.release_notes }}
@@ -82,7 +117,7 @@ jobs:
             Download the APK below and install on your Android device.
             
             **Version Code:** Auto-generated from Git
-            **Version Name:** ${{ steps.version.version_name }}
+            **Version Name:** ${{ steps.version.outputs.version_name }}
           files: |
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
