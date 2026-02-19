@@ -42,7 +42,7 @@ abstract class GitCommandValueSource : ValueSource<String, GitCommandValueSource
 
 object GitVersioning {
     /**
-     * Base version code offset to maintain consistency with Google Play.
+     * Base version code offset - used only as fallback when Google Play API is unavailable.
      * 
      * Historical context:
      * - The repository underwent a major restructure/reset, drastically reducing commit count
@@ -56,21 +56,83 @@ object GitVersioning {
      * - This was based on Play Store version 348 and git count 323
      * - After repository restructure, the offset became outdated
      * 
-     * This offset is added to all version code calculations to ensure:
-     * 1. No conflicts with existing Google Play versions (must be > 367)
-     * 2. Monotonically increasing version codes
-     * 3. Consistent versioning going forward
+     * **Primary Method**: Fetch from Google Play API (see fetchFromGooglePlay())
+     * **Fallback Method**: commit_count + BASE_VERSION_CODE_OFFSET
      * 
-     * Formula: version_code = commit_count + BASE_VERSION_CODE_OFFSET
-     * Example: With 2 commits -> version code 367 (2 + 365 = 367)
-     * 
-     * Note: If Play Store version changes independently (e.g., manual upload),
-     * this offset must be recalculated as: new_offset = latest_play_version - current_commit_count
+     * Note: This fallback offset must be updated if Play Store version changes independently.
      */
     private const val BASE_VERSION_CODE_OFFSET = 365
     
     @JvmStatic
     fun getVersionCode(project: Project): Int {
+        // Primary method: Fetch from Google Play Store API
+        // This ensures version codes are always accurate regardless of git history
+        val playStoreVersion = fetchFromGooglePlay(project)
+        if (playStoreVersion != null) {
+            project.logger.lifecycle("Using Google Play API version: $playStoreVersion")
+            return playStoreVersion
+        }
+        
+        // Fallback: Use git commit count + offset
+        // This runs when API is unavailable (no credentials, network issues, etc.)
+        project.logger.warn("Google Play API unavailable, falling back to git-based versioning")
+        return getGitBasedVersionCode(project)
+    }
+    
+    /**
+     * Fetch the latest version code from Google Play Store using the Python script.
+     * Returns the next version code to use (latest + 1).
+     * 
+     * @return Next version code, or null if fetch fails
+     */
+    private fun fetchFromGooglePlay(project: Project): Int? {
+        val scriptPath = File(project.rootDir, "scripts/fetch_play_version.py")
+        if (!scriptPath.exists()) {
+            project.logger.debug("Play Store fetch script not found: ${scriptPath.absolutePath}")
+            return null
+        }
+        
+        val credentialsPath = File(project.rootDir, "service-account.json")
+        if (!credentialsPath.exists()) {
+            project.logger.debug("Service account credentials not found: ${credentialsPath.absolutePath}")
+            return null
+        }
+        
+        return try {
+            val process = ProcessBuilder("python3", scriptPath.absolutePath)
+                .directory(project.rootDir)
+                .redirectErrorStream(false)
+                .start()
+            
+            val output = process.inputStream.bufferedReader().use { it.readText().trim() }
+            val exitCode = process.waitFor()
+            
+            if (exitCode == 0 && output.isNotEmpty()) {
+                val versionCode = output.toIntOrNull()
+                if (versionCode != null && versionCode > 0) {
+                    project.logger.lifecycle("Fetched Play Store version: ${versionCode - 1}, using: $versionCode")
+                    return versionCode
+                }
+            }
+            
+            // Log error output if available
+            val errorOutput = process.errorStream.bufferedReader().use { it.readText().trim() }
+            if (errorOutput.isNotEmpty()) {
+                project.logger.debug("Play Store fetch error: $errorOutput")
+            }
+            
+            null
+        } catch (e: Exception) {
+            project.logger.debug("Failed to fetch from Google Play: ${e.message}")
+            null
+        }
+    }
+    
+    /**
+     * Fallback method: Calculate version code from git commit count.
+     * Used when Google Play API is unavailable.
+     */
+    private fun getGitBasedVersionCode(project: Project): Int {
         // Note: Requires full Git history (not a shallow clone)
         // GitHub Actions workflows should use fetch-depth: 0
         val countProvider = gitCommand(project, listOf("git", "rev-list", "--count", "HEAD"))
@@ -83,20 +145,11 @@ object GitVersioning {
         
         // Calculate version code: commit count + base offset
         // Base offset maintains consistency with historical Google Play versions
-        //
-        // Note: Branch-specific offsets were removed to prevent extremely large version codes.
-        // Previously, feature branches would get offsets like 891,400,000 which approached
-        // Int.MAX_VALUE (2,147,483,647) and made debugging difficult.
-        //
-        // For parallel feature branch deployments to Alpha track, teams should:
-        // - Deploy feature branches sequentially (recommended)
-        // - Use different Google Play tracks (Internal Testing, Alpha, Beta)
-        // - Manually coordinate version codes if truly needed
         val versionCode = count + BASE_VERSION_CODE_OFFSET
         
         val branchProvider = gitCommand(project, listOf("git", "rev-parse", "--abbrev-ref", "HEAD"))
         val branch = branchProvider.orNull?.trim() ?: "unknown"
-        project.logger.lifecycle("Branch: $branch, Version Code: $versionCode")
+        project.logger.lifecycle("Branch: $branch, Fallback Version Code: $versionCode")
         
         return versionCode
     }

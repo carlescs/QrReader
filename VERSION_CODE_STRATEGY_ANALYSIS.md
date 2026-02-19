@@ -47,69 +47,113 @@ Result: 2 + 25 = 27 ✗ (way too low!)
 
 ---
 
-## Solution Implemented: Update Static Offset
+## Solution Implemented: Dynamic Google Play API Fetch with Fallback
 
-### Approach: Recalculate BASE_VERSION_CODE_OFFSET
+### Approach: Fetch from Play Store + Git Fallback
 
-**New Calculation**:
+**Primary Method: Google Play API**
 ```
 Current Play Store version: 367
-Current git commit count: 2
-New offset: 367 - 2 = 365
+API fetch: 367 + 1 = 368
+Next build uses: 368
 ```
 
-**Updated Formula**:
-```kotlin
-private const val BASE_VERSION_CODE_OFFSET = 365
+**Fallback Method: Git-based with offset (when API unavailable)**
+```
+Current git commit count: 5
+Fallback offset: 365
+Fallback calculation: 5 + 365 = 370
+```
 
+**Updated Implementation:**
+```kotlin
+@JvmStatic
 fun getVersionCode(project: Project): Int {
-    val count = getCommitCount() // 2
-    return count + BASE_VERSION_CODE_OFFSET // 2 + 365 = 367
+    // Primary: Fetch from Google Play Store API
+    val playStoreVersion = fetchFromGooglePlay(project)
+    if (playStoreVersion != null) {
+        return playStoreVersion
+    }
+    
+    // Fallback: Use git commit count + offset
+    return getGitBasedVersionCode(project)
+}
+
+private fun fetchFromGooglePlay(project: Project): Int? {
+    // Calls scripts/fetch_play_version.py
+    // Returns latest version + 1, or null if unavailable
 }
 ```
+
+### Why This Approach?
+
+**Addresses the concern about commit count:**
+- ✅ Exploratory/abandoned branches don't affect version codes
+- ✅ Git history is irrelevant when API credentials are available
+- ✅ Repository resets/restructures don't cause issues
+- ✅ Always accurate based on actual Play Store state
+
+**Benefits:**
+- Primary method uses Play Store as source of truth
+- Falls back gracefully when API unavailable
+- No manual offset recalculation needed
+- Self-healing if Play Store changes independently
 
 ### Changes Made
 
 1. **GitVersioning.kt**:
-   - Updated `BASE_VERSION_CODE_OFFSET` from 25 → **365**
-   - Added detailed comment explaining the calculation
-   - Documented previous offset history
+   - Implemented `fetchFromGooglePlay()` method to call Python script
+   - Uses `scripts/fetch_play_version.py` to query Play Store API
+   - Falls back to `getGitBasedVersionCode()` if API unavailable
+   - Separated git-based calculation into fallback method
+   - BASE_VERSION_CODE_OFFSET (365) now only used in fallback
 
 2. **Validation Script** (`scripts/validate_version_offset.sh`):
-   - Validates current offset against Google Play version
-   - Calculates correct offset if mismatch detected
-   - Provides clear guidance for fixing issues
-
+   - Still useful for validating fallback offset
+   - Helps diagnose when API vs fallback is being used
+   
 3. **Documentation Updates**:
-   - `VERSIONING.md`: Updated offset value and examples
-   - `VERSION_CODE_FIX_SUMMARY.md`: Added new fix section
-   - `docs/VERSION_CODE_TESTING.md`: Updated all references
-   - `scripts/README.md`: Documented validation tool
+   - `VERSIONING.md`: Updated to explain dynamic + fallback approach
+   - `VERSION_CODE_STRATEGY_ANALYSIS.md`: Updated solution section
+   - Added setup instructions for Google Play API credentials
 
 ### Verification
 
+**With Google Play API credentials:**
 ```bash
-$ ./scripts/validate_version_offset.sh 367
-=== Version Code Offset Validator ===
+$ python3 scripts/fetch_play_version.py
+Package: cat.company.qrreader
+Track: production
+Latest version code: 367
+Next version code: 368
 
-Current git commit count: 2
-Current BASE_VERSION_CODE_OFFSET: 365
-Calculated version code: 367 (commit count + offset)
-
-Expected Play Store version: 367
-
-✓ VALID: Calculated version matches expected Play Store version
-
-Next commit will produce version: 368
+# Build will use: 368
 ```
 
-✅ **Confirmed working**: Next build will produce version 367, matching Play Store.
+**Without API credentials (fallback):**
+```bash
+$ ./scripts/validate_version_offset.sh 367
+Current git commit count: 5
+Current BASE_VERSION_CODE_OFFSET: 365
+Calculated version code: 370 (commit count + offset)
+
+# Build will use: 370 (fallback mode)
+```
+
+**Gradle build output:**
+```
+> Task :app:processDebugMainManifest
+Using Google Play API version: 368
+# OR
+Google Play API unavailable, falling back to git-based versioning
+Branch: copilot/review-version-code-strategy, Fallback Version Code: 370
+```
 
 ---
 
 ## Alternative Approaches Considered
 
-### Option 1: Static Offset (IMPLEMENTED) ✅
+### Option 1: Static Offset Only
 
 **Pros**:
 - ✅ Simple and fast (zero build time impact)
@@ -121,26 +165,28 @@ Next commit will produce version: 368
 **Cons**:
 - ⚠️ Requires manual recalculation if repository history changes again
 - ⚠️ Not self-healing if Play Store version changes independently
+- ⚠️ Commit count issues with exploratory branches
+- ❌ Git history dependent
 
-**Best for**: Standard development workflows with stable git history.
+**Verdict**: Not suitable for this project due to commit count concerns.
 
 ---
 
-### Option 2: Dynamic Google Play API Fetch
+### Option 2: Dynamic Google Play API Fetch (IMPLEMENTED) ✅
 
-**Implementation**: Use existing `scripts/fetch_play_version.py` to query Google Play Developer API at build time.
+**Implementation**: Query Google Play Developer API at build time to get the latest version code, then add 1.
 
 **How it works**:
 ```kotlin
 fun getVersionCode(project: Project): Int {
-    try {
-        // Fetch latest version from Play Store API
-        val playStoreVersion = fetchFromGooglePlay()
-        return playStoreVersion + 1
-    } catch (e: Exception) {
-        // Fallback to git-based calculation
-        return getGitBasedVersionCode(project)
+    // Primary: Fetch from Play Store API
+    val playStoreVersion = fetchFromGooglePlay()
+    if (playStoreVersion != null) {
+        return playStoreVersion
     }
+    
+    // Fallback: Git-based calculation
+    return getGitBasedVersionCode(project)
 }
 ```
 
@@ -218,37 +264,60 @@ object VersionCodeStrategy {
 
 ## Recommendation
 
-### Current Decision: Static Offset ✅
+### Current Decision: Dynamic API with Git Fallback ✅
 
-**Reasons**:
-1. **Simplicity**: Easy to understand, maintain, and debug
-2. **Performance**: Zero build time impact
-3. **Reliability**: Always works, even offline
-4. **Security**: No credentials to manage
-5. **Sufficient**: Handles the current situation effectively
+**Implemented Approach**: Hybrid system that uses Google Play API when available, falls back to git-based calculation.
 
-### When to Reconsider Dynamic API
+**Reasons for this choice**:
+1. **Addresses commit count concern**: Git history doesn't affect version codes when API is available
+2. **Self-healing**: Automatically adapts to Play Store state
+3. **Graceful degradation**: Works offline with fallback
+4. **Best of both worlds**: Accuracy when online, reliability when offline
+5. **CI/CD ready**: GitHub Actions already has credentials configured
 
-Consider switching to dynamic API approach if:
-- Repository history is frequently rewritten (e.g., rebasing, squashing)
-- Multiple independent repositories deploy to the same Google Play app
-- Absolute accuracy is mission-critical
-- Team has Google Cloud expertise and infrastructure
-- Build time impact is acceptable (+2-5 seconds per build)
+**When API credentials are provided:**
+- ✅ Always accurate version codes
+- ✅ No git history dependency
+- ✅ Exploratory branches don't cause issues
+- ✅ Self-healing on repository changes
+- ⚠️ Adds ~2-5 seconds to build time
+
+**When API unavailable (fallback):**
+- ✅ Still builds successfully
+- ✅ Works offline
+- ⚠️ Needs manual offset updates if Play Store changes
+- ⚠️ Commit count issues may resurface
+
+### Setup Recommendation
+
+**For CI/CD (GitHub Actions):**
+- ✅ Already configured with `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret
+- API will be used automatically in all builds
+
+**For Local Development:**
+1. **With credentials**: Copy `service-account.json` to project root
+   - Get accurate version codes matching CI/CD
+   - Test as production builds would work
+   
+2. **Without credentials**: Fallback mode works fine
+   - Faster builds (no API call)
+   - Version codes may differ from CI/CD
+   - Good enough for local development/testing
 
 ### Future-Proofing
 
-The validation script (`validate_version_offset.sh`) provides early warning if offset becomes outdated again:
+The validation script (`validate_version_offset.sh`) is still useful:
+- Checks if fallback offset needs updating
+- Helps diagnose API vs fallback usage
+- Useful when API credentials are missing
 
 ```bash
-# Run periodically or in CI/CD to detect issues
+# Check current configuration
 ./scripts/validate_version_offset.sh 367
 
-# Will show error if offset is wrong and provide fix:
-# new_offset = play_store_version - commit_count
+# Test API directly
+python3 scripts/fetch_play_version.py
 ```
-
-**Recommendation**: Add this check to CI/CD as a validation step (non-blocking warning).
 
 ---
 
