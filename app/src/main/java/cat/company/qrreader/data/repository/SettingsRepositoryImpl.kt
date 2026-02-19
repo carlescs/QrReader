@@ -22,8 +22,7 @@ private val Context.dataStore by preferencesDataStore(
 class SettingsRepositoryImpl(private val context: Context) : SettingsRepository {
     private val HIDE_TAGGED_KEY = booleanPreferencesKey("hide_tagged_when_no_tag_selected")
     private val SEARCH_ACROSS_ALL_TAGS_KEY = booleanPreferencesKey("search_across_all_tags_when_filtering")
-    private val AI_TAG_SUGGESTIONS_KEY = booleanPreferencesKey("ai_tag_suggestions_enabled")
-    private val AI_DESCRIPTIONS_KEY = booleanPreferencesKey("ai_descriptions_enabled")
+    private val AI_GENERATION_KEY = booleanPreferencesKey("ai_generation_enabled")
 
     override val hideTaggedWhenNoTagSelected: Flow<Boolean> =
         context.dataStore.data.map { prefs -> prefs[HIDE_TAGGED_KEY] ?: false }
@@ -31,11 +30,8 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     override val searchAcrossAllTagsWhenFiltering: Flow<Boolean> =
         context.dataStore.data.map { prefs -> prefs[SEARCH_ACROSS_ALL_TAGS_KEY] ?: false }
 
-    override val aiTagSuggestionsEnabled: Flow<Boolean> =
-        context.dataStore.data.map { prefs -> prefs[AI_TAG_SUGGESTIONS_KEY] ?: true }
-
-    override val aiDescriptionsEnabled: Flow<Boolean> =
-        context.dataStore.data.map { prefs -> prefs[AI_DESCRIPTIONS_KEY] ?: true }
+    override val aiGenerationEnabled: Flow<Boolean> =
+        context.dataStore.data.map { prefs -> prefs[AI_GENERATION_KEY] ?: true }
 
     override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {
         context.dataStore.edit { prefs ->
@@ -49,15 +45,9 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         }
     }
 
-    override suspend fun setAiTagSuggestionsEnabled(value: Boolean) {
+    override suspend fun setAiGenerationEnabled(value: Boolean) {
         context.dataStore.edit { prefs ->
-            prefs[AI_TAG_SUGGESTIONS_KEY] = value
-        }
-    }
-
-    override suspend fun setAiDescriptionsEnabled(value: Boolean) {
-        context.dataStore.edit { prefs ->
-            prefs[AI_DESCRIPTIONS_KEY] = value
+            prefs[AI_GENERATION_KEY] = value
         }
     }
 }

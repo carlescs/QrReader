@@ -28,22 +28,12 @@ interface SettingsRepository {
     suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean)
 
     /**
-     * Whether AI-generated tag suggestions are enabled
+     * Whether AI-generated features (tag suggestions and barcode descriptions) are enabled
      */
-    val aiTagSuggestionsEnabled: Flow<Boolean>
+    val aiGenerationEnabled: Flow<Boolean>
 
     /**
-     * Enable or disable AI-generated tag suggestions
+     * Enable or disable AI-generated features (tag suggestions and barcode descriptions)
      */
-    suspend fun setAiTagSuggestionsEnabled(value: Boolean)
-
-    /**
-     * Whether AI-generated barcode descriptions are enabled
-     */
-    val aiDescriptionsEnabled: Flow<Boolean>
-
-    /**
-     * Enable or disable AI-generated barcode descriptions
-     */
-    suspend fun setAiDescriptionsEnabled(value: Boolean)
+    suspend fun setAiGenerationEnabled(value: Boolean)
 }

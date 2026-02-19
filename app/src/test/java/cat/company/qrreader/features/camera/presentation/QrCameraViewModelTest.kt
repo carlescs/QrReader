@@ -5,8 +5,7 @@ import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.repository.TagRepository
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeDescriptionUseCase
-import cat.company.qrreader.domain.usecase.settings.GetAiDescriptionsEnabledUseCase
-import cat.company.qrreader.domain.usecase.settings.GetAiTagSuggestionsEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.tags.GenerateTagSuggestionsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -42,8 +41,7 @@ class QrCameraViewModelTest {
     private lateinit var fakeGenerateBarcodeDescriptionUseCase: FakeGenerateBarcodeDescriptionUseCase
     private lateinit var fakeTagRepository: FakeTagRepository
     private lateinit var getAllTagsUseCase: GetAllTagsUseCase
-    private lateinit var getAiTagSuggestionsEnabledUseCase: GetAiTagSuggestionsEnabledUseCase
-    private lateinit var getAiDescriptionsEnabledUseCase: GetAiDescriptionsEnabledUseCase
+    private lateinit var getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase
     private lateinit var viewModel: QrCameraViewModel
     private val testDispatcher = StandardTestDispatcher()
 
@@ -114,20 +112,15 @@ class QrCameraViewModelTest {
 
     // Fake SettingsRepository implementation
     private class FakeSettingsRepository(
-        aiTagSuggestionsEnabled: Boolean = true,
-        aiDescriptionsEnabled: Boolean = true
+        aiGenerationEnabled: Boolean = true
     ) : SettingsRepository {
         override val hideTaggedWhenNoTagSelected = MutableStateFlow(false)
         override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
         override val searchAcrossAllTagsWhenFiltering = MutableStateFlow(false)
         override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
-        override val aiTagSuggestionsEnabled = MutableStateFlow(aiTagSuggestionsEnabled)
-        override suspend fun setAiTagSuggestionsEnabled(value: Boolean) {
-            this.aiTagSuggestionsEnabled.value = value
-        }
-        override val aiDescriptionsEnabled = MutableStateFlow(aiDescriptionsEnabled)
-        override suspend fun setAiDescriptionsEnabled(value: Boolean) {
-            this.aiDescriptionsEnabled.value = value
+        override val aiGenerationEnabled = MutableStateFlow(aiGenerationEnabled)
+        override suspend fun setAiGenerationEnabled(value: Boolean) {
+            this.aiGenerationEnabled.value = value
         }
     }
     
@@ -189,14 +182,12 @@ class QrCameraViewModelTest {
         fakeTagRepository = FakeTagRepository()
         getAllTagsUseCase = GetAllTagsUseCase(fakeTagRepository)
         val fakeSettingsRepository = FakeSettingsRepository()
-        getAiTagSuggestionsEnabledUseCase = GetAiTagSuggestionsEnabledUseCase(fakeSettingsRepository)
-        getAiDescriptionsEnabledUseCase = GetAiDescriptionsEnabledUseCase(fakeSettingsRepository)
+        getAiGenerationEnabledUseCase = GetAiGenerationEnabledUseCase(fakeSettingsRepository)
         viewModel = QrCameraViewModel(
             fakeGenerateTagSuggestionsUseCase,
             getAllTagsUseCase,
             fakeGenerateBarcodeDescriptionUseCase,
-            getAiTagSuggestionsEnabledUseCase,
-            getAiDescriptionsEnabledUseCase
+            getAiGenerationEnabledUseCase
         )
     }
 
@@ -421,7 +412,7 @@ class QrCameraViewModelTest {
 
     @Test
     fun viewModel_canBeCreated_withValidDependencies() {
-        val vm = QrCameraViewModel(fakeGenerateTagSuggestionsUseCase, getAllTagsUseCase, fakeGenerateBarcodeDescriptionUseCase, getAiTagSuggestionsEnabledUseCase, getAiDescriptionsEnabledUseCase)
+        val vm = QrCameraViewModel(fakeGenerateTagSuggestionsUseCase, getAllTagsUseCase, fakeGenerateBarcodeDescriptionUseCase, getAiGenerationEnabledUseCase)
 
         assertNotNull(vm)
         assertNotNull(vm.uiState)

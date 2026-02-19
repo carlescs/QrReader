@@ -204,50 +204,25 @@ class SettingsRepositoryTest {
     }
 
     /**
-     * Test that AI tag suggestions can be set to true and reads back correctly
+     * Test that AI generation can be set to true and reads back correctly
      */
     @Test
-    fun aiTagSuggestionsEnabled_canBeSetToTrue() = runTest {
-        // Set to a known state (true = enabled)
-        repository.setAiTagSuggestionsEnabled(true)
+    fun aiGenerationEnabled_canBeSetToTrue() = runTest {
+        repository.setAiGenerationEnabled(true)
 
-        val result = repository.aiTagSuggestionsEnabled.first()
+        val result = repository.aiGenerationEnabled.first()
         assertTrue(result)
     }
 
     /**
-     * Test setting AI tag suggestions to false
+     * Test setting AI generation to false
      */
     @Test
-    fun setAiTagSuggestionsEnabled_false_updatesValue() = runTest {
-        repository.setAiTagSuggestionsEnabled(true)
-        assertTrue(repository.aiTagSuggestionsEnabled.first())
+    fun setAiGenerationEnabled_false_updatesValue() = runTest {
+        repository.setAiGenerationEnabled(true)
+        assertTrue(repository.aiGenerationEnabled.first())
 
-        repository.setAiTagSuggestionsEnabled(false)
-        assertFalse(repository.aiTagSuggestionsEnabled.first())
-    }
-
-    /**
-     * Test that AI descriptions can be set to true and reads back correctly
-     */
-    @Test
-    fun aiDescriptionsEnabled_canBeSetToTrue() = runTest {
-        // Set to a known state (true = enabled)
-        repository.setAiDescriptionsEnabled(true)
-
-        val result = repository.aiDescriptionsEnabled.first()
-        assertTrue(result)
-    }
-
-    /**
-     * Test setting AI descriptions to false
-     */
-    @Test
-    fun setAiDescriptionsEnabled_false_updatesValue() = runTest {
-        repository.setAiDescriptionsEnabled(true)
-        assertTrue(repository.aiDescriptionsEnabled.first())
-
-        repository.setAiDescriptionsEnabled(false)
-        assertFalse(repository.aiDescriptionsEnabled.first())
+        repository.setAiGenerationEnabled(false)
+        assertFalse(repository.aiGenerationEnabled.first())
     }
 }

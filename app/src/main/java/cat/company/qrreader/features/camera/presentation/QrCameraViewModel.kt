@@ -5,8 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeDescriptionUseCase
-import cat.company.qrreader.domain.usecase.settings.GetAiDescriptionsEnabledUseCase
-import cat.company.qrreader.domain.usecase.settings.GetAiTagSuggestionsEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.tags.GenerateTagSuggestionsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -24,8 +23,7 @@ class QrCameraViewModel(
     private val generateTagSuggestionsUseCase: GenerateTagSuggestionsUseCase,
     private val getAllTagsUseCase: GetAllTagsUseCase,
     private val generateBarcodeDescriptionUseCase: GenerateBarcodeDescriptionUseCase,
-    private val getAiTagSuggestionsEnabledUseCase: GetAiTagSuggestionsEnabledUseCase,
-    private val getAiDescriptionsEnabledUseCase: GetAiDescriptionsEnabledUseCase
+    private val getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase
 ) : ViewModel() {
     
     companion object {
@@ -33,12 +31,10 @@ class QrCameraViewModel(
     }
     
     init {
-        // Attempt to download Gemini Nano model on initialization, only if at least one AI feature is enabled
+        // Attempt to download Gemini Nano model on initialization, only if AI features are enabled
         viewModelScope.launch {
             try {
-                val tagsEnabled = getAiTagSuggestionsEnabledUseCase().first()
-                val descriptionsEnabled = getAiDescriptionsEnabledUseCase().first()
-                if (tagsEnabled || descriptionsEnabled) {
+                if (getAiGenerationEnabledUseCase().first()) {
                     Log.d(TAG, "Checking Gemini Nano model availability")
                     generateTagSuggestionsUseCase.downloadModelIfNeeded()
                 }
@@ -68,7 +64,7 @@ class QrCameraViewModel(
                 
                 // Generate tag suggestions
                 viewModelScope.launch {
-                    if (!getAiTagSuggestionsEnabledUseCase().first()) return@launch
+                    if (!getAiGenerationEnabledUseCase().first()) return@launch
 
                     // Mark this barcode as loading tags
                     _uiState.update { state ->
@@ -120,7 +116,7 @@ class QrCameraViewModel(
                 
                 // Generate description
                 viewModelScope.launch {
-                    if (!getAiDescriptionsEnabledUseCase().first()) return@launch
+                    if (!getAiGenerationEnabledUseCase().first()) return@launch
 
                     // Mark this barcode as loading description
                     _uiState.update { state ->

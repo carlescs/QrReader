@@ -1,12 +1,10 @@
 package cat.company.qrreader.features.settings.presentation
 
 import androidx.lifecycle.ViewModel
-import cat.company.qrreader.domain.usecase.settings.GetAiDescriptionsEnabledUseCase
-import cat.company.qrreader.domain.usecase.settings.GetAiTagSuggestionsEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.GetSearchAcrossAllTagsUseCase
-import cat.company.qrreader.domain.usecase.settings.SetAiDescriptionsEnabledUseCase
-import cat.company.qrreader.domain.usecase.settings.SetAiTagSuggestionsEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCase
 import androidx.lifecycle.viewModelScope
@@ -22,10 +20,8 @@ class SettingsViewModel(
     private val setHideTaggedSettingUseCase: SetHideTaggedSettingUseCase,
     getSearchAcrossAllTagsUseCase: GetSearchAcrossAllTagsUseCase,
     private val setSearchAcrossAllTagsUseCase: SetSearchAcrossAllTagsUseCase,
-    getAiTagSuggestionsEnabledUseCase: GetAiTagSuggestionsEnabledUseCase,
-    private val setAiTagSuggestionsEnabledUseCase: SetAiTagSuggestionsEnabledUseCase,
-    getAiDescriptionsEnabledUseCase: GetAiDescriptionsEnabledUseCase,
-    private val setAiDescriptionsEnabledUseCase: SetAiDescriptionsEnabledUseCase
+    getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase,
+    private val setAiGenerationEnabledUseCase: SetAiGenerationEnabledUseCase
 ) : ViewModel() {
 
     /**
@@ -39,14 +35,9 @@ class SettingsViewModel(
     val searchAcrossAllTagsWhenFiltering: Flow<Boolean> = getSearchAcrossAllTagsUseCase()
 
     /**
-     * Flow for the 'AI tag suggestions enabled' setting
+     * Flow for the 'AI generation enabled' setting
      */
-    val aiTagSuggestionsEnabled: Flow<Boolean> = getAiTagSuggestionsEnabledUseCase()
-
-    /**
-     * Flow for the 'AI descriptions enabled' setting
-     */
-    val aiDescriptionsEnabled: Flow<Boolean> = getAiDescriptionsEnabledUseCase()
+    val aiGenerationEnabled: Flow<Boolean> = getAiGenerationEnabledUseCase()
 
     /**
      * Update the hide tagged when no tag selected setting
@@ -63,15 +54,9 @@ class SettingsViewModel(
         }
     }
 
-    fun setAiTagSuggestionsEnabled(value: Boolean) {
+    fun setAiGenerationEnabled(value: Boolean) {
         viewModelScope.launch {
-            setAiTagSuggestionsEnabledUseCase(value)
-        }
-    }
-
-    fun setAiDescriptionsEnabled(value: Boolean) {
-        viewModelScope.launch {
-            setAiDescriptionsEnabledUseCase(value)
+            setAiGenerationEnabledUseCase(value)
         }
     }
 }
