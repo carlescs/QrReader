@@ -17,7 +17,8 @@ import cat.company.qrreader.domain.model.SuggestedTagModel
 import androidx.core.graphics.toColorInt
 
 /**
- * Display suggested tags that can be toggled
+ * Display suggested tags that can be toggled.
+ * The section is hidden entirely when AI features are not available on this device.
  */
 @Composable
 fun SuggestedTagsSection(
@@ -27,6 +28,12 @@ fun SuggestedTagsSection(
     onToggleTag: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isAiUnavailable = error != null && (
+        error.contains("not available on this device", ignoreCase = true) ||
+        error.contains("UnsupportedOperation", ignoreCase = true)
+    )
+    if (isAiUnavailable) return
+
     Column(modifier = modifier) {
         Text(
             text = stringResource(R.string.suggested_tags),
