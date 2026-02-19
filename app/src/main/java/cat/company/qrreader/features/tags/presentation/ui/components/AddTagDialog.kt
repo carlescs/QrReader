@@ -19,8 +19,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import cat.company.qrreader.domain.model.TagModel
@@ -55,7 +57,7 @@ fun AddTagDialog(
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     Text(
-                        text = "Add tag",
+                        text = stringResource(R.string.add_tag),
                         fontSize = 24.sp,
                         modifier = Modifier.padding(PaddingValues(bottom = 16.dp))
                     )
@@ -69,7 +71,7 @@ fun AddTagDialog(
                         },
                         label = {
                             Text(
-                                text = "Tag name"
+                                text = stringResource(R.string.tag_name)
                             )
                         },
                         isError = tagName.text.isBlank() && tagNameTouched
@@ -87,7 +89,7 @@ fun AddTagDialog(
                         ) else TextFieldDefaults.colors(),
                         label = {
                             Text(
-                                text = "Color"
+                                text = stringResource(R.string.color_label)
                             )
                         },
                         enabled = false,
@@ -97,13 +99,13 @@ fun AddTagDialog(
                         TextButton(onClick = {
                             onRequestDismiss()
                         }) {
-                            Text(text = "Cancel")
+                            Text(text = stringResource(R.string.cancel))
                         }
                         TextButton(onClick = {
                             saveTag(tag, ioCoroutineScope, viewModel, tagName, color)
                             onRequestDismiss()
                         }, enabled = tagName.text.isNotBlank()) {
-                            Text(text = "Save")
+                            Text(text = stringResource(R.string.save))
                         }
                     }
                 }

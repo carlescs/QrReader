@@ -125,7 +125,7 @@ private fun PermissionPrompt(permissionState: PermissionState) {
         }
         Text(textToShow, Modifier.padding(0.dp, 20.dp))
         Button(onClick = { permissionState.launchPermissionRequest() }) {
-            Text("Request permission")
+            Text(stringResource(R.string.request_permission))
         }
     }
 }

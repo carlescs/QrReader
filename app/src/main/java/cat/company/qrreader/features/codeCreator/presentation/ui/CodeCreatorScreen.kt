@@ -26,8 +26,10 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.print.PrintHelper
 import cat.company.qrreader.domain.usecase.codecreator.SaveBitmapToMediaStoreUseCase
@@ -77,7 +79,7 @@ fun CodeCreatorScreen(viewModel: CodeCreatorViewModel = koinViewModel()) {
         TextField(
             value = text,
             onValueChange = { viewModel.onTextChanged(it) },
-            label = { Text("Enter text to encode") },
+            label = { Text(stringResource(R.string.enter_text_to_encode)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
@@ -91,7 +93,7 @@ fun CodeCreatorScreen(viewModel: CodeCreatorViewModel = koinViewModel()) {
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Clear,
-                            contentDescription = "Clear"
+                            contentDescription = stringResource(R.string.clear)
                         )
                     }
                 }

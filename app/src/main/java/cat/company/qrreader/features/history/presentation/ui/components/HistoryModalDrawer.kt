@@ -17,7 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.features.tags.presentation.ui.components.AddTagDialog
 import cat.company.qrreader.features.tags.presentation.ui.components.TagsList
@@ -36,15 +38,15 @@ fun HistoryModalDrawerContent(selectedTagId:Int?, selectTag: (TagModel?) -> Unit
                 .wrapContentWidth()
         ) {
             val dialogState=remember{ mutableStateOf(false) }
-            TopAppBar(title = { Text(text = "Tags") },
+            TopAppBar(title = { Text(text = stringResource(R.string.tags)) },
                 actions = {
                     IconButton(onClick = {
                         dialogState.value=true
                     }) {
-                        Icon(imageVector = Icons.Filled.Add, contentDescription = "Add tag")
+                        Icon(imageVector = Icons.Filled.Add, contentDescription = stringResource(R.string.add_tag))
                     }
                     IconButton(onClick = { selectTag(null) }) {
-                        Icon(imageVector = Icons.Filled.Clear, contentDescription = "Clear filter")
+                        Icon(imageVector = Icons.Filled.Clear, contentDescription = stringResource(R.string.clear_filter))
                     }
                 })
             TagsList(selectedTagId= selectedTagId){

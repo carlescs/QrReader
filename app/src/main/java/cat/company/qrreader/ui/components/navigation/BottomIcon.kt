@@ -1,10 +1,12 @@
 package cat.company.qrreader.ui.components.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import cat.company.qrreader.R
 
 /**
@@ -12,7 +14,7 @@ import cat.company.qrreader.R
  */
 class BottomIcon(
     val icon: @Composable () -> Unit,
-    val label: String,
+    @StringRes val labelRes: Int,
     val route: String
 )
 
@@ -21,20 +23,20 @@ val items = arrayListOf(
         icon = {
             Icon(
                 painter = painterResource(id = R.drawable.ic_baseline_history_24),
-                contentDescription = "History"
+                contentDescription = stringResource(R.string.history)
             )
         },
-        label = "History",
+        labelRes = R.string.history,
         route = "history"
     ),
     BottomIcon(
         icon = {
             Icon(
                 imageVector = Icons.Filled.Build,
-                contentDescription = "Code creator"
+                contentDescription = stringResource(R.string.code_creator)
             )
         },
-        label = "Code Creator",
+        labelRes = R.string.code_creator,
         route = "codeCreator"
     ),
 )
