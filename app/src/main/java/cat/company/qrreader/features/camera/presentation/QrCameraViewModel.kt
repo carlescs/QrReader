@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.model.SuggestedTagModel
+import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeDescriptionUseCase
 import cat.company.qrreader.domain.usecase.tags.GenerateTagSuggestionsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -19,7 +20,8 @@ import kotlinx.coroutines.launch
  */
 class QrCameraViewModel(
     private val generateTagSuggestionsUseCase: GenerateTagSuggestionsUseCase,
-    private val getAllTagsUseCase: GetAllTagsUseCase
+    private val getAllTagsUseCase: GetAllTagsUseCase,
+    private val generateBarcodeDescriptionUseCase: GenerateBarcodeDescriptionUseCase
 ) : ViewModel() {
     
     companion object {
@@ -44,7 +46,7 @@ class QrCameraViewModel(
     fun saveBarcodes(barcodes: List<Barcode>?) {
         _uiState.update { it.copy(lastBarcode = barcodes) }
         
-        // Generate tag suggestions for ALL barcodes
+        // Generate tag suggestions and descriptions for ALL barcodes
         if (!barcodes.isNullOrEmpty()) {
             barcodes.forEach { barcode ->
                 val content = barcode.displayValue ?: return@forEach
@@ -54,10 +56,11 @@ class QrCameraViewModel(
                 val barcodeType = getBarcodeTypeName(barcode.valueType)
                 val barcodeFormat = getBarcodeFormatName(barcode.format)
                 
-                Log.d(TAG, "Generating tags for barcode #$barcodeHash: content='$content', type=$barcodeType, format=$barcodeFormat")
+                Log.d(TAG, "Generating tags and description for barcode #$barcodeHash: content='$content', type=$barcodeType, format=$barcodeFormat")
                 
+                // Generate tag suggestions
                 viewModelScope.launch {
-                    // Mark this barcode as loading
+                    // Mark this barcode as loading tags
                     _uiState.update { state ->
                         state.copy(isLoadingTags = state.isLoadingTags + barcodeHash)
                     }
@@ -100,6 +103,49 @@ class QrCameraViewModel(
                                 barcodeTags = state.barcodeTags + (barcodeHash to emptyList()),
                                 isLoadingTags = state.isLoadingTags - barcodeHash,
                                 tagSuggestionErrors = state.tagSuggestionErrors + (barcodeHash to (e.message ?: "Unknown error"))
+                            )
+                        }
+                    }
+                }
+                
+                // Generate description
+                viewModelScope.launch {
+                    // Mark this barcode as loading description
+                    _uiState.update { state ->
+                        state.copy(isLoadingDescriptions = state.isLoadingDescriptions + barcodeHash)
+                    }
+                    
+                    try {
+                        val result = generateBarcodeDescriptionUseCase(
+                            barcodeContent = content,
+                            barcodeType = barcodeType,
+                            barcodeFormat = barcodeFormat
+                        )
+                        
+                        result.onSuccess { description ->
+                            Log.d(TAG, "Generated description for barcode #$barcodeHash: $description")
+                            _uiState.update { state ->
+                                state.copy(
+                                    barcodeDescriptions = state.barcodeDescriptions + (barcodeHash to description),
+                                    isLoadingDescriptions = state.isLoadingDescriptions - barcodeHash,
+                                    descriptionErrors = state.descriptionErrors - barcodeHash
+                                )
+                            }
+                        }.onFailure { error ->
+                            Log.w(TAG, "Failed to generate description for barcode #$barcodeHash: ${error.message}")
+                            _uiState.update { state ->
+                                state.copy(
+                                    isLoadingDescriptions = state.isLoadingDescriptions - barcodeHash,
+                                    descriptionErrors = state.descriptionErrors + (barcodeHash to (error.message ?: "Unknown error"))
+                                )
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Exception generating description for barcode #$barcodeHash", e)
+                        _uiState.update { state ->
+                            state.copy(
+                                isLoadingDescriptions = state.isLoadingDescriptions - barcodeHash,
+                                descriptionErrors = state.descriptionErrors + (barcodeHash to (e.message ?: "Unknown error"))
                             )
                         }
                     }
@@ -157,6 +203,27 @@ class QrCameraViewModel(
     }
     
     /**
+     * Get AI-generated description for a specific barcode
+     */
+    fun getDescription(barcodeHash: Int): String? {
+        return _uiState.value.barcodeDescriptions[barcodeHash]
+    }
+    
+    /**
+     * Check if description is loading for a specific barcode
+     */
+    fun isLoadingDescription(barcodeHash: Int): Boolean {
+        return _uiState.value.isLoadingDescriptions.contains(barcodeHash)
+    }
+    
+    /**
+     * Get description error message for a specific barcode
+     */
+    fun getDescriptionError(barcodeHash: Int): String? {
+        return _uiState.value.descriptionErrors[barcodeHash]
+    }
+    
+    /**
      * Convert ML Kit barcode value type to human-readable name
      */
     private fun getBarcodeTypeName(valueType: Int): String {
@@ -202,6 +269,7 @@ class QrCameraViewModel(
     override fun onCleared() {
         super.onCleared()
         generateTagSuggestionsUseCase.cleanup()
+        generateBarcodeDescriptionUseCase.cleanup()
     }
 }
 
@@ -212,11 +280,17 @@ class QrCameraViewModel(
  * @property barcodeTags Map of barcode hash to its suggested tags
  * @property isLoadingTags Set of barcode hashes that are currently loading tags
  * @property tagSuggestionErrors Map of barcode hash to error messages
+ * @property barcodeDescriptions Map of barcode hash to AI-generated description
+ * @property isLoadingDescriptions Set of barcode hashes that are currently loading descriptions
+ * @property descriptionErrors Map of barcode hash to description error messages
  */
 data class BarcodeState(
     var lastBarcode: List<Barcode>? = null,
     val barcodeTags: Map<Int, List<SuggestedTagModel>> = emptyMap(),
     val isLoadingTags: Set<Int> = emptySet(),
-    val tagSuggestionErrors: Map<Int, String> = emptyMap()
+    val tagSuggestionErrors: Map<Int, String> = emptyMap(),
+    val barcodeDescriptions: Map<Int, String> = emptyMap(),
+    val isLoadingDescriptions: Set<Int> = emptySet(),
+    val descriptionErrors: Map<Int, String> = emptyMap()
 )
 

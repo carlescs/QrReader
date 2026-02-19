@@ -16,7 +16,8 @@ fun SavedBarcode.toDomainModel(): BarcodeModel {
         format = this.format,
         title = this.title,
         description = this.description,
-        barcode = this.barcode
+        barcode = this.barcode,
+        aiGeneratedDescription = this.aiGeneratedDescription
     )
 }
 
@@ -29,7 +30,8 @@ fun BarcodeModel.toEntity(): SavedBarcode {
         format = this.format,
         title = this.title,
         description = this.description,
-        barcode = this.barcode
+        barcode = this.barcode,
+        aiGeneratedDescription = this.aiGeneratedDescription
     )
 }
 

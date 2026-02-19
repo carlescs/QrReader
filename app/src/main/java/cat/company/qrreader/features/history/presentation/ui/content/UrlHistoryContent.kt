@@ -44,5 +44,10 @@ fun UrlHistoryContent(sdf:SimpleDateFormat, barcode:BarcodeModel) {
         HorizontalDivider()
         Text(text = barcode.description)
     }
+    if(barcode.aiGeneratedDescription!=null && barcode.aiGeneratedDescription.trim()!="") {
+        Spacer(modifier = Modifier.height(5.dp))
+        HorizontalDivider()
+        Text(text = "✨ ${barcode.aiGeneratedDescription}")
+    }
 }
 

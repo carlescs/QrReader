@@ -9,6 +9,7 @@ import cat.company.qrreader.db.Migrations
 import cat.company.qrreader.domain.repository.BarcodeRepository
 import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.repository.TagRepository
+import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeDescriptionUseCase
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeUseCase
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
 import cat.company.qrreader.domain.usecase.codecreator.GenerateQrCodeUseCase
@@ -48,7 +49,8 @@ val databaseModule = module {
             .addMigrations(
                 Migrations.MIGRATION_1_2,
                 Migrations.MIGRATION_2_3,
-                Migrations.MIGRATION_3_4
+                Migrations.MIGRATION_3_4,
+                Migrations.MIGRATION_4_5
             )
             .build()
     }
@@ -70,6 +72,7 @@ val useCaseModule = module {
     factory { GetAllTagsUseCase(get()) }
     factory { GetOrCreateTagsByNameUseCase(get()) }
     factory { GenerateTagSuggestionsUseCase() }
+    factory { GenerateBarcodeDescriptionUseCase() }
     factory { DeleteTagUseCase(get()) }
     factory { GetHideTaggedSettingUseCase(get()) }
     factory { SetHideTaggedSettingUseCase(get()) }
@@ -82,7 +85,7 @@ val useCaseModule = module {
 val viewModelModule = module {
     viewModel { HistoryViewModel(get(), get(), get(), get()) }
     viewModel { TagsViewModel(get(), get()) }
-    viewModel { QrCameraViewModel(get<GenerateTagSuggestionsUseCase>(), get<GetAllTagsUseCase>()) }
+    viewModel { QrCameraViewModel(get<GenerateTagSuggestionsUseCase>(), get<GetAllTagsUseCase>(), get<GenerateBarcodeDescriptionUseCase>()) }
     viewModel { CodeCreatorViewModel(get<GenerateQrCodeUseCase>()) }
     viewModel { SettingsViewModel(get(), get(), get(), get()) }
 }

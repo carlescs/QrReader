@@ -488,22 +488,13 @@ The workflow supports deploying versions from any branch to the Alpha track for 
 ### Version Naming
 
 Feature branch deployments use development version names:
-- **Version Name Format**: `{version}-dev.{commits}+{hash}`
-- **Version Code**: Unique per branch to prevent conflicts
-- Example: `5.2.0-dev.8+a1b2c3d` with version code `456008`
+- Format: `{version}-dev.{commits}+{hash}`
+- Example: `5.2.0-dev.8+a1b2c3d`
   - `5.2.0`: Last git tag version
   - `dev.8`: 8 commits since that tag
   - `a1b2c3d`: Unique commit hash
-  - Version code: `456000` (branch offset) + `8` (commits) = `456008`
 
-**Version Code Collision Prevention:**
-- Master/main branches use simple commit count (e.g., 260)
-- Feature branches add a branch-specific offset (e.g., 456260)
-- This ensures each feature branch can be deployed to Alpha in parallel without conflicts
-- Google Play requires unique, monotonically increasing version codes per track
-- See `buildSrc/src/main/kotlin/GitVersioning.kt` for implementation details
-
-This ensures each branch has a unique, traceable version that can be deployed independently.
+This ensures each branch has a unique, traceable version.
 
 ### Requirements
 
@@ -519,7 +510,6 @@ This ensures each branch has a unique, traceable version that can be deployed in
 | **Alpha Deploy** | ✅ Manual (must check box) | ✅ Manual (must check box) |
 | **Production Promote** | ✅ Available (with approval) | ✅ Available (with approval) |
 | **Version Name** | Clean (e.g., `5.2.0`) or dev | Always dev (e.g., `5.2.0-dev.8+hash`) |
-| **Version Code** | Simple commit count (e.g., 260) | Commit count + branch offset (e.g., 456260) |
 
 ## Manual Approval for Production Promotion
 
