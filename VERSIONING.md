@@ -8,16 +8,24 @@ For detailed technical information about version code testing and troubleshootin
 
 ### Version Code
 - Automatically calculated from the total number of Git commits plus a base offset
-- **Base offset**: A historical offset of 25 is added to maintain consistency with existing Google Play versions
-  - This accounts for repository restructuring that occurred in the past
+- **Base offset**: A historical offset of **365** is added to maintain consistency with existing Google Play versions
+  - This accounts for repository restructuring/reset that occurred, drastically reducing commit count
+  - Latest Google Play version: **367** (as of 2026-02-19)
+  - Current commit count: **2**
+  - Calculated offset: **367 - 2 = 365**
   - Ensures monotonically increasing version codes that don't conflict with existing Play Store versions
 - Increments with every commit (on any branch)
-- **Formula**: `version_code = commit_count + 25`
-- Example: With 323 commits → version code 348 (323 + 25)
+- **Formula**: `version_code = commit_count + 365`
+- Example: With 2 commits → version code 367 (2 + 365)
 - **All branches use the same formula** - no branch-specific offsets
-  - Simplified approach keeps version codes reasonable (300-400 range for typical projects)
+  - Simplified approach keeps version codes reasonable
   - Teams should deploy feature branches to Alpha track sequentially to avoid conflicts
   - Alternative: Use different Google Play tracks (Internal Testing, Alpha, Beta) for parallel testing
+
+**Important**: If the Google Play version ever changes independently (e.g., manual upload), recalculate the offset:
+```
+new_offset = latest_play_store_version - current_git_commit_count
+```
 
 ### Version Name
 - Derived from Git tags following semantic versioning (major.minor.patch)

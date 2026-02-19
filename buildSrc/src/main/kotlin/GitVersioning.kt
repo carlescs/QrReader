@@ -45,19 +45,29 @@ object GitVersioning {
      * Base version code offset to maintain consistency with Google Play.
      * 
      * Historical context:
-     * - The repository was restructured at some point, causing a mismatch between
-     *   the git commit count and the actual version codes in Google Play.
-     * - The last known version code in Google Play was 348.
-     * - The git commit count at that time was 323.
-     * - This offset (348 - 323 = 25) ensures version codes remain monotonically increasing
+     * - The repository underwent a major restructure/reset, drastically reducing commit count
+     * - The last deployed version code in Google Play: 367 (as of 2026-02-19)
+     * - Current git commit count: 2
+     * - This offset (367 - 2 = 365) ensures version codes remain monotonically increasing
      *   and consistent with Google Play's expectations.
      * 
+     * Previous offset history:
+     * - Initial offset: 25 (calculated as 348 - 323)
+     * - This was based on Play Store version 348 and git count 323
+     * - After repository restructure, the offset became outdated
+     * 
      * This offset is added to all version code calculations to ensure:
-     * 1. No conflicts with existing Google Play versions
+     * 1. No conflicts with existing Google Play versions (must be > 367)
      * 2. Monotonically increasing version codes
      * 3. Consistent versioning going forward
+     * 
+     * Formula: version_code = commit_count + BASE_VERSION_CODE_OFFSET
+     * Example: With 2 commits -> version code 367 (2 + 365 = 367)
+     * 
+     * Note: If Play Store version changes independently (e.g., manual upload),
+     * this offset must be recalculated as: new_offset = latest_play_version - current_commit_count
      */
-    private const val BASE_VERSION_CODE_OFFSET = 25
+    private const val BASE_VERSION_CODE_OFFSET = 365
     
     @JvmStatic
     fun getVersionCode(project: Project): Int {

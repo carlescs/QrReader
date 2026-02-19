@@ -6,16 +6,20 @@ This document explains how the version code system works and how to test it for 
 
 ### All Branches (Simplified Formula)
 - **Formula**: `version_code = commit_count + BASE_OFFSET`
-- **Base Offset**: 25 (added to maintain consistency with Google Play history)
-- **Example**: 323 commits + 25 = version code 348
-- **Historical Context**: The repository was restructured in the past, causing a discrepancy
-  between git commit count and Google Play version codes. The base offset ensures
-  monotonically increasing version codes that don't conflict with existing versions.
+- **Base Offset**: **365** (updated 2026-02-19 to match current Google Play state)
+- **Example**: 2 commits + 365 = version code 367
+- **Historical Context**: The repository underwent major restructure/reset, reducing commit count
+  from ~350 to just 2. The base offset was recalculated (367 - 2 = 365) to ensure version codes
+  remain monotonically increasing and don't conflict with existing Google Play versions (latest: 367).
+
+**Previous Offset History:**
+- Initial offset: 25 (calculated as 348 - 323 when Play Store was at 348)
+- Current offset: 365 (calculated as 367 - 2 after repository reset)
 
 **Why Simplified?**
 - Previous approach used branch-specific offsets (e.g., +891,400,000 for feature branches)
 - This created extremely large version codes approaching Int.MAX_VALUE (2.1 billion)
-- Simplified approach keeps version codes reasonable (25-500 range for typical projects)
+- Simplified approach keeps version codes reasonable
 - Teams coordinate sequential deployments or use different Google Play tracks
 
 ## Why This Matters
@@ -66,14 +70,23 @@ Google Play requires that each APK/AAB uploaded to a track has a **unique, monot
    ```bash
    git checkout master
    git rev-list --count HEAD  # Shows commit count
-   # Version code should equal commit count + 25 (base offset)
+   # Version code should equal commit count + 365 (current base offset)
    ```
 
 3. **Test on feature branch:**
    ```bash
    git checkout feature/my-feature
    git rev-list --count HEAD  # Shows commit count
-   # Version code should also be: commit_count + 25 (same formula)
+   # Version code should also be: commit_count + 365 (same formula)
+   ```
+
+4. **Validate version offset:**
+   ```bash
+   # Use the validation script to check if offset is correct
+   ./scripts/validate_version_offset.sh 367
+   
+   # Or just show current calculation
+   ./scripts/validate_version_offset.sh
    ```
 
 ### Verification Script
@@ -89,7 +102,7 @@ echo "=================================="
 
 # Get current commit count
 COMMIT_COUNT=$(git rev-list --count HEAD)
-BASE_OFFSET=25
+BASE_OFFSET=365
 echo "Current commit count: $COMMIT_COUNT"
 echo "Base offset: $BASE_OFFSET"
 echo ""
