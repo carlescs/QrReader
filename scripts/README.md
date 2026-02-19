@@ -4,6 +4,52 @@ This directory contains utility scripts for the QR Reader project.
 
 ## Available Scripts
 
+### `validate_version_offset.sh` ⭐ NEW
+
+Validates that the `BASE_VERSION_CODE_OFFSET` in `GitVersioning.kt` is correctly configured for the current repository state and Google Play version.
+
+**Purpose:** Ensures version codes match or exceed the latest Google Play version to prevent upload failures.
+
+**Usage:**
+```bash
+# Show current configuration
+./scripts/validate_version_offset.sh
+
+# Validate against known Play Store version
+./scripts/validate_version_offset.sh 367
+```
+
+**Output:**
+- ✓ VALID: Calculated version matches or exceeds Play Store version
+- ⚠ WARNING: Calculated version is higher (OK for new releases)
+- ✗ ERROR: Calculated version is lower (will be rejected by Play Store)
+
+**When to use:**
+- After repository restructure or history changes
+- Before making a release if version codes seem off
+- To verify offset calculation after manual Google Play uploads
+- When troubleshooting Play Store upload failures
+
+**Example:**
+```bash
+$ ./scripts/validate_version_offset.sh 367
+=== Version Code Offset Validator ===
+
+Current git commit count: 2
+Current BASE_VERSION_CODE_OFFSET: 365
+Calculated version code: 367 (commit count + offset)
+
+Expected Play Store version: 367
+
+✓ VALID: Calculated version matches expected Play Store version
+
+Next commit will produce version: 368
+```
+
+If validation fails, the script provides the exact offset value to update in `GitVersioning.kt`.
+
+---
+
 ### `fetch_play_version.py`
 
 Fetches the latest version code from Google Play Store using the Google Play Developer API.

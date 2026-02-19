@@ -1,5 +1,65 @@
 # Version Code Fix Summary
 
+## Latest Update (2026-02-19): BASE_VERSION_CODE_OFFSET Adjustment
+
+### Problem Discovered
+After repository restructure/reset, the BASE_VERSION_CODE_OFFSET of 25 became outdated:
+- **Current repository state**: Only 2 commits (likely from major restructure or shallow clone conversion)
+- **Old calculation**: `version_code = 2 + 25 = 27`
+- **Reality**: 
+  - GitHub deployed version: 353
+  - Google Play current version: 367
+- **Issue**: New builds would produce version 27, far below Google Play's 367, causing upload failures
+
+### Root Cause
+The offset of 25 was calculated based on:
+- Play Store version: 348
+- Git commit count: 323
+- Formula: 348 - 323 = 25
+
+However, the repository history changed dramatically (reset to 2 commits), making the offset invalid.
+
+### Solution Implemented
+Updated `BASE_VERSION_CODE_OFFSET` from **25** to **365**:
+
+```kotlin
+// OLD (outdated after repository reset)
+private const val BASE_VERSION_CODE_OFFSET = 25
+
+// NEW (correct for current state)
+private const val BASE_VERSION_CODE_OFFSET = 365
+```
+
+**Calculation:**
+- Latest Google Play version: **367**
+- Current git commit count: **2**
+- New offset: **367 - 2 = 365**
+- Verification: 2 + 365 = 367 ✓
+
+### Impact
+- **Before fix**: version_code = 2 + 25 = **27** (would be rejected by Play Store)
+- **After fix**: version_code = 2 + 365 = **367** (matches Play Store, ready for next version)
+- **Next commit**: version_code = 3 + 365 = **368** (properly increments)
+
+### Why the Offset is Necessary
+The offset ensures version codes:
+1. **Never conflict** with existing Play Store versions
+2. **Monotonically increase** (Google Play requirement)
+3. **Remain simple** (no complex API calls or credentials needed)
+4. **Work offline** (no network dependency)
+
+### Maintenance Note
+If the Google Play version ever changes independently (e.g., manual upload from different source), recalculate:
+```bash
+new_offset = latest_play_store_version - $(git rev-list --count HEAD)
+```
+
+Then update `BASE_VERSION_CODE_OFFSET` in `buildSrc/src/main/kotlin/GitVersioning.kt`.
+
+---
+
+## Previous Fix (2026-02): Branch Offset Removal
+
 ## Problem
 
 The version code on the `copilot/explore-barcode-description` branch was **891,400,363** - an extremely large value that:

@@ -6,18 +6,40 @@ For detailed technical information about version code testing and troubleshootin
 
 ## How It Works
 
-### Version Code
-- Automatically calculated from the total number of Git commits plus a base offset
-- **Base offset**: A historical offset of 25 is added to maintain consistency with existing Google Play versions
-  - This accounts for repository restructuring that occurred in the past
-  - Ensures monotonically increasing version codes that don't conflict with existing Play Store versions
-- Increments with every commit (on any branch)
-- **Formula**: `version_code = commit_count + 25`
-- Example: With 323 commits → version code 348 (323 + 25)
-- **All branches use the same formula** - no branch-specific offsets
-  - Simplified approach keeps version codes reasonable (300-400 range for typical projects)
-  - Teams should deploy feature branches to Alpha track sequentially to avoid conflicts
-  - Alternative: Use different Google Play tracks (Internal Testing, Alpha, Beta) for parallel testing
+### Version Code (Dynamic + Fallback Approach)
+
+**Primary Method: Google Play API Fetch**
+- Fetches the latest version code directly from Google Play Store at build time
+- Returns `latest_version + 1` for the next build
+- Eliminates dependency on git history (commit count, branches, etc.)
+- Always accurate regardless of exploratory branches or repository restructuring
+- Requires `service-account.json` credentials file in project root
+
+**Fallback Method: Git Commit Count + Offset**
+- Used only when Google Play API is unavailable (no credentials, network issues, etc.)
+- Formula: `version_code = commit_count + 365`
+- Base offset of **365** maintains consistency with current Play Store state
+- This accounts for repository restructuring that reduced commit count
+
+**Benefits of Dynamic Approach:**
+- ✅ Always accurate - no manual offset recalculation needed
+- ✅ Self-healing - adapts to any Play Store changes automatically
+- ✅ Git-independent - exploratory/abandoned branches don't affect version codes
+- ✅ Robust - handles repository resets, rebases, squashes gracefully
+- ✅ Fast build times - API call adds ~2-5 seconds (cached in CI/CD)
+
+**How it works:**
+1. Build starts → Check for `service-account.json`
+2. If found → Call `scripts/fetch_play_version.py` → Get latest version + 1
+3. If not found or fails → Fall back to `commit_count + 365`
+4. Version code is used in build
+
+Example workflow:
+- Play Store has version 367
+- API fetch returns 368 (next version)
+- Build uses version code 368
+- After upload, Play Store has 368
+- Next build fetches 369, and so on...
 
 ### Version Name
 - Derived from Git tags following semantic versioning (major.minor.patch)
@@ -41,6 +63,42 @@ For detailed technical information about version code testing and troubleshootin
 - Clean version number from the tag
 - Same on all branches when on a tagged commit
 
+## Setup (First Time Only)
+
+### Google Play API Credentials (Optional but Recommended)
+
+For automatic version code fetching from Google Play Store:
+
+1. **Create a Service Account** in [Google Cloud Console](https://console.cloud.google.com/)
+2. **Enable Google Play Developer API** for your project
+3. **Download the JSON key file** for the service account
+4. **Grant access in Play Console**: Settings → API access → Add service account with "Release Manager" role
+5. **Save credentials** as `service-account.json` in the project root (this file is in `.gitignore`)
+
+**For CI/CD (GitHub Actions):**
+- Add the JSON content as a GitHub Secret: `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`
+- The workflow automatically creates `service-account.json` from this secret
+- Already configured in `.github/workflows/android-ci-cd.yml`
+
+**Without credentials:**
+- Builds still work using git-based fallback (`commit_count + 365`)
+- Version codes may become out of sync with Play Store over time
+- Manual offset updates needed if Play Store versions change independently
+
+**Testing the setup:**
+```bash
+# Test if credentials work
+python3 scripts/fetch_play_version.py
+
+# Expected output (to stderr):
+# Package: cat.company.qrreader
+# Track: production
+# Latest version code: 367
+# Next version code: 368
+
+# Version code will be output to stdout: 368
+```
+
 ## Creating a New Release
 
 ### 1. Regular Development
@@ -57,12 +115,20 @@ Versions are calculated automatically.
 When working on feature branches, the system automatically generates development versions:
 
 **Example on feature branch `feature/new-scanner`:**
-- Version Code: Commit count + base offset (e.g., 285 for 260 commits)
-  - **Note**: Deploy feature branches sequentially to avoid version code conflicts
-- Version Name: `5.1.8-dev.8+a1b2c3d` 
+- **Version Code**: Fetched from Google Play API (e.g., latest is 367, so next is 368)
+  - **With API credentials**: Version codes are independent of git history
+  - **Without API (fallback)**: Uses `commit_count + 365`
+  - No conflicts between branches - all fetch the same "next version" from Play Store
+- **Version Name**: `5.1.8-dev.8+a1b2c3d` 
   - Based on last tag `v5.1.8`
   - `8` commits since that tag
   - `a1b2c3d` = unique commit hash
+
+**Benefits of API-based versioning:**
+- Exploratory/abandoned branches don't affect version codes
+- No need to coordinate between parallel feature branches
+- Version codes always align with Play Store state
+- Repository restructuring doesn't cause version conflicts
 
 **To upload a dev version from a feature branch to Play Store Alpha:**
 
@@ -81,10 +147,14 @@ When working on feature branches, the system automatically generates development
 
 This uploads your dev version (e.g., `5.1.8-dev.8+a1b2c3d`) to the Alpha track for testing.
 
-**Important: Sequential Deployment**
-- Since all branches use the same version code formula, deploy feature branches to Alpha one at a time
-- Or use different tracks (Internal Testing for Branch A, Alpha for Branch B)
-- Avoids version code conflicts when multiple branches have the same commit count
+**Parallel Development with API:**
+- **With API credentials**: Multiple branches can be built simultaneously
+  - All fetch the same "next version" from Play Store (e.g., 368)
+  - Upload one at a time to Alpha track (Google Play doesn't allow multiple same versions)
+  - No version conflicts - they'll just increment (368, 369, 370...)
+- **Without API (fallback mode)**: 
+  - Deploy sequentially or use different tracks (Internal Testing, Alpha, Beta)
+  - Commit count differences between branches may cause conflicts
 
 **Why use manual upload for feature branches?**
 - Safety: Prevents accidental uploads from every feature branch push
@@ -169,23 +239,16 @@ This allows multiple feature branches to be tested in parallel without version c
 
 ### Feature Branch Deployment Strategy
 
-When deploying multiple feature branches to the Alpha track:
+**With Google Play API (Recommended):**
+- All branches fetch the latest version from Play Store
+- Version codes are independent of git history
+- No coordination needed between branches
+- Just upload when ready - version codes increment automatically
 
-**Automatic Protection:**
-- Each feature branch gets a unique version code based on branch name + commit count
-- Prevents Google Play upload rejections due to version code conflicts
-- Branch offset is deterministic (same branch name always gets the same offset)
-
-**Recommended Workflow:**
-1. **Parallel Development**: Work on multiple feature branches simultaneously
-2. **Independent Testing**: Deploy any branch to Alpha track for testing
-3. **Sequential Promotion**: Only promote tested branches to Production one at a time
-
-**Example on feature branch `feature/new-scanner`:**
-
+**Without API (Fallback Mode):**
 Deploy feature branches to Play Store Alpha one at a time to avoid version code conflicts:
 
-1. **Sequential Deployment (Recommended)**:
+1. **Sequential Deployment**:
    - Deploy and test Branch A first
    - Merge Branch A to master
    - Then deploy Branch B
@@ -196,16 +259,33 @@ Deploy feature branches to Play Store Alpha one at a time to avoid version code 
    - Branch C → Beta track (if available)
 
 3. **Version Uniqueness**:
-   - Version Code: Same for branches with equal commit count
+   - Version Code: May be same for branches with equal commit count
    - Version Name: Unique due to commit hash (e.g., `5.1.8-dev.8+a1b2c3d`)
    - Google Play track selection prevents conflicts
 
-This allows independent testing while avoiding version code collisions.
-
 ### GitHub Secrets
-No additional secrets needed for automatic versioning. Existing secrets for Google Play publishing remain unchanged.
+
+**Required for Google Play API:**
+- `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` - Service account credentials for Play Store API
+- Already configured in `.github/workflows/android-ci-cd.yml`
+
+**Other secrets:**
+- Existing secrets for Google Play publishing remain unchanged
 
 ## Troubleshooting
+
+### Google Play API Issues
+
+**"Service account credentials not found"**
+- Create `service-account.json` in project root
+- Or add `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret in GitHub Actions
+- Build will use git-based fallback if credentials are missing
+
+**"Failed to fetch from Google Play"**
+- Check service account has "Release Manager" role in Play Console
+- Verify Google Play Developer API is enabled
+- Test manually: `python3 scripts/fetch_play_version.py`
+- Build continues with fallback version (commit count + offset)
 
 ### "No tags found" warning
 If you see version `0.0.1-dev+abc1234`, it means no Git tags exist yet. Create your first tag:
@@ -233,29 +313,45 @@ git push origin v5.2.0
 
 ### Will different feature branches have version conflicts?
 
-**Possibly** - Teams should coordinate deployments:
+**With Google Play API: NO** - Version conflicts are eliminated:
 
 **Version Code Behavior:**
-- All branches use: `version_code = commit_count + 25`
+- All branches fetch latest version from Play Store API
+- Example:
+  - Play Store has version 367
+  - Branch A builds: fetches 368
+  - Branch B builds: fetches 369 (since A uploaded 368)
+  - Branch C builds: fetches 370 (after B uploaded 369)
+- Each upload increments the version automatically
+
+**Without API (Fallback Mode): POSSIBLY** - Coordination needed:
+
+**Version Code Behavior:**
+- All branches use: `version_code = commit_count + 365`
 - Example: 
-  - Master: version code 285 (260 commits + 25)
-  - Branch A: version code 285 (260 commits + 25) ← Same!
-  - Branch B: version code 285 (260 commits + 25) ← Same!
+  - Master: version code 370 (5 commits + 365)
+  - Branch A: version code 370 (5 commits + 365) ← Same!
+  - Branch B: version code 370 (5 commits + 365) ← Same!
 
 **Solutions to Avoid Conflicts:**
 
-1. **Sequential Deployment** (Recommended):
+1. **Use Google Play API** (Recommended):
+   - Add `service-account.json` credentials
+   - Automatic version management
+   - No coordination needed
+
+2. **Sequential Deployment**:
    - Test Branch A on Alpha → Merge to master
    - Then test Branch B on Alpha → Merge to master
-   - Simplest approach, works for most projects
+   - Simplest approach without API
 
-2. **Use Different Tracks**:
+3. **Use Different Tracks**:
    - Branch A → Internal Testing track
    - Branch B → Alpha track  
    - Branch C → Beta track
    - Google Play allows one version per track
 
-3. **Coordinate Timing**:
+4. **Coordinate Timing**:
    - Short-lived feature branches rarely conflict
    - By the time Branch B is ready, Branch A is likely merged (increasing commit count)
 
