@@ -31,7 +31,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.BarcodeWithTagsModel
 import cat.company.qrreader.features.history.presentation.HistoryViewModel
 import cat.company.qrreader.features.history.presentation.ui.content.OtherHistoryContent
@@ -65,6 +67,7 @@ fun BarcodeCard(
     val confirmDeleteOpen = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val ioCoroutineScope = CoroutineScope(Dispatchers.IO)
+    val copiedMsg = stringResource(R.string.copied)
 
     // Load tags
     tagsViewModel.loadTags()
@@ -76,7 +79,7 @@ fun BarcodeCard(
             .clickable {
                 coroutineScope.launch {
                     clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText("barcode", barcode.barcode.barcode)))
-                    snackBarHostState.showSnackbar("Copied!")
+                    snackBarHostState.showSnackbar(copiedMsg)
                 }
             },
         colors = CardDefaults.cardColors(),
@@ -103,7 +106,7 @@ fun BarcodeCard(
         Row(modifier = Modifier.padding(5.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             val menuOpen = remember { mutableStateOf(false) }
             IconButton(onClick = { menuOpen.value = true }) {
-                Icon(Icons.AutoMirrored.Filled.Label, contentDescription = "Manage tags")
+                Icon(Icons.AutoMirrored.Filled.Label, contentDescription = stringResource(R.string.manage_tags))
             }
             Spacer(modifier = Modifier.width(4.dp))
             barcode.tags.forEach {
@@ -117,7 +120,7 @@ fun BarcodeCard(
                     DropdownMenuItem(text = { Text(text = tag.name) },
                         leadingIcon = {
                             if(barcode.tags.contains(tag))
-                                Icon(imageVector = Icons.Filled.Check, contentDescription = "Check")
+                                Icon(imageVector = Icons.Filled.Check, contentDescription = stringResource(R.string.check))
                         },
                         onClick = {
                             ioCoroutineScope.launch {
@@ -133,12 +136,12 @@ fun BarcodeCard(
             TextButton(onClick = {
                 confirmDeleteOpen.value = true
             }) {
-                Text(text = "Delete")
+                Text(text = stringResource(R.string.delete))
             }
             TextButton(onClick = {
                 editOpen.value = true
             }) {
-                Text(text = "Edit")
+                Text(text = stringResource(R.string.edit))
             }
         }
         if (editOpen.value) {

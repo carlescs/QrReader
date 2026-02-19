@@ -9,8 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.SuggestedTagModel
 import androidx.core.graphics.toColorInt
 
@@ -27,7 +29,7 @@ fun SuggestedTagsSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "Suggested Tags",
+            text = stringResource(R.string.suggested_tags),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -42,23 +44,20 @@ fun SuggestedTagsSection(
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Generating suggestions...",
+                        text = stringResource(R.string.generating_suggestions),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
             }
             error != null -> {
-                // Display user-friendly error message
                 val errorMessage = when {
                     error.contains("not available on this device", ignoreCase = true) ||
-                    error.contains("UnsupportedOperation", ignoreCase = true) -> {
-                        "AI suggestions not supported on this device"
-                    }
+                    error.contains("UnsupportedOperation", ignoreCase = true) ->
+                        stringResource(R.string.ai_suggestions_not_supported)
                     error.contains("downloading", ignoreCase = true) ||
-                    error.contains("download", ignoreCase = true) -> {
-                        "AI model downloading... Try again shortly"
-                    }
-                    else -> "Tag suggestions unavailable"
+                    error.contains("download", ignoreCase = true) ->
+                        stringResource(R.string.ai_model_downloading_retry)
+                    else -> stringResource(R.string.tag_suggestions_unavailable)
                 }
                 
                 Text(
@@ -71,7 +70,7 @@ fun SuggestedTagsSection(
             }
             suggestedTags.isEmpty() -> {
                 Text(
-                    text = "No tag suggestions",
+                    text = stringResource(R.string.no_tag_suggestions),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth(),
@@ -91,7 +90,7 @@ fun SuggestedTagsSection(
                     }
                 }
                 Text(
-                    text = "Tap to remove unwanted tags",
+                    text = stringResource(R.string.tap_to_remove_unwanted_tags),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp)

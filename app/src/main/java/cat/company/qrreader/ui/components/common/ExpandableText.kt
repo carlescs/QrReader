@@ -11,9 +11,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 
 /**
  * A text composable that truncates at [collapsedMaxLines] lines and shows a
@@ -48,7 +50,7 @@ fun ExpandableText(
         )
         if (hasOverflow || expanded) {
             Text(
-                text = if (expanded) "Show less" else "Show more",
+                text = if (expanded) stringResource(R.string.show_less) else stringResource(R.string.show_more),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier

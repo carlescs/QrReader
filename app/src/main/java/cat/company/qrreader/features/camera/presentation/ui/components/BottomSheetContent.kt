@@ -20,7 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import cat.company.qrreader.features.camera.presentation.BarcodeState
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.launch
@@ -51,6 +53,7 @@ fun BottomSheetContent(
                     key = { it.hashCode() },
                     itemContent = { barcode ->
                         val barcodeHash = barcode.hashCode()
+                        val copiedMsg = stringResource(R.string.copied)
                         
                         // Get tag data from the observed state (triggers recomposition when changed)
                         val suggestedTags = state.barcodeTags[barcodeHash] ?: emptyList()
@@ -80,7 +83,7 @@ fun BottomSheetContent(
                                             )
                                         }
                                     }
-                                    coroutineScope.launch { snackbarHostState.showSnackbar("Copied!") }
+                                    coroutineScope.launch { snackbarHostState.showSnackbar(copiedMsg) }
                                 },
                             shape = RoundedCornerShape(12.dp),
                             elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)

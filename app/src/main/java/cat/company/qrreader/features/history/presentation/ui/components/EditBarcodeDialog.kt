@@ -17,8 +17,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import cat.company.qrreader.domain.model.BarcodeModel
@@ -46,28 +48,24 @@ fun EditBarcodeDialog(
                 contentAlignment = Alignment.Center
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
-                    Text(text = "Edit barcode",
+                    Text(text = stringResource(R.string.edit_barcode),
                         fontSize = 24.sp,
                         modifier = Modifier.padding(PaddingValues(bottom = 16.dp))
                         )
-                    TextField(modifier = Modifier.padding(vertical = 5.dp), value = text, singleLine = true, onValueChange = {text=it}, label = { Text(
-                        text = "Title"
-                    )})
-                    TextField(modifier = Modifier.padding(vertical = 5.dp), value = description, onValueChange = {description=it}, label = { Text(
-                        text = "Description"
-                    )})
+                    TextField(modifier = Modifier.padding(vertical = 5.dp), value = text, singleLine = true, onValueChange = {text=it}, label = { Text(text = stringResource(R.string.title_label)) })
+                    TextField(modifier = Modifier.padding(vertical = 5.dp), value = description, onValueChange = {description=it}, label = { Text(text = stringResource(R.string.description_label)) })
                     TextField(
                         modifier = Modifier.padding(vertical = 5.dp), 
                         value = aiDescription, 
                         onValueChange = {aiDescription=it}, 
-                        label = { Text(text = "AI Description") },
+                        label = { Text(text = stringResource(R.string.ai_description)) },
                         enabled = savedBarcode.aiGeneratedDescription != null
                     )
                     Row(modifier = Modifier.align(Alignment.End)){
                         TextButton(onClick = {
                             onRequestClose()
                         }) {
-                            Text(text = "Cancel")
+                            Text(text = stringResource(R.string.cancel))
                         }
                         TextButton(onClick = {
                             val updatedBarcode = savedBarcode.copy(
@@ -78,7 +76,7 @@ fun EditBarcodeDialog(
                             viewModel.updateBarcode(updatedBarcode)
                             onRequestClose()
                         }) {
-                            Text(text = "Save")
+                            Text(text = stringResource(R.string.save))
                         }
                     }
                 }

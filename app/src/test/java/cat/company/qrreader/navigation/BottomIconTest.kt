@@ -1,5 +1,6 @@
 package cat.company.qrreader.navigation
 
+import cat.company.qrreader.R
 import cat.company.qrreader.ui.components.navigation.items
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -28,7 +29,7 @@ class BottomIconTest {
     fun items_firstItem_isHistory() {
         val historyItem = items[0]
 
-        assertEquals("History", historyItem.label)
+        assertEquals(R.string.history, historyItem.labelRes)
         assertEquals("history", historyItem.route)
         assertNotNull(historyItem.icon)
     }
@@ -40,7 +41,7 @@ class BottomIconTest {
     fun items_secondItem_isCodeCreator() {
         val codeCreatorItem = items[1]
 
-        assertEquals("Code Creator", codeCreatorItem.label)
+        assertEquals(R.string.code_creator, codeCreatorItem.labelRes)
         assertEquals("codeCreator", codeCreatorItem.route)
         assertNotNull(codeCreatorItem.icon)
     }
@@ -71,8 +72,8 @@ class BottomIconTest {
     @Test
     fun items_allHaveNonEmptyLabels() {
         items.forEach { item ->
-            assertNotNull(item.label)
-            assert(item.label.isNotEmpty()) { "Label should not be empty" }
+            assertNotNull(item.labelRes)
+            assert(item.labelRes != 0) { "Label resource should not be 0" }
         }
     }
 
@@ -107,8 +108,8 @@ class BottomIconTest {
 
         assertNotNull(historyItem)
         assertNotNull(codeCreatorItem)
-        assertEquals("History", historyItem?.label)
-        assertEquals("Code Creator", codeCreatorItem?.label)
+        assertEquals(R.string.history, historyItem?.labelRes)
+        assertEquals(R.string.code_creator, codeCreatorItem?.labelRes)
     }
 
     /**
@@ -116,8 +117,8 @@ class BottomIconTest {
      */
     @Test
     fun items_findByLabel_findsCorrectItem() {
-        val historyItem = items.find { it.label == "History" }
-        val codeCreatorItem = items.find { it.label == "Code Creator" }
+        val historyItem = items.find { it.labelRes == R.string.history }
+        val codeCreatorItem = items.find { it.labelRes == R.string.code_creator }
 
         assertNotNull(historyItem)
         assertNotNull(codeCreatorItem)
@@ -131,9 +132,9 @@ class BottomIconTest {
     @Test
     fun items_orderIsStable() {
         // History should always be first
-        assertEquals("History", items[0].label)
+        assertEquals(R.string.history, items[0].labelRes)
         // Code Creator should always be second
-        assertEquals("Code Creator", items[1].label)
+        assertEquals(R.string.code_creator, items[1].labelRes)
     }
 
     /**
@@ -145,11 +146,11 @@ class BottomIconTest {
 
         // These should not throw
         val icon = item.icon
-        val label = item.label
+        val labelRes = item.labelRes
         val route = item.route
 
         assertNotNull(icon)
-        assertNotNull(label)
+        assertNotNull(labelRes)
         assertNotNull(route)
     }
 }
