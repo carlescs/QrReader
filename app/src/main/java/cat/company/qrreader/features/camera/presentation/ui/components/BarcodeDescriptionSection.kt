@@ -1,6 +1,5 @@
 package cat.company.qrreader.features.camera.presentation.ui.components
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.ui.components.common.ExpandableText
 
 /**
  * Section displaying AI-generated barcode description with loading and error states
@@ -117,19 +117,13 @@ private fun ErrorDescription(error: String) {
 
 @Composable
 private fun DescriptionText(description: String) {
-    Box(
+    ExpandableText(
+        text = description,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-    ) {
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
+            .padding(vertical = 4.dp),
+        style = MaterialTheme.typography.bodyMedium
+    )
 }
 
 /**
