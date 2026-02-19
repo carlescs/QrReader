@@ -130,7 +130,7 @@ private fun DescriptionText(description: String) {
 }
 
 /**
- * Parse error message to show user-friendly text, returning a string resource ID
+ * Parse error message to show user-friendly text, returning a @StringRes Int resource ID
  */
 @StringRes
 private fun parseErrorMessageRes(error: String): Int {
