@@ -202,4 +202,27 @@ class SettingsRepositoryTest {
         // Verify it changed
         assertEquals(!currentValue, newValue)
     }
+
+    /**
+     * Test that AI generation can be set to true and reads back correctly
+     */
+    @Test
+    fun aiGenerationEnabled_canBeSetToTrue() = runTest {
+        repository.setAiGenerationEnabled(true)
+
+        val result = repository.aiGenerationEnabled.first()
+        assertTrue(result)
+    }
+
+    /**
+     * Test setting AI generation to false
+     */
+    @Test
+    fun setAiGenerationEnabled_false_updatesValue() = runTest {
+        repository.setAiGenerationEnabled(true)
+        assertTrue(repository.aiGenerationEnabled.first())
+
+        repository.setAiGenerationEnabled(false)
+        assertFalse(repository.aiGenerationEnabled.first())
+    }
 }

@@ -69,6 +69,9 @@ class HistoryViewModelHideFlagTest {
             override val searchAcrossAllTagsWhenFiltering: Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
+            override val aiGenerationEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setAiGenerationEnabled(value: Boolean) {}
         }
         val vm = HistoryViewModel(
             getBarcodesWithTagsUseCase,

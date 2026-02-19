@@ -26,4 +26,14 @@ interface SettingsRepository {
      * Set whether searching should ignore the selected tag filter
      */
     suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean)
+
+    /**
+     * Whether AI-generated features (tag suggestions and barcode descriptions) are enabled
+     */
+    val aiGenerationEnabled: Flow<Boolean>
+
+    /**
+     * Enable or disable AI-generated features (tag suggestions and barcode descriptions)
+     */
+    suspend fun setAiGenerationEnabled(value: Boolean)
 }

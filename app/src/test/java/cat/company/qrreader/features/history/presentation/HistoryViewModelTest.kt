@@ -75,6 +75,9 @@ class HistoryViewModelTest {
             override val searchAcrossAllTagsWhenFiltering: Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
+            override val aiGenerationEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setAiGenerationEnabled(value: Boolean) {}
         }
         val vm = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo)
 
@@ -95,6 +98,9 @@ class HistoryViewModelTest {
             override val searchAcrossAllTagsWhenFiltering: Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
+            override val aiGenerationEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setAiGenerationEnabled(value: Boolean) {}
         }
         val vm = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo)
 
@@ -117,6 +123,9 @@ class HistoryViewModelTest {
             override val searchAcrossAllTagsWhenFiltering: Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
+            override val aiGenerationEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setAiGenerationEnabled(value: Boolean) {}
         }
         val vm = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo)
 
@@ -176,6 +185,9 @@ class HistoryViewModelTest {
             override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {
                 settingsSearchAcrossAll.value = value
             }
+            override val aiGenerationEnabled: Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setAiGenerationEnabled(value: Boolean) {}
         }
 
         val getBarcodesUseCase = GetBarcodesWithTagsUseCase(fakeRepository)

@@ -1,9 +1,11 @@
 package cat.company.qrreader.features.settings.presentation
 
 import androidx.lifecycle.ViewModel
+import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
-import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.GetSearchAcrossAllTagsUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCase
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
@@ -15,9 +17,11 @@ import kotlinx.coroutines.launch
  */
 class SettingsViewModel(
     getHideTaggedSettingUseCase: GetHideTaggedSettingUseCase,
-    private val setHideTaggedSettingUseCase: SetHideTaggedSettingUseCase
-    , getSearchAcrossAllTagsUseCase: GetSearchAcrossAllTagsUseCase,
-    private val setSearchAcrossAllTagsUseCase: SetSearchAcrossAllTagsUseCase
+    private val setHideTaggedSettingUseCase: SetHideTaggedSettingUseCase,
+    getSearchAcrossAllTagsUseCase: GetSearchAcrossAllTagsUseCase,
+    private val setSearchAcrossAllTagsUseCase: SetSearchAcrossAllTagsUseCase,
+    getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase,
+    private val setAiGenerationEnabledUseCase: SetAiGenerationEnabledUseCase
 ) : ViewModel() {
 
     /**
@@ -31,6 +35,11 @@ class SettingsViewModel(
     val searchAcrossAllTagsWhenFiltering: Flow<Boolean> = getSearchAcrossAllTagsUseCase()
 
     /**
+     * Flow for the 'AI generation enabled' setting
+     */
+    val aiGenerationEnabled: Flow<Boolean> = getAiGenerationEnabledUseCase()
+
+    /**
      * Update the hide tagged when no tag selected setting
      */
     fun setHideTaggedWhenNoTagSelected(value: Boolean) {
@@ -42,6 +51,12 @@ class SettingsViewModel(
     fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {
         viewModelScope.launch {
             setSearchAcrossAllTagsUseCase(value)
+        }
+    }
+
+    fun setAiGenerationEnabled(value: Boolean) {
+        viewModelScope.launch {
+            setAiGenerationEnabledUseCase(value)
         }
     }
 }

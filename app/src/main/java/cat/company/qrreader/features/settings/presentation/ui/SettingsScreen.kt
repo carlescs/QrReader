@@ -24,6 +24,7 @@ import org.koin.androidx.compose.koinViewModel
 fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val hideTaggedState by viewModel.hideTaggedWhenNoTagSelected.collectAsState(initial = false)
     val searchAcrossAllState by viewModel.searchAcrossAllTagsWhenFiltering.collectAsState(initial = false)
+    val aiGenerationState by viewModel.aiGenerationEnabled.collectAsState(initial = true)
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         ListItem(
@@ -43,6 +44,17 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
             trailingContent = {
                 Switch(checked = searchAcrossAllState, onCheckedChange = { newValue ->
                     viewModel.setSearchAcrossAllTagsWhenFiltering(newValue)
+                })
+            },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = "AI features") },
+            supportingContent = { Text(text = "When enabled, AI-generated tag suggestions and barcode descriptions will be shown for scanned barcodes on supported devices.") },
+            trailingContent = {
+                Switch(checked = aiGenerationState, onCheckedChange = { newValue ->
+                    viewModel.setAiGenerationEnabled(newValue)
                 })
             },
             colors = androidx.compose.material3.ListItemDefaults.colors()
