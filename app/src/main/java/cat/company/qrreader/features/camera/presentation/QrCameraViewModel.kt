@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeDescriptionUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiDescriptionsEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiTagSuggestionsEnabledUseCase
 import cat.company.qrreader.domain.usecase.tags.GenerateTagSuggestionsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -21,7 +23,9 @@ import kotlinx.coroutines.launch
 class QrCameraViewModel(
     private val generateTagSuggestionsUseCase: GenerateTagSuggestionsUseCase,
     private val getAllTagsUseCase: GetAllTagsUseCase,
-    private val generateBarcodeDescriptionUseCase: GenerateBarcodeDescriptionUseCase
+    private val generateBarcodeDescriptionUseCase: GenerateBarcodeDescriptionUseCase,
+    private val getAiTagSuggestionsEnabledUseCase: GetAiTagSuggestionsEnabledUseCase,
+    private val getAiDescriptionsEnabledUseCase: GetAiDescriptionsEnabledUseCase
 ) : ViewModel() {
     
     companion object {
@@ -29,11 +33,15 @@ class QrCameraViewModel(
     }
     
     init {
-        // Attempt to download Gemini Nano model on initialization
+        // Attempt to download Gemini Nano model on initialization, only if at least one AI feature is enabled
         viewModelScope.launch {
             try {
-                Log.d(TAG, "Checking Gemini Nano model availability")
-                generateTagSuggestionsUseCase.downloadModelIfNeeded()
+                val tagsEnabled = getAiTagSuggestionsEnabledUseCase().first()
+                val descriptionsEnabled = getAiDescriptionsEnabledUseCase().first()
+                if (tagsEnabled || descriptionsEnabled) {
+                    Log.d(TAG, "Checking Gemini Nano model availability")
+                    generateTagSuggestionsUseCase.downloadModelIfNeeded()
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Error during model download check", e)
             }
@@ -60,6 +68,8 @@ class QrCameraViewModel(
                 
                 // Generate tag suggestions
                 viewModelScope.launch {
+                    if (!getAiTagSuggestionsEnabledUseCase().first()) return@launch
+
                     // Mark this barcode as loading tags
                     _uiState.update { state ->
                         state.copy(isLoadingTags = state.isLoadingTags + barcodeHash)
@@ -110,6 +120,8 @@ class QrCameraViewModel(
                 
                 // Generate description
                 viewModelScope.launch {
+                    if (!getAiDescriptionsEnabledUseCase().first()) return@launch
+
                     // Mark this barcode as loading description
                     _uiState.update { state ->
                         state.copy(isLoadingDescriptions = state.isLoadingDescriptions + barcodeHash)

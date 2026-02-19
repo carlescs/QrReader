@@ -22,6 +22,8 @@ import org.koin.androidx.compose.koinViewModel
 fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val hideTaggedState by viewModel.hideTaggedWhenNoTagSelected.collectAsState(initial = false)
     val searchAcrossAllState by viewModel.searchAcrossAllTagsWhenFiltering.collectAsState(initial = false)
+    val aiTagSuggestionsState by viewModel.aiTagSuggestionsEnabled.collectAsState(initial = true)
+    val aiDescriptionsState by viewModel.aiDescriptionsEnabled.collectAsState(initial = true)
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         ListItem(
@@ -41,6 +43,28 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
             trailingContent = {
                 Switch(checked = searchAcrossAllState, onCheckedChange = { newValue ->
                     viewModel.setSearchAcrossAllTagsWhenFiltering(newValue)
+                })
+            },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = "AI tag suggestions") },
+            supportingContent = { Text(text = "When enabled, AI-generated tag suggestions will be shown for scanned barcodes on supported devices.") },
+            trailingContent = {
+                Switch(checked = aiTagSuggestionsState, onCheckedChange = { newValue ->
+                    viewModel.setAiTagSuggestionsEnabled(newValue)
+                })
+            },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = "AI barcode descriptions") },
+            supportingContent = { Text(text = "When enabled, AI-generated descriptions will be shown for scanned barcodes on supported devices.") },
+            trailingContent = {
+                Switch(checked = aiDescriptionsState, onCheckedChange = { newValue ->
+                    viewModel.setAiDescriptionsEnabled(newValue)
                 })
             },
             colors = androidx.compose.material3.ListItemDefaults.colors()
