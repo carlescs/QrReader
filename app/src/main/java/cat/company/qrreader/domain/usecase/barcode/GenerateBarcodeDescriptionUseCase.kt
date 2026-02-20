@@ -192,7 +192,7 @@ open class GenerateBarcodeDescriptionUseCase {
         val jsonPayload = extractJsonPayload(rawText)
         val jsonDescription = jsonPayload?.let {
             try {
-                JSONObject(it).getString("description").trim().trim('"')
+                JSONObject(it).getString("description").trim().removeSurrounding("\"")
             } catch (e: JSONException) {
                 Log.w(TAG, "JSON parsing failed, using raw text: ${e.message}")
                 null
