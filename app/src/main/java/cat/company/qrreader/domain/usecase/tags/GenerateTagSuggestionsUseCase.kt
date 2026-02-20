@@ -170,14 +170,7 @@ open class GenerateTagSuggestionsUseCase {
             }
 
             // Parse JSON response; fall back to comma-split for robustness
-            val tagNames: List<String> = try {
-                val json = JSONObject(text)
-                val array = json.getJSONArray("tags")
-                (0 until array.length()).map { array.getString(it).trim() }
-            } catch (e: JSONException) {
-                Log.w(TAG, "JSON parsing failed, falling back to comma-split: ${e.message}")
-                text.split(",").map { it.trim() }
-            }
+            val tagNames = parseTagNames(text)
 
             // Parse the response into tag suggestions
             val suggestions = tagNames
@@ -244,9 +237,38 @@ open class GenerateTagSuggestionsUseCase {
                                     }
                                     is DownloadStatus.DownloadFailed -> {
                                         Log.e(TAG, "✗ Gemini Nano download failed: ${downloadStatus.e.message}", downloadStatus.e)
-                                    }
-                                }
-                            }
+        }
+    }
+
+    internal fun parseTagNames(rawText: String): List<String> {
+        val jsonPayload = extractJsonPayload(rawText)
+        val jsonTags = jsonPayload?.let {
+            try {
+                val json = JSONObject(it)
+                val array = json.getJSONArray("tags")
+                (0 until array.length()).map { index -> array.getString(index).trim().trim('"') }
+            } catch (e: JSONException) {
+                Log.w(TAG, "JSON parsing failed, falling back to raw text: ${e.message}")
+                emptyList()
+            }
+        }.orEmpty()
+
+        if (jsonTags.isNotEmpty()) return jsonTags
+
+        return rawText.split(",").map { it.trim().trim('"') }
+    }
+
+    internal fun extractJsonPayload(text: String): String? {
+        val cleaned = text
+            .replace("```json", "```", ignoreCase = true)
+            .trim()
+        val withoutFence = cleaned.removeSurrounding("```").trim()
+        val candidate = if (withoutFence.isNotEmpty()) withoutFence else cleaned
+        val start = candidate.indexOf('{')
+        val end = candidate.lastIndexOf('}')
+        return if (start in 0 until end) candidate.substring(start, end + 1) else null
+    }
+}
                     } catch (e: Exception) {
                         Log.e(TAG, "✗ Failed to start Gemini Nano download", e)
                     }

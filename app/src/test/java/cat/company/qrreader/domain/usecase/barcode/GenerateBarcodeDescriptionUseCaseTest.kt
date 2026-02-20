@@ -1,6 +1,7 @@
 package cat.company.qrreader.domain.usecase.barcode
 
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,5 +30,29 @@ class GenerateBarcodeDescriptionUseCaseTest {
         
         // Expected to fail with UnsupportedOperationException or model unavailable
         assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun parseDescriptionText_handlesCodeFenceJson() = runTest {
+        val useCase = GenerateBarcodeDescriptionUseCase()
+        val raw = """
+            ```json
+            {"description": "Example site with tutorials."}
+            ```
+        """.trimIndent()
+
+        val description = useCase.parseDescriptionText(raw)
+
+        assertEquals("Example site with tutorials.", description)
+    }
+
+    @Test
+    fun parseDescriptionText_fallsBackToRawText() = runTest {
+        val useCase = GenerateBarcodeDescriptionUseCase()
+        val raw = "Plain text response without JSON"
+
+        val description = useCase.parseDescriptionText(raw)
+
+        assertEquals("Plain text response without JSON", description)
     }
 }

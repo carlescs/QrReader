@@ -167,13 +167,7 @@ open class GenerateBarcodeDescriptionUseCase {
             }
 
             // Parse JSON response; fall back to raw text for robustness
-            val rawDescription = try {
-                val json = JSONObject(text)
-                json.getString("description").trim()
-            } catch (e: JSONException) {
-                Log.w(TAG, "JSON parsing failed, using raw text: ${e.message}")
-                text
-            }
+            val rawDescription = parseDescriptionText(text)
 
             // Truncate if necessary and clean up
             val description = if (rawDescription.length > MAX_DESCRIPTION_LENGTH) {
@@ -192,5 +186,30 @@ open class GenerateBarcodeDescriptionUseCase {
     open fun cleanup() {
         // Model cleanup is handled automatically by ML Kit
         model = null
+    }
+
+    internal fun parseDescriptionText(rawText: String): String {
+        val jsonPayload = extractJsonPayload(rawText)
+        val jsonDescription = jsonPayload?.let {
+            try {
+                JSONObject(it).getString("description").trim().trim('"')
+            } catch (e: JSONException) {
+                Log.w(TAG, "JSON parsing failed, using raw text: ${e.message}")
+                null
+            }
+        }
+
+        return jsonDescription?.takeIf { it.isNotEmpty() } ?: rawText.trim()
+    }
+
+    internal fun extractJsonPayload(text: String): String? {
+        val cleaned = text
+            .replace("```json", "```", ignoreCase = true)
+            .trim()
+        val withoutFence = cleaned.removeSurrounding("```").trim()
+        val candidate = if (withoutFence.isNotEmpty()) withoutFence else cleaned
+        val start = candidate.indexOf('{')
+        val end = candidate.lastIndexOf('}')
+        return if (start in 0 until end) candidate.substring(start, end + 1) else null
     }
 }
