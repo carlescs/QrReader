@@ -12,6 +12,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -31,6 +32,12 @@ class QrCameraViewModel(
     }
     
     init {
+        // Observe AI generation setting and keep state in sync
+        viewModelScope.launch {
+            getAiGenerationEnabledUseCase().collectLatest { enabled ->
+                _uiState.update { it.copy(aiGenerationEnabled = enabled) }
+            }
+        }
         // Attempt to download Gemini Nano model on initialization, only if AI features are enabled
         viewModelScope.launch {
             try {
@@ -285,6 +292,7 @@ class QrCameraViewModel(
  * State for the barcode
  * 
  * @property lastBarcode List of scanned barcodes
+ * @property aiGenerationEnabled Whether AI features are enabled in settings
  * @property barcodeTags Map of barcode hash to its suggested tags
  * @property isLoadingTags Set of barcode hashes that are currently loading tags
  * @property tagSuggestionErrors Map of barcode hash to error messages
@@ -294,6 +302,7 @@ class QrCameraViewModel(
  */
 data class BarcodeState(
     var lastBarcode: List<Barcode>? = null,
+    val aiGenerationEnabled: Boolean = true,
     val barcodeTags: Map<Int, List<SuggestedTagModel>> = emptyMap(),
     val isLoadingTags: Set<Int> = emptySet(),
     val tagSuggestionErrors: Map<Int, String> = emptyMap(),

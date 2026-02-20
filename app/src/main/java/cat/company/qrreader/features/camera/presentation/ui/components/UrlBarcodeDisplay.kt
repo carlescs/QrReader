@@ -39,6 +39,7 @@ fun UrlBarcodeDisplay(
     barcode: Barcode,
     selectedTagNames: List<String> = emptyList(),
     aiGeneratedDescription: String? = null,
+    aiGenerationEnabled: Boolean = true,
     suggestedTags: List<cat.company.qrreader.domain.model.SuggestedTagModel> = emptyList(),
     isLoadingTags: Boolean = false,
     tagError: String? = null,
@@ -74,6 +75,7 @@ fun UrlBarcodeDisplay(
         suggestedTags = suggestedTags,
         isLoading = isLoadingTags,
         error = tagError,
+        aiGenerationEnabled = aiGenerationEnabled,
         onToggleTag = onToggleTag,
         modifier = Modifier
             .fillMaxWidth()
