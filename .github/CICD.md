@@ -98,9 +98,13 @@ Promotes to Production track (supports both flows):
 
 ## Deployment Flows
 
-The CI/CD pipeline supports **two flexible deployment paths** to accommodate different release scenarios:
+The CI/CD pipeline supports **two flexible deployment paths** to accommodate different release scenarios.
 
-Both flows can be triggered **automatically via tag push** (push a `v*.*.*` tag on master) or **manually via workflow_dispatch**.
+Releases are triggered in one of two ways:
+- **Via "Create Release" workflow** (recommended): GitHub Actions → "Create Release" → enter version → the pipeline starts automatically
+- **Via direct tag push**: `git tag v1.2.3 && git push origin v1.2.3` from your local machine
+
+> **⚠️ Note on tag push mechanism**: When the "Create Release" workflow creates a tag, it also explicitly triggers `android-ci-cd.yml` via the GitHub API (because GitHub prevents one workflow from triggering another via a `GITHUB_TOKEN` git push). A manual tag push from a local machine uses the `on.push.tags` trigger directly.
 
 ### Flow 1: Fast-Track (2-Tier) - **DEFAULT**
 ```
@@ -116,13 +120,19 @@ Code → CI → Alpha (Internal) → Production (Public)
 
 **Timeline:** 2-3 days (Alpha testing + Production approval)
 
-**How to Trigger (Automatic - Recommended):**
-1. Ensure your changes are on master
-2. Create and push a version tag: `git tag v1.2.3 && git push origin v1.2.3`
-3. Pipeline runs automatically: tests → build → sign → Alpha deploy
-4. Approve Production promotion when ready
+**How to Trigger (via Create Release - Recommended):**
+1. Ensure your changes are merged to master
+2. Navigate to: GitHub → Actions → "Create Release"
+3. Click "Run workflow" → enter version (e.g. `5.2.0`)
+4. The pipeline runs automatically: tests → build → sign → Alpha deploy
+5. Approve Production promotion when ready
 
-**How to Trigger (Manual - Alternative):**
+**How to Trigger (via direct tag push):**
+1. Push a tag from your local machine: `git tag v1.2.3 && git push origin v1.2.3`
+2. Pipeline runs automatically: tests → build → sign → Alpha deploy
+3. Approve Production promotion when ready
+
+**How to Trigger (Manual workflow_dispatch - Alternative):**
 1. Navigate to: GitHub → Actions → "Android CI/CD"
 2. Click "Run workflow" button
 3. Select branch (usually master)
@@ -146,8 +156,8 @@ Code → CI → Alpha (Internal) → Beta (External) → Production (Public)
 
 **Timeline:** 5-8 days (Alpha 2-3d + Beta 3-5d + Production approval)
 
-**How to Trigger (Automatic via tag push):**
-1. Push a `v*.*.*` tag on master — this automatically triggers Alpha **and** Beta deployment
+**How to Trigger (Automatic via Create Release or tag push):**
+1. Use "Create Release" workflow or push a `v*.*.*` tag — this automatically triggers Alpha **and** Beta deployment
 2. Approve Beta promotion (if configured)
 3. Approve Production promotion (self-approve if solo developer)
 
@@ -464,26 +474,43 @@ No additional configuration needed - Dependabot is ready to use!
 
 ## Deploying to Alpha Track
 
-The workflow supports deploying versions to the Alpha track in two ways:
-1. **Automatically**: Push a `v*.*.*` tag on master (recommended for releases)
-2. **Manually**: Trigger via workflow_dispatch from any branch (useful for testing feature branches)
+The workflow supports deploying versions to the Alpha track in three ways:
+1. **Via "Create Release" workflow** (recommended for releases): GitHub Actions → "Create Release" → enter version → pipeline starts automatically
+2. **Via direct tag push** (from local machine): `git tag v1.2.3 && git push origin v1.2.3` triggers the pipeline via `on.push.tags`
+3. **Manually**: Trigger via workflow_dispatch from any branch (useful for testing feature branches)
 
 This is useful for:
 - Testing features in production-like environment before merging
 - QA testing of specific feature branches or master
 - Beta testing with stakeholders
 
-### How to Deploy to Alpha (Automatic via Tag Push - Recommended)
+### How to Deploy to Alpha (via "Create Release" - Recommended)
+
+1. **Ensure your changes are merged to master**
+
+2. **Trigger "Create Release" workflow**:
+   - Go to GitHub repository → **Actions** tab
+   - Select **"Create Release"** workflow from the left sidebar
+   - Click **"Run workflow"** button
+   - Enter the version (e.g. `5.2.0` or `v5.2.0`)
+   - Click **"Run workflow"** button
+
+3. **The pipeline starts automatically**:
+   - Create Release creates the tag and triggers Android CI/CD
+   - Tests → Build → Sign → Deploy to Alpha track
+   - Version name will be clean (e.g., `5.2.0`)
+
+### How to Deploy to Alpha (via direct tag push)
 
 1. **Ensure your changes are on master** and ready for release
 
-2. **Create and push a version tag**:
+2. **Create and push a version tag from your local machine**:
    ```bash
    git tag v1.2.3
    git push origin v1.2.3
    ```
 
-3. **The pipeline runs automatically**:
+3. **The pipeline runs automatically** via `on.push.tags`:
    - Tests → Build → Sign → Deploy to Alpha track
    - Version name will be clean (e.g., `5.2.0`)
 
