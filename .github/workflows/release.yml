@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   create-tag:
@@ -23,6 +24,7 @@ jobs:
           fetch-depth: 0
 
       - name: Create and push tag
+        id: create_tag
         run: |
           VERSION="${{ github.event.inputs.version }}"
           # Ensure version starts with 'v'
@@ -43,4 +45,15 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag "$VERSION"
           git push origin "$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "✅ Tag $VERSION created and pushed successfully"
+
+      - name: Trigger CI/CD pipeline
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.create_tag.outputs.version }}"
+          gh workflow run android-ci-cd.yml \
+            --ref "$VERSION" \
+            --field upload_to_play_store=true
+          echo "✅ CI/CD pipeline triggered for $VERSION"
