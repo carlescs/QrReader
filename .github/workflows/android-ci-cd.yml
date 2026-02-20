@@ -396,7 +396,7 @@ jobs:
     needs: [release, beta]
     # Run after release (2-tier: Alpha → Production) OR after beta (3-tier: Alpha → Beta → Production)
     # Skip beta if it didn't run (always() allows this job even if beta was skipped)
-    # Only runs when workflow_dispatch triggered (no automatic promotion)
+    # Only master branch can deploy to Production (verified by git in "Verify master branch" step below)
     if: |
       always() && 
       needs.release.result == 'success' &&
@@ -412,6 +412,22 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Verify master branch for Production deployment
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            if [ "${{ github.ref }}" != "refs/heads/master" ]; then
+              echo "::error::Production deployment via workflow_dispatch is only allowed from the master branch (got: ${{ github.ref }})."
+              exit 1
+            fi
+          elif [ "${{ github.event_name }}" == "push" ]; then
+            git fetch origin master --quiet
+            if ! git merge-base --is-ancestor "${{ github.sha }}" origin/master 2>/dev/null; then
+              echo "::error::Production deployment is only allowed for commits that are on the master branch (sha: ${{ github.sha }})."
+              exit 1
+            fi
+          fi
+          echo "✅ Branch verification passed — proceeding with Production deployment."
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
