@@ -75,6 +75,7 @@
     <string name="choose_color">Choose Color</string>
 
     <!-- Settings -->
+    <string name="settings_section_ai">AI</string>
     <string name="hide_tagged_when_no_tag_selected">Hide tagged elements when no tag selected</string>
     <string name="hide_tagged_description">When enabled, elements that have any tag will be hidden if the user hasn\'t selected a tag in the history filter.</string>
     <string name="search_across_all_tags">Search across all tags when filtering</string>
