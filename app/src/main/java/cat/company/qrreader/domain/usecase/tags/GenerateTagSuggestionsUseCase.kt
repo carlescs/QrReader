@@ -255,9 +255,43 @@ open class GenerateTagSuggestionsUseCase {
 
         if (jsonTags.isNotEmpty()) return jsonTags
 
-        return rawText.split(",").map { it.trim().trim('"') }
+        return splitTagsRespectingQuotes(rawText).map { it.trim().trim('"') }
     }
 
+    /**
+     * Split a comma-separated list of tags while preserving commas that appear inside quotes.
+     *
+     * Examples:
+     * - Work, Projects, Company -> ["Work", "Projects", "Company"]
+     * - "Work, personal", Projects -> ["\"Work, personal\"", "Projects"]
+     */
+    private fun splitTagsRespectingQuotes(text: String): List<String> {
+        if (text.isEmpty()) return emptyList()
+
+        val result = mutableListOf<String>()
+        val current = StringBuilder()
+        var inQuotes = false
+
+        text.forEach { ch ->
+            when {
+                ch == '"' -> {
+                    inQuotes = !inQuotes
+                    current.append(ch)
+                }
+                ch == ',' && !inQuotes -> {
+                    result.add(current.toString())
+                    current.setLength(0)
+                }
+                else -> current.append(ch)
+            }
+        }
+
+        if (current.isNotEmpty()) {
+            result.add(current.toString())
+        }
+
+        return result
+    }
     internal fun extractJsonPayload(text: String): String? {
         val cleaned = text
             .replace("```json", "```", ignoreCase = true)
