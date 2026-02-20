@@ -37,6 +37,7 @@
     <string name="other">Other</string>
     <string name="email_label">eMail: </string>
     <string name="copied">Copied!</string>
+    <string name="no_barcode_value">No</string>
 
     <!-- Code Creator -->
     <string name="enter_text_to_encode">Enter text to encode</string>
@@ -66,6 +67,9 @@
     <string name="tag_name">Tag name</string>
     <string name="color_label">Color</string>
     <string name="clear_filter">Clear filter</string>
+    <string name="no_saved_tags">No saved tags!</string>
+    <string name="edit_tag">Edit tag</string>
+    <string name="delete_tag">Delete tag</string>
 
     <!-- Color picker -->
     <string name="choose_color">Choose Color</string>
@@ -95,6 +99,7 @@
 
     <!-- AI features -->
     <string name="ai_generated">AI Generated</string>
+    <string name="ai_description_formatted">✨ %s</string>
     <string name="generating_description">Generating description\u2026</string>
     <string name="not_available_on_device">Not available on this device</string>
     <string name="ai_model_downloading">AI model downloading\u2026</string>

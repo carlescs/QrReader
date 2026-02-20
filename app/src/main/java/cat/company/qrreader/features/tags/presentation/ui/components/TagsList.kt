@@ -13,7 +13,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.features.tags.presentation.TagsViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -33,7 +35,7 @@ fun TagsList(viewModel: TagsViewModel = koinViewModel(), selectedTagId: Int?, se
     if (items.isEmpty()) {
         Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
             Text(
-                text = "No saved tags!",
+                text = stringResource(R.string.no_saved_tags),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         }
