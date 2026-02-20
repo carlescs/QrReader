@@ -121,7 +121,8 @@ fun OtherContent(
             
             // Get or create tags
             val tags = if (selectedTagNames.isNotEmpty()) {
-                getOrCreateTagsByNameUseCase(selectedTagNames)
+                val tagColors = suggestedTags.associate { it.name to it.color }
+                getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
             } else {
                 emptyList()
             }
