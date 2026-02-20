@@ -8,6 +8,8 @@ import com.google.mlkit.genai.prompt.TextPart
 import com.google.mlkit.genai.prompt.generateContentRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Use case to generate a human-readable description for a barcode using ML Kit GenAI
@@ -122,7 +124,8 @@ open class GenerateBarcodeDescriptionUseCase {
                 - For products: mention the product type or brand if recognizable
                 - For contacts, Wi-Fi, events, or other types: describe what the barcode provides access to
                 
-                Return ONLY the description, no labels or extra formatting.
+                Respond ONLY with valid JSON in this exact format, nothing else:
+                {"description": "Your description here."}
             """.trimIndent()
             
             Log.d(TAG, "Generating description for: $barcodeContent ($barcodeDefinition)")
@@ -149,11 +152,20 @@ open class GenerateBarcodeDescriptionUseCase {
                 )
             }
 
-            // Truncate if necessary and clean up
-            val description = if (text.length > MAX_DESCRIPTION_LENGTH) {
-                text.take(MAX_DESCRIPTION_LENGTH - 3) + "..."
-            } else {
+            // Parse JSON response; fall back to raw text for robustness
+            val rawDescription = try {
+                val json = JSONObject(text)
+                json.getString("description").trim()
+            } catch (e: JSONException) {
+                Log.w(TAG, "JSON parsing failed, using raw text: ${e.message}")
                 text
+            }
+
+            // Truncate if necessary and clean up
+            val description = if (rawDescription.length > MAX_DESCRIPTION_LENGTH) {
+                rawDescription.take(MAX_DESCRIPTION_LENGTH - 3) + "..."
+            } else {
+                rawDescription
             }
 
             Result.success(description)

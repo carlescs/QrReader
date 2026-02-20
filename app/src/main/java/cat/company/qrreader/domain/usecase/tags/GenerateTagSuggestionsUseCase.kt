@@ -11,6 +11,8 @@ import com.google.mlkit.genai.prompt.generateContentRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.withContext
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Use case to generate tag suggestions for a barcode using ML Kit GenAI
@@ -126,7 +128,8 @@ open class GenerateTagSuggestionsUseCase {
                 - Capitalize each tag (e.g., "Loyalty Card", "Online Order")
                 - Avoid generic tags like "Barcode", "Item", or "Other"
                 
-                Return ONLY comma-separated tag names, nothing else. Example: Shopping, Loyalty Card, Grocery
+                Respond ONLY with valid JSON in this exact format, nothing else:
+                {"tags": ["Tag1", "Tag2", "Tag3"]}
             """.trimIndent()
             
             Log.d(TAG, "Generating tags for: $barcodeContent ($barcodeDefinition)")
@@ -138,7 +141,7 @@ open class GenerateTagSuggestionsUseCase {
                 temperature = 0.3f
                 topK = 10
                 candidateCount = 1
-                maxOutputTokens = 50
+                maxOutputTokens = 60
             }
             
             // Generate content synchronously (suspend function)
@@ -153,16 +156,22 @@ open class GenerateTagSuggestionsUseCase {
                 )
             }
 
+            // Parse JSON response; fall back to comma-split for robustness
+            val tagNames: List<String> = try {
+                val json = JSONObject(text)
+                val array = json.getJSONArray("tags")
+                (0 until array.length()).map { array.getString(it).trim() }
+            } catch (e: JSONException) {
+                Log.w(TAG, "JSON parsing failed, falling back to comma-split: ${e.message}")
+                text.split(",").map { it.trim() }
+            }
+
             // Parse the response into tag suggestions
-            val suggestions = text
-                .split(",")
-                .asSequence()
-                .map { it.trim() }
+            val suggestions = tagNames
                 .filter { it.isNotEmpty() && it.length <= 30 }
                 .distinct()
                 .take(3)
                 .map { SuggestedTagModel(name = it, isSelected = true) }
-                .toList()
 
             if (suggestions.isEmpty()) {
                 return@withContext Result.failure(
