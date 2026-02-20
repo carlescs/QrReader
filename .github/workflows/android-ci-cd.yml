@@ -251,6 +251,79 @@ jobs:
           fi
           echo "Bundle found: $(ls -lh ./bundle/app-release.aab)"
 
+      - name: Generate AI Release Notes
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python3 << 'PYTHON_EOF'
+          import json
+          import os
+          import subprocess
+          import sys
+          import urllib.request
+          import urllib.error
+
+          # Get commits since the previous tag (or last 20 if no prior tag)
+          try:
+              tags = subprocess.check_output(
+                  ['git', 'tag', '--sort=-version:refname'], text=True
+              ).strip().split('\n')
+              prev_tag = tags[0] if tags and tags[0].strip() else ''
+          except Exception:
+              prev_tag = ''
+
+          if prev_tag:
+              commits_raw = subprocess.getoutput(
+                  f"git log {prev_tag}..HEAD --pretty=format:'- %s' --no-merges"
+              )
+          else:
+              commits_raw = subprocess.getoutput(
+                  "git log --pretty=format:'- %s' --no-merges -20"
+              )
+
+          gemini_api_key = os.environ.get('GEMINI_API_KEY', '').strip()
+
+          if not gemini_api_key or not commits_raw.strip():
+              notes = commits_raw.strip() or 'Bug fixes and improvements.'
+          else:
+              prompt = (
+                  'Write concise release notes for a QR code scanner Android app based on these '
+                  'commits. Focus on user-visible improvements. Keep under 400 characters. '
+                  'Plain text only, no markdown.\n\nCommits:\n' + commits_raw
+              )
+              payload = json.dumps({
+                  'contents': [{'parts': [{'text': prompt}]}],
+                  'generationConfig': {
+                      # ~150 tokens ≈ 400 characters; low temperature for consistent output
+                      'maxOutputTokens': 150,
+                      'temperature': 0.4
+                  }
+              }).encode()
+              url = (
+                  'https://generativelanguage.googleapis.com/v1beta/models/'
+                  'gemini-1.5-flash:generateContent?key=' + gemini_api_key
+              )
+              try:
+                  req = urllib.request.Request(url, payload, {'Content-Type': 'application/json'})
+                  with urllib.request.urlopen(req, timeout=30) as resp:
+                      result = json.loads(resp.read())
+                  notes = result['candidates'][0]['content']['parts'][0]['text'].strip()
+              except Exception as e:
+                  print(f'AI generation failed: {e}', file=sys.stderr)
+                  notes = commits_raw.strip() or 'Bug fixes and improvements.'
+
+          # Google Play limits release notes to 500 characters; truncate at a word boundary
+          if len(notes) > 500:
+              notes = notes[:500].rsplit(' ', 1)[0]
+
+          os.makedirs('whatsnew', exist_ok=True)
+          with open('whatsnew/whatsnew-en-US', 'w') as f:
+              f.write(notes)
+
+          print('Generated release notes:')
+          print(notes)
+          PYTHON_EOF
+
       - name: Release to Google Play (Alpha track)
         uses: r0adkll/upload-google-play@v1.1.3
         with:
@@ -259,6 +332,7 @@ jobs:
           releaseFiles: ./bundle/app-release.aab
           track: alpha
           status: completed
+          releaseNotes: whatsnew/
 
   beta:
     name: Promote to Beta (Optional)
