@@ -118,7 +118,8 @@ open class GenerateBarcodeDescriptionUseCase {
             }
 
             val promptText = """
-                Describe this scanned barcode in 1-2 sentences (under $MAX_DESCRIPTION_LENGTH characters).
+                Generate a brief, helpful description (1-2 sentences, max $MAX_DESCRIPTION_LENGTH characters) for this barcode.
+                Explain what it is and what it might be used for.
                 Respond in ${languageNameForPrompt(language)}.
                 
                 Barcode content: "$barcodeContent"

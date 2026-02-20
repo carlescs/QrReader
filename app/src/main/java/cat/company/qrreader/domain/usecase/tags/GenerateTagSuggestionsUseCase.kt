@@ -119,7 +119,7 @@ open class GenerateTagSuggestionsUseCase {
             }
 
             val promptText = """
-                Suggest up to 3 short tags (1-2 words each) to categorize this scanned barcode.
+                Suggest up to 3 short, relevant tags (1-2 words each) for categorizing this barcode.
                 Respond in ${languageNameForPrompt(language)}.
                 
                 Barcode content: "$barcodeContent"
