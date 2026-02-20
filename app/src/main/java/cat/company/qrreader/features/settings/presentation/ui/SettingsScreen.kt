@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -56,6 +57,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     var showLanguageDialog by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
+        SettingsSectionHeader(title = stringResource(R.string.history))
         ListItem(
             headlineContent = { Text(text = stringResource(R.string.hide_tagged_when_no_tag_selected)) },
             supportingContent = { Text(text = stringResource(R.string.hide_tagged_description)) },
@@ -77,7 +79,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
             },
             colors = androidx.compose.material3.ListItemDefaults.colors()
         )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        SettingsSectionHeader(title = stringResource(R.string.settings_section_ai))
         ListItem(
             headlineContent = { Text(text = stringResource(R.string.ai_features)) },
             supportingContent = { Text(text = stringResource(R.string.ai_features_description)) },
@@ -115,6 +117,16 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
             onDismiss = { showLanguageDialog = false }
         )
     }
+}
+
+@Composable
+private fun SettingsSectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
+    )
 }
 
 @Composable
