@@ -264,9 +264,50 @@ open class GenerateTagSuggestionsUseCase {
             .trim()
         val withoutFence = cleaned.removeSurrounding("```").trim()
         val candidate = if (withoutFence.isNotEmpty()) withoutFence else cleaned
-        val start = candidate.indexOf('{')
-        val end = candidate.lastIndexOf('}')
-        return if (start in 0 until end) candidate.substring(start, end + 1) else null
+
+        val firstBraceIndex = candidate.indexOf('{')
+        if (firstBraceIndex == -1) {
+            return null
+        }
+
+        var depth = 0
+        var inString = false
+        var escapeNext = false
+
+        for (i in firstBraceIndex until candidate.length) {
+            val c = candidate[i]
+
+            if (escapeNext) {
+                escapeNext = false
+                continue
+            }
+
+            when (c) {
+                '\\' -> {
+                    // Escape the next character when inside a string
+                    if (inString) {
+                        escapeNext = true
+                    }
+                }
+                '"' -> {
+                    // Toggle string state when quote is not escaped
+                    inString = !inString
+                }
+                '{' -> if (!inString) {
+                    depth++
+                }
+                '}' -> if (!inString) {
+                    depth--
+                    if (depth == 0) {
+                        // Found the end of the first complete JSON object
+                        return candidate.substring(firstBraceIndex, i + 1)
+                    }
+                }
+            }
+        }
+
+        // No complete JSON object found
+        return null
     }
 }
                     } catch (e: Exception) {
