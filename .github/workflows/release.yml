@@ -1,9 +1,6 @@
 name: Create Release
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'  # Triggers on version tags like v5.2.0
   workflow_dispatch:
     inputs:
       version:
@@ -13,15 +10,10 @@ on:
 
 permissions:
   contents: write
-  packages: write
-
-env:
-  JAVA_VERSION: '21'
-  JAVA_DISTRIBUTION: 'temurin'
 
 jobs:
-  build-and-release:
-    name: Build and Create GitHub Release
+  create-tag:
+    name: Create Release Tag
     runs-on: ubuntu-latest
 
     steps:
@@ -30,8 +22,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create and push tag (manual trigger only)
-        if: github.event_name == 'workflow_dispatch'
+      - name: Create and push tag
         run: |
           VERSION="${{ github.event.inputs.version }}"
           # Ensure version starts with 'v'
@@ -44,7 +35,7 @@ jobs:
             exit 1
           fi
           # Fail early if the tag already exists
-          if git tag -l "$VERSION" | grep -q "^$VERSION$"; then
+          if git rev-parse -q --verify "refs/tags/$VERSION" > /dev/null 2>&1; then
             echo "::error::Tag $VERSION already exists. Use a different version number."
             exit 1
           fi
@@ -52,76 +43,4 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag "$VERSION"
           git push origin "$VERSION"
-          echo "TAG_NAME=$VERSION" >> $GITHUB_ENV
-
-      - name: Set tag name (push trigger)
-        if: github.event_name == 'push'
-        run: echo "TAG_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
-
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          distribution: ${{ env.JAVA_DISTRIBUTION }}
-          java-version: ${{ env.JAVA_VERSION }}
-
-      - name: Validate Gradle wrapper
-        uses: gradle/actions/wrapper-validation@v4
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
-
-      - name: Build Release Bundle (AAB)
-        run: ./gradlew bundleRelease
-
-      - name: Get version name
-        id: version
-        run: |
-          VERSION_NAME=$(./gradlew -q printVersionName | tail -n 1)
-          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION_NAME"
-
-      - name: Generate Release Notes
-        id: release_notes
-        run: |
-          # Get the previous tag (excluding the current one)
-          CURRENT_TAG="${{ env.TAG_NAME }}"
-          # Use a compatible approach that works with older Git versions
-          PREV_TAG=$(git tag --sort=-version:refname | grep -v "^$CURRENT_TAG$" | head -n 1)
-          
-          if [ -z "$PREV_TAG" ]; then
-            echo "release_notes=Initial release" >> $GITHUB_OUTPUT
-          else
-            # Generate changelog from commits between tags
-            CHANGELOG=$(git log $PREV_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges)
-            echo "release_notes<<EOF" >> $GITHUB_OUTPUT
-            echo "$CHANGELOG" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ env.TAG_NAME }}
-          name: Release ${{ steps.version.outputs.version_name }}
-          body: |
-            ## What's Changed
-            ${{ steps.release_notes.outputs.release_notes }}
-            
-            ## Installation
-            Download the APK below and install on your Android device.
-            
-            **Version Code:** Auto-generated from Git
-            **Version Name:** ${{ steps.version.outputs.version_name }}
-          files: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/bundle/release/*.aab
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "✅ Tag $VERSION created and pushed successfully"
