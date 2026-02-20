@@ -50,8 +50,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
         )
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         ListItem(
-            headlineContent = { Text(text = "AI features") },
-            supportingContent = { Text(text = "When enabled, AI-generated tag suggestions and barcode descriptions will be shown for scanned barcodes on supported devices.") },
+            headlineContent = { Text(text = stringResource(R.string.ai_features)) },
+            supportingContent = { Text(text = stringResource(R.string.ai_features_description)) },
             trailingContent = {
                 Switch(checked = aiGenerationState, onCheckedChange = { newValue ->
                     viewModel.setAiGenerationEnabled(newValue)

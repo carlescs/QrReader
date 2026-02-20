@@ -75,6 +75,8 @@
     <string name="hide_tagged_description">When enabled, elements that have any tag will be hidden if the user hasn\'t selected a tag in the history filter.</string>
     <string name="search_across_all_tags">Search across all tags when filtering</string>
     <string name="search_across_all_tags_description">When enabled, typing in the search field will search across all tags even if a particular tag is selected.</string>
+    <string name="ai_features">AI features</string>
+    <string name="ai_features_description">When enabled, AI-generated tag suggestions and barcode descriptions will be shown for scanned barcodes on supported devices.</string>
 
     <!-- AI features -->
     <string name="ai_generated">AI Generated</string>
