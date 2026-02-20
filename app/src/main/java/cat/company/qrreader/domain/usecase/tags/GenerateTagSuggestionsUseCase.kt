@@ -22,6 +22,26 @@ import org.json.JSONObject
 open class GenerateTagSuggestionsUseCase {
     companion object {
         private const val TAG = "GenerateTagSuggestions"
+
+        /**
+         * Extract JSON object from AI response text that may contain extra text.
+         * Handles cases like:
+         * - "Here's the JSON: {\"tags\": [...]}"
+         * - "{\"tags\": [...]} Hope this helps!"
+         * - Just the JSON: "{\"tags\": [...]}"
+         */
+        private fun extractJsonObject(text: String): String {
+            // Find first { and last } to extract JSON object
+            val startIndex = text.indexOf('{')
+            val endIndex = text.lastIndexOf('}')
+
+            if (startIndex == -1 || endIndex == -1 || startIndex >= endIndex) {
+                // No valid JSON braces found, return original text
+                return text
+            }
+
+            return text.substring(startIndex, endIndex + 1)
+        }
     }
     
     private var model: GenerativeModel? = null
@@ -171,11 +191,14 @@ open class GenerateTagSuggestionsUseCase {
 
             // Parse JSON response; fall back to comma-split for robustness
             val tagNames: List<String> = try {
-                val json = JSONObject(text)
+                // Extract JSON object from response (may contain extra text)
+                val jsonText = extractJsonObject(text)
+                val json = JSONObject(jsonText)
                 val array = json.getJSONArray("tags")
                 (0 until array.length()).map { array.getString(it).trim() }
             } catch (e: JSONException) {
                 Log.w(TAG, "JSON parsing failed, falling back to comma-split: ${e.message}")
+                Log.w(TAG, "Response text was: $text")
                 text.split(",").map { it.trim() }
             }
 

@@ -20,6 +20,26 @@ open class GenerateBarcodeDescriptionUseCase {
     companion object {
         private const val TAG = "GenerateBarcodeDesc"
         private const val MAX_DESCRIPTION_LENGTH = 200
+
+        /**
+         * Extract JSON object from AI response text that may contain extra text.
+         * Handles cases like:
+         * - "Here's the description: {\"description\": \"...\"}"
+         * - "{\"description\": \"...\"} I hope this helps!"
+         * - Just the JSON: "{\"description\": \"...\"}"
+         */
+        private fun extractJsonObject(text: String): String {
+            // Find first { and last } to extract JSON object
+            val startIndex = text.indexOf('{')
+            val endIndex = text.lastIndexOf('}')
+
+            if (startIndex == -1 || endIndex == -1 || startIndex >= endIndex) {
+                // No valid JSON braces found, return original text
+                return text
+            }
+
+            return text.substring(startIndex, endIndex + 1)
+        }
     }
     
     private var model: GenerativeModel? = null
@@ -168,10 +188,13 @@ open class GenerateBarcodeDescriptionUseCase {
 
             // Parse JSON response; fall back to raw text for robustness
             val rawDescription = try {
-                val json = JSONObject(text)
+                // Extract JSON object from response (may contain extra text)
+                val jsonText = extractJsonObject(text)
+                val json = JSONObject(jsonText)
                 json.getString("description").trim()
             } catch (e: JSONException) {
                 Log.w(TAG, "JSON parsing failed, using raw text: ${e.message}")
+                Log.w(TAG, "Response text was: $text")
                 text
             }
 
