@@ -88,6 +88,7 @@ Promotes to Production track (supports both flows):
 - **2-Tier Flow** (default): Promotes directly from Alpha to Production
 - **3-Tier Flow** (optional): Promotes from Beta to Production (when Beta job ran)
 - **Runs after release job** (or after Beta if 3-tier), whether triggered by tag push or manual dispatch
+- **Master branch only**: Production promotion is restricted to workflows triggered from the `master` branch (tag pushes from other branches or workflow_dispatch on non-master branches are skipped)
 - **Pauses and waits for manual approval** before executing (via GitHub Environment protection)
 - **Approval requirements**: Configurable based on team size
   - Solo developers: Can add themselves as single reviewer for self-approval
@@ -128,14 +129,17 @@ Code → CI → Alpha (Internal) → Production (Public)
 5. Approve Production promotion when ready
 
 **How to Trigger (via direct tag push):**
-1. Push a tag from your local machine: `git tag v1.2.3 && git push origin v1.2.3`
-2. Pipeline runs automatically: tests → build → sign → Alpha deploy (no Beta)
-3. Approve Production promotion when ready
+1. Ensure you are on the `master` branch (Production deploys are restricted to master)
+2. Push a tag from your local machine: `git tag v1.2.3 && git push origin v1.2.3`
+3. Pipeline runs automatically: tests → build → sign → Alpha deploy (no Beta)
+4. Approve Production promotion when ready
+
+> **⚠️ Branch restriction**: Production promotion is only allowed when the tag is pushed from the `master` branch. Tags pushed from other branches will build and deploy to Alpha, but the Production promotion step will be skipped.
 
 **How to Trigger (Manual workflow_dispatch - Alternative):**
 1. Navigate to: GitHub → Actions → "Android CI/CD"
 2. Click "Run workflow" button
-3. Select branch (usually master)
+3. Select the **master** branch (Production deploys are restricted to master)
 4. ✅ Check "Upload to Google Play Alpha"
 5. Click "Run workflow"
 6. Wait for Alpha testing validation
