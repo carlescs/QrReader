@@ -5,12 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeDescriptionUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.tags.GenerateTagSuggestionsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -21,7 +23,8 @@ import kotlinx.coroutines.launch
 class QrCameraViewModel(
     private val generateTagSuggestionsUseCase: GenerateTagSuggestionsUseCase,
     private val getAllTagsUseCase: GetAllTagsUseCase,
-    private val generateBarcodeDescriptionUseCase: GenerateBarcodeDescriptionUseCase
+    private val generateBarcodeDescriptionUseCase: GenerateBarcodeDescriptionUseCase,
+    private val getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase
 ) : ViewModel() {
     
     companion object {
@@ -29,11 +32,19 @@ class QrCameraViewModel(
     }
     
     init {
-        // Attempt to download Gemini Nano model on initialization
+        // Observe AI generation setting and keep state in sync
+        viewModelScope.launch {
+            getAiGenerationEnabledUseCase().collectLatest { enabled ->
+                _uiState.update { it.copy(aiGenerationEnabled = enabled) }
+            }
+        }
+        // Attempt to download Gemini Nano model on initialization, only if AI features are enabled
         viewModelScope.launch {
             try {
-                Log.d(TAG, "Checking Gemini Nano model availability")
-                generateTagSuggestionsUseCase.downloadModelIfNeeded()
+                if (getAiGenerationEnabledUseCase().first()) {
+                    Log.d(TAG, "Checking Gemini Nano model availability")
+                    generateTagSuggestionsUseCase.downloadModelIfNeeded()
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Error during model download check", e)
             }
@@ -60,6 +71,8 @@ class QrCameraViewModel(
                 
                 // Generate tag suggestions
                 viewModelScope.launch {
+                    if (!getAiGenerationEnabledUseCase().first()) return@launch
+
                     // Mark this barcode as loading tags
                     _uiState.update { state ->
                         state.copy(isLoadingTags = state.isLoadingTags + barcodeHash)
@@ -110,6 +123,8 @@ class QrCameraViewModel(
                 
                 // Generate description
                 viewModelScope.launch {
+                    if (!getAiGenerationEnabledUseCase().first()) return@launch
+
                     // Mark this barcode as loading description
                     _uiState.update { state ->
                         state.copy(isLoadingDescriptions = state.isLoadingDescriptions + barcodeHash)
@@ -277,6 +292,7 @@ class QrCameraViewModel(
  * State for the barcode
  * 
  * @property lastBarcode List of scanned barcodes
+ * @property aiGenerationEnabled Whether AI features are enabled in settings
  * @property barcodeTags Map of barcode hash to its suggested tags
  * @property isLoadingTags Set of barcode hashes that are currently loading tags
  * @property tagSuggestionErrors Map of barcode hash to error messages
@@ -286,6 +302,7 @@ class QrCameraViewModel(
  */
 data class BarcodeState(
     var lastBarcode: List<Barcode>? = null,
+    val aiGenerationEnabled: Boolean = true,
     val barcodeTags: Map<Int, List<SuggestedTagModel>> = emptyMap(),
     val isLoadingTags: Set<Int> = emptySet(),
     val tagSuggestionErrors: Map<Int, String> = emptyMap(),

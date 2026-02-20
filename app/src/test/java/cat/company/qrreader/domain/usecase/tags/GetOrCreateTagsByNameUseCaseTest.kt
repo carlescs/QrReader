@@ -132,4 +132,41 @@ class GetOrCreateTagsByNameUseCaseTest {
         assertTrue(result.isEmpty())
         assertTrue(fakeTagRepository.insertedTags.isEmpty())
     }
+
+    @Test
+    fun invoke_newTagWithProvidedColor_usesProvidedColor() = runTest {
+        val tagColors = mapOf("NewTag" to "#FF5733")
+
+        val result = useCase(listOf("NewTag"), tagColors)
+
+        assertEquals(1, result.size)
+        assertEquals("NewTag", result[0].name)
+        assertEquals("#FF5733", result[0].color)
+        assertEquals(1, fakeTagRepository.insertedTags.size)
+        assertEquals("#FF5733", fakeTagRepository.insertedTags[0].color)
+    }
+
+    @Test
+    fun invoke_newTagWithoutProvidedColor_usesDefaultColor() = runTest {
+        val result = useCase(listOf("NewTag"), emptyMap())
+
+        assertEquals(1, result.size)
+        assertEquals("NewTag", result[0].name)
+        assertEquals("#2196F3", result[0].color)
+    }
+
+    @Test
+    fun invoke_mixedTagsWithColors_usesProvidedColorForNewTag() = runTest {
+        val existingTag = TagModel(id = 1, name = "Work", color = "#00FF00")
+        fakeTagRepository.emitTags(listOf(existingTag))
+        val tagColors = mapOf("Work" to "#AABBCC", "Personal" to "#FF5733")
+
+        val result = useCase(listOf("Work", "Personal"), tagColors)
+
+        assertEquals(2, result.size)
+        // Existing tag keeps its original color
+        assertEquals("#00FF00", result[0].color)
+        // New tag uses the provided color
+        assertEquals("#FF5733", result[1].color)
+    }
 }

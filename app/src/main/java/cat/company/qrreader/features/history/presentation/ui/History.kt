@@ -36,8 +36,10 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cat.company.qrreader.events.SharedEvents
 import cat.company.qrreader.features.history.presentation.HistoryViewModel
@@ -282,7 +284,7 @@ private fun SearchBarInputField(
         expanded = searchActive,
         onExpandedChange = onSearchActiveChange,
         placeholder = {
-            Text("Search barcodes, titles, descriptions", maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(stringResource(R.string.search_placeholder), maxLines = 1, overflow = TextOverflow.Ellipsis)
         },
         leadingIcon = {
             SearchBarLeadingIcon(
@@ -333,9 +335,9 @@ private fun SearchBarLeadingIcon(
     ) {
         Crossfade(targetState = searchActive, animationSpec = tween(durationMillis = 180)) { expanded ->
             if (expanded) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Cancel search")
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cancel_search))
             } else {
-                Icon(imageVector = Icons.Filled.Search, contentDescription = "Open search")
+                Icon(imageVector = Icons.Filled.Search, contentDescription = stringResource(R.string.open_search))
             }
         }
     }
@@ -358,7 +360,7 @@ private fun SearchBarTrailingIcon(
 ) {
     if (query.isNotEmpty()) {
         IconButton(onClick = onClear) {
-            Icon(imageVector = Icons.Filled.Close, contentDescription = "Clear search")
+            Icon(imageVector = Icons.Filled.Close, contentDescription = stringResource(R.string.clear_search))
         }
     }
 }
@@ -414,7 +416,7 @@ private fun EmptySearchState(query: String) {
         horizontalAlignment = CenterHorizontally
     ) {
         Text(
-            text = if (query.isBlank()) "Start typing to search" else "No results",
+            text = if (query.isBlank()) stringResource(R.string.start_typing_to_search) else stringResource(R.string.no_results),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -566,7 +568,7 @@ private fun HistoryResults(
 @Composable
 private fun EmptyResultsState(query: String) {
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
-        val msg = if (query.isBlank()) "No saved barcodes!" else "No results"
+        val msg = if (query.isBlank()) stringResource(R.string.no_saved_barcodes) else stringResource(R.string.no_results)
         Text(text = msg, modifier = Modifier.align(CenterHorizontally), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }

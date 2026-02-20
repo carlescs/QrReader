@@ -18,8 +18,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cat.company.qrreader.R
 import androidx.compose.ui.window.Dialog
 import cat.company.qrreader.utils.Utils
 import com.godaddy.android.colorpicker.ClassicColorPicker
@@ -43,7 +45,7 @@ fun ColorPickerDialog(colorDialogVisible: MutableState<Boolean>, color:String, s
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     Text(
-                        text = "Chose Color",
+                        text = stringResource(R.string.choose_color),
                         fontSize = 24.sp,
                         modifier = Modifier.padding(PaddingValues(bottom = 16.dp))
                     )
@@ -57,13 +59,13 @@ fun ColorPickerDialog(colorDialogVisible: MutableState<Boolean>, color:String, s
                         TextButton(onClick = {
                             colorDialogVisible.value = false
                         }) {
-                            Text(text = "Cancel")
+                            Text(text = stringResource(R.string.cancel))
                         }
                         TextButton(onClick = {
                             selectColor(Utils.colorToString(selectedColor.value.toColor()))
                             colorDialogVisible.value = false
                         },) {
-                            Text(text = "Select")
+                            Text(text = stringResource(R.string.select))
                         }
                     }
                 }

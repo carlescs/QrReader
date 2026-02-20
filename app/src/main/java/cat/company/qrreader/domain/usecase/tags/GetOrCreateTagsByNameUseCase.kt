@@ -14,9 +14,14 @@ class GetOrCreateTagsByNameUseCase(
     /**
      * Get or create tags by name
      * @param tagNames List of tag names to get or create
+     * @param tagColors Optional map of tag name to color for new tags. If a name is not found
+     *                  in this map, the default color (#2196F3) will be used.
      * @return List of TagModel (existing or newly created)
      */
-    suspend operator fun invoke(tagNames: List<String>): List<TagModel> {
+    suspend operator fun invoke(
+        tagNames: List<String>,
+        tagColors: Map<String, String> = emptyMap()
+    ): List<TagModel> {
         val existingTags = tagRepository.getAllTags().first()
         val result = mutableListOf<TagModel>()
         
@@ -32,10 +37,10 @@ class GetOrCreateTagsByNameUseCase(
             if (existingTag != null) {
                 result.add(existingTag)
             } else {
-                // Create new tag with default color (blue)
+                // Create new tag with provided color or default color (blue)
                 val newTag = TagModel(
                     name = normalizedName,
-                    color = "#2196F3" // Material Blue 500
+                    color = tagColors[normalizedName] ?: "#2196F3" // Use provided color or Material Blue 500
                 )
                 tagRepository.insertTags(newTag)
                 // Get the newly created tag with its ID

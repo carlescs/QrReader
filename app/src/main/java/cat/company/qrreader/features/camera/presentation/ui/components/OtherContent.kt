@@ -14,11 +14,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
@@ -38,6 +40,7 @@ fun OtherContent(
     barcode: Barcode,
     selectedTagNames: List<String> = emptyList(),
     aiGeneratedDescription: String? = null,
+    aiGenerationEnabled: Boolean = true,
     suggestedTags: List<cat.company.qrreader.domain.model.SuggestedTagModel> = emptyList(),
     isLoadingTags: Boolean = false,
     tagError: String? = null,
@@ -51,7 +54,7 @@ fun OtherContent(
     val getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
     val coroutineScope= CoroutineScope(Dispatchers.IO)
     val saved = remember{ mutableStateOf(false) }
-    Title(title = if (barcode.format==Barcode.FORMAT_EAN_13) "EAN13" else "Other")
+    Title(title = if (barcode.format==Barcode.FORMAT_EAN_13) stringResource(R.string.ean13) else stringResource(R.string.other))
     when (barcode.format) {
         Barcode.FORMAT_EAN_13,
         Barcode.FORMAT_EAN_8,
@@ -82,6 +85,7 @@ fun OtherContent(
         suggestedTags = suggestedTags,
         isLoading = isLoadingTags,
         error = tagError,
+        aiGenerationEnabled = aiGenerationEnabled,
         onToggleTag = onToggleTag,
         modifier = Modifier
             .fillMaxWidth()
@@ -117,7 +121,8 @@ fun OtherContent(
             
             // Get or create tags
             val tags = if (selectedTagNames.isNotEmpty()) {
-                getOrCreateTagsByNameUseCase(selectedTagNames)
+                val tagColors = suggestedTags.associate { it.name to it.color }
+                getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
             } else {
                 emptyList()
             }
@@ -127,6 +132,6 @@ fun OtherContent(
         }
         saved.value=true
     }, enabled = !saved.value) {
-        Text(text = if (!saved.value) "Save" else "Saved")
+        Text(text = if (!saved.value) stringResource(R.string.save) else stringResource(R.string.saved))
     }
 }

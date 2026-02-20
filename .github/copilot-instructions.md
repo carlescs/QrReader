@@ -415,6 +415,88 @@ class FakeGenerateTagSuggestionsUseCase : GenerateTagSuggestionsUseCase() {
 5. **Cleanup models** in ViewModel `onCleared()`
 6. **Store AI outputs** to avoid regenerating on every view
 
+## Localization
+
+### Overview
+
+The app uses Android's standard string resource system for all user-facing text. Currently, only **English** is supported. All strings are stored in a single resource file:
+
+- **Location**: `app/src/main/res/values/strings.xml`
+- **No language variants** exist yet (no `values-es/`, `values-fr/`, etc.)
+
+### String Resource File Structure
+
+`strings.xml` organizes strings by feature using XML comments:
+
+```xml
+<!-- App -->
+<string name="app_name">QrReader</string>
+
+<!-- Navigation -->
+<string name="camera">Camera</string>
+
+<!-- Common actions -->
+<string name="cancel">Cancel</string>
+
+<!-- Camera / Permission -->
+<!-- Camera bottom sheet barcode types -->
+<!-- Code Creator -->
+<!-- History screen -->
+<!-- Edit barcode dialog -->
+<!-- Delete confirm dialog -->
+<!-- Tags -->
+<!-- Color picker -->
+<!-- Settings -->
+<!-- AI features -->
+<!-- Expandable text -->
+<!-- App shortcuts -->
+```
+
+Always add new strings under the appropriate feature comment block. If no suitable block exists, add a new one.
+
+### Referencing Strings in Compose
+
+Use `stringResource()` from `androidx.compose.ui.res` in all Composable functions:
+
+```kotlin
+import androidx.compose.ui.res.stringResource
+
+// In a Composable:
+Text(stringResource(R.string.search_placeholder))
+Icon(contentDescription = stringResource(R.string.camera))
+```
+
+**Never hardcode user-facing strings** directly in Composables or ViewModels. Always define them in `strings.xml`.
+
+### Dynamic AI Error String Mapping
+
+AI feature errors arrive as dynamic English strings from the ML Kit library. These are mapped to string resource IDs using `parseErrorMessageRes()` in `BarcodeDescriptionSection.kt`:
+
+```kotlin
+private fun parseErrorMessageRes(error: String): Int = when {
+    error.contains("not available on this device") -> R.string.not_available_on_device
+    error.contains("downloading") -> R.string.ai_model_downloading
+    error.contains("temporarily unavailable") -> R.string.temporarily_unavailable
+    else -> R.string.could_not_generate
+}
+```
+
+When adding new AI error cases, extend this `when` block and add the corresponding string to `strings.xml`.
+
+### Adding a New Language
+
+To add support for a new language, create a new resource directory and translate all strings:
+
+```
+app/src/main/res/
+├── values/
+│   └── strings.xml          # Default (English)
+└── values-es/
+    └── strings.xml          # Spanish translation
+```
+
+Android automatically selects the correct file based on the device locale. No code changes are needed beyond creating the translated file.
+
 ## Testing Guidelines
 
 ### Unit Tests (app/src/test/)
@@ -570,6 +652,14 @@ See [CICD.md](./CICD.md) for detailed setup instructions and best practices.
 5. **Update mappers** in `data/mapper/`
 6. **Update domain models** if needed
 7. **Write migration test**
+
+### Adding a New String Resource
+
+1. **Open** `app/src/main/res/values/strings.xml`
+2. **Find** the appropriate feature comment block (e.g., `<!-- History screen -->`)
+3. **Add** the new string entry: `<string name="my_new_string">My text</string>`
+4. **Reference** it in Compose: `stringResource(R.string.my_new_string)`
+5. **If adding an AI error string**, also update `parseErrorMessageRes()` in `BarcodeDescriptionSection.kt`
 
 ### Adding a New Dependency
 

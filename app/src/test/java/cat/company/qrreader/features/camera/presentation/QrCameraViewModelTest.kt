@@ -2,8 +2,10 @@ package cat.company.qrreader.features.camera.presentation
 
 import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.model.TagModel
+import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.repository.TagRepository
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeDescriptionUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.tags.GenerateTagSuggestionsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -39,6 +41,7 @@ class QrCameraViewModelTest {
     private lateinit var fakeGenerateBarcodeDescriptionUseCase: FakeGenerateBarcodeDescriptionUseCase
     private lateinit var fakeTagRepository: FakeTagRepository
     private lateinit var getAllTagsUseCase: GetAllTagsUseCase
+    private lateinit var getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase
     private lateinit var viewModel: QrCameraViewModel
     private val testDispatcher = StandardTestDispatcher()
 
@@ -106,6 +109,20 @@ class QrCameraViewModelTest {
             tagsFlow.value = tags
         }
     }
+
+    // Fake SettingsRepository implementation
+    private class FakeSettingsRepository(
+        aiGenerationEnabled: Boolean = true
+    ) : SettingsRepository {
+        override val hideTaggedWhenNoTagSelected = MutableStateFlow(false)
+        override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
+        override val searchAcrossAllTagsWhenFiltering = MutableStateFlow(false)
+        override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
+        override val aiGenerationEnabled = MutableStateFlow(aiGenerationEnabled)
+        override suspend fun setAiGenerationEnabled(value: Boolean) {
+            this.aiGenerationEnabled.value = value
+        }
+    }
     
     // Simple fake Barcode for testing - uses reflection to work around internal BarcodeSource
     private class FakeBarcode private constructor(
@@ -164,10 +181,13 @@ class QrCameraViewModelTest {
         fakeGenerateBarcodeDescriptionUseCase = FakeGenerateBarcodeDescriptionUseCase()
         fakeTagRepository = FakeTagRepository()
         getAllTagsUseCase = GetAllTagsUseCase(fakeTagRepository)
+        val fakeSettingsRepository = FakeSettingsRepository()
+        getAiGenerationEnabledUseCase = GetAiGenerationEnabledUseCase(fakeSettingsRepository)
         viewModel = QrCameraViewModel(
             fakeGenerateTagSuggestionsUseCase,
             getAllTagsUseCase,
-            fakeGenerateBarcodeDescriptionUseCase
+            fakeGenerateBarcodeDescriptionUseCase,
+            getAiGenerationEnabledUseCase
         )
     }
 
@@ -392,7 +412,7 @@ class QrCameraViewModelTest {
 
     @Test
     fun viewModel_canBeCreated_withValidDependencies() {
-        val vm = QrCameraViewModel(fakeGenerateTagSuggestionsUseCase, getAllTagsUseCase, fakeGenerateBarcodeDescriptionUseCase)
+        val vm = QrCameraViewModel(fakeGenerateTagSuggestionsUseCase, getAllTagsUseCase, fakeGenerateBarcodeDescriptionUseCase, getAiGenerationEnabledUseCase)
 
         assertNotNull(vm)
         assertNotNull(vm.uiState)

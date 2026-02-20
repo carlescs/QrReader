@@ -107,7 +107,7 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics) {
                         items.forEach { item ->
                             NavigationBarItem(
                                 icon = item.icon,
-                                label = { Text(item.label) },
+                                label = { Text(stringResource(item.labelRes)) },
                                 selected = activeRoute.value?.destination?.route == item.route,
                                 onClick = {
                                     navController.navigate(item.route){
@@ -180,7 +180,7 @@ private fun TopAppBar(
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 }
@@ -188,7 +188,7 @@ private fun TopAppBar(
                     IconButton(onClick = { SharedEvents.openSideBar?.invoke() }) {
                         Icon(
                             imageVector = Icons.Filled.Menu,
-                            contentDescription = "More",
+                            contentDescription = stringResource(R.string.more),
                         )
                     }
                 }
@@ -199,7 +199,7 @@ private fun TopAppBar(
             // Add settings icon visible when on history
             if (currentRoute.value?.destination?.route.equals("history")) {
                 IconButton(onClick = { navController.navigate("settings") }) {
-                    Icon(imageVector = Icons.Filled.Settings, contentDescription = "Settings")
+                    Icon(imageVector = Icons.Filled.Settings, contentDescription = stringResource(R.string.settings))
                 }
             }
             if (currentRoute.value?.destination?.route.equals("codeCreator")) {
@@ -213,12 +213,12 @@ private fun TopAppBar(
                         }
                     }
                 }, enabled = !shareDisabled.value) {
-                    Icon(Icons.Filled.Share, contentDescription = "Share")
+                    Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.share))
                 }
                 IconButton(onClick = { menuExpanded = !menuExpanded }) {
                     Icon(
                         imageVector = Icons.Filled.MoreVert,
-                        contentDescription = "More",
+                        contentDescription = stringResource(R.string.more),
                     )
                 }
                 DropdownMenu(
@@ -226,11 +226,11 @@ private fun TopAppBar(
                     onDismissRequest = { menuExpanded = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text(text = "Print") },
+                        text = { Text(text = stringResource(R.string.print)) },
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(id = R.drawable.baseline_print_24),
-                                contentDescription = "Print"
+                                contentDescription = stringResource(R.string.print)
                             )
                         },
                         onClick = {

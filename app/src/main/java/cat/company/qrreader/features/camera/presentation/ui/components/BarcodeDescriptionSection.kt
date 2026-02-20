@@ -1,5 +1,6 @@
 package cat.company.qrreader.features.camera.presentation.ui.components
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,9 +18,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import cat.company.qrreader.ui.components.common.ExpandableText
 
 /**
@@ -45,13 +48,13 @@ fun BarcodeDescriptionSection(
         ) {
             Icon(
                 imageVector = Icons.Default.AutoAwesome,
-                contentDescription = "AI Generated",
+                contentDescription = stringResource(R.string.ai_generated),
                 modifier = Modifier.size(16.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = "AI Description",
+                text = stringResource(R.string.ai_description),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -84,7 +87,7 @@ private fun LoadingDescription() {
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = "Generating description...",
+            text = stringResource(R.string.generating_description),
             style = MaterialTheme.typography.bodySmall,
             fontStyle = FontStyle.Italic,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -100,13 +103,13 @@ private fun ErrorDescription(error: String) {
     ) {
         Icon(
             imageVector = Icons.Default.Error,
-            contentDescription = "Error",
+            contentDescription = stringResource(R.string.error),
             modifier = Modifier.size(16.dp),
             tint = MaterialTheme.colorScheme.error
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
-            text = parseErrorMessage(error),
+            text = stringResource(parseErrorMessageRes(error)),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error,
             maxLines = 2,
@@ -127,17 +130,18 @@ private fun DescriptionText(description: String) {
 }
 
 /**
- * Parse error message to show user-friendly text
+ * Parse error message to show user-friendly text, returning a @StringRes Int resource ID
  */
-private fun parseErrorMessage(error: String): String {
+@StringRes
+private fun parseErrorMessageRes(error: String): Int {
     return when {
-        error.contains("not available on this device", ignoreCase = true) -> 
-            "Not available on this device"
-        error.contains("downloading", ignoreCase = true) || 
-        error.contains("download", ignoreCase = true) -> 
-            "AI model downloading..."
-        error.contains("temporarily unavailable", ignoreCase = true) -> 
-            "Temporarily unavailable"
-        else -> "Could not generate"
+        error.contains("not available on this device", ignoreCase = true) ->
+            R.string.not_available_on_device
+        error.contains("downloading", ignoreCase = true) ||
+        error.contains("download", ignoreCase = true) ->
+            R.string.ai_model_downloading
+        error.contains("temporarily unavailable", ignoreCase = true) ->
+            R.string.temporarily_unavailable
+        else -> R.string.could_not_generate
     }
 }
