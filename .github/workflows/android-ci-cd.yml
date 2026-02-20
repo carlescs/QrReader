@@ -130,13 +130,15 @@ jobs:
       - name: Setup service account for version fetching
         env:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-        if: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' }}
         run: |
-          echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > service-account.json
-          echo "✅ Service account configured for Google Play API version fetching"
+          if [ -n "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > service-account.json
+            echo "✅ Service account configured for Google Play API version fetching"
+          else
+            echo "⚠️ No service account configured, version fetching will use git fallback"
+          fi
 
       - name: Install Python dependencies for version fetching
-        if: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' }}
         run: |
           pip install --quiet google-api-python-client google-auth
           echo "✅ Python dependencies installed"
