@@ -2,9 +2,11 @@ package cat.company.qrreader.domain.usecase
 
 import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.GetSearchAcrossAllTagsUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +28,8 @@ class SettingsUseCasesTest {
             override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) { searchFlow.value = value }
             override val aiGenerationEnabled = aiFlow
             override suspend fun setAiGenerationEnabled(value: Boolean) { aiFlow.value = value }
+            override val aiLanguage = MutableStateFlow("en")
+            override suspend fun setAiLanguage(value: String) {}
         }
 
         val getHide = GetHideTaggedSettingUseCase(settingsRepo)
@@ -53,6 +57,8 @@ class SettingsUseCasesTest {
             override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
             override val aiGenerationEnabled = aiFlow
             override suspend fun setAiGenerationEnabled(value: Boolean) { aiFlow.value = value }
+            override val aiLanguage = MutableStateFlow("en")
+            override suspend fun setAiLanguage(value: String) {}
         }
 
         val getAi = GetAiGenerationEnabledUseCase(settingsRepo)
@@ -65,6 +71,32 @@ class SettingsUseCasesTest {
 
         setAi(true)
         assertEquals(true, getAi().first())
+    }
+
+    @Test
+    fun `get and set AI language`() = runTest {
+        val languageFlow = MutableStateFlow("en")
+        val settingsRepo = object : SettingsRepository {
+            override val hideTaggedWhenNoTagSelected = MutableStateFlow(false)
+            override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
+            override val searchAcrossAllTagsWhenFiltering = MutableStateFlow(false)
+            override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
+            override val aiGenerationEnabled = MutableStateFlow(true)
+            override suspend fun setAiGenerationEnabled(value: Boolean) {}
+            override val aiLanguage = languageFlow
+            override suspend fun setAiLanguage(value: String) { languageFlow.value = value }
+        }
+
+        val getLanguage = GetAiLanguageUseCase(settingsRepo)
+        val setLanguage = SetAiLanguageUseCase(settingsRepo)
+
+        assertEquals("en", getLanguage().first())
+
+        setLanguage("es")
+        assertEquals("es", getLanguage().first())
+
+        setLanguage("fr")
+        assertEquals("fr", getLanguage().first())
     }
 }
 

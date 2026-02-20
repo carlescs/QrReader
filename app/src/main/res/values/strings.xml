@@ -37,6 +37,7 @@
     <string name="other">Other</string>
     <string name="email_label">eMail: </string>
     <string name="copied">Copied!</string>
+    <string name="no_barcode_value">No</string>
 
     <!-- Code Creator -->
     <string name="enter_text_to_encode">Enter text to encode</string>
@@ -66,6 +67,9 @@
     <string name="tag_name">Tag name</string>
     <string name="color_label">Color</string>
     <string name="clear_filter">Clear filter</string>
+    <string name="no_saved_tags">No saved tags!</string>
+    <string name="edit_tag">Edit tag</string>
+    <string name="delete_tag">Delete tag</string>
 
     <!-- Color picker -->
     <string name="choose_color">Choose Color</string>
@@ -77,9 +81,25 @@
     <string name="search_across_all_tags_description">When enabled, typing in the search field will search across all tags even if a particular tag is selected.</string>
     <string name="ai_features">AI features</string>
     <string name="ai_features_description">When enabled, AI-generated tag suggestions and barcode descriptions will be shown for scanned barcodes on supported devices.</string>
+    <string name="ai_language">AI language</string>
+    <string name="ai_language_description">Language for AI-generated tags and descriptions</string>
+    <string name="change_language">Change</string>
+
+    <!-- AI language options -->
+    <string name="language_english">English</string>
+    <string name="language_spanish">Spanish</string>
+    <string name="language_french">French</string>
+    <string name="language_german">German</string>
+    <string name="language_italian">Italian</string>
+    <string name="language_portuguese">Portuguese</string>
+    <string name="language_chinese">Chinese</string>
+    <string name="language_japanese">Japanese</string>
+    <string name="language_korean">Korean</string>
+    <string name="language_arabic">Arabic</string>
 
     <!-- AI features -->
     <string name="ai_generated">AI Generated</string>
+    <string name="ai_description_formatted">✨ %s</string>
     <string name="generating_description">Generating description\u2026</string>
     <string name="not_available_on_device">Not available on this device</string>
     <string name="ai_model_downloading">AI model downloading\u2026</string>

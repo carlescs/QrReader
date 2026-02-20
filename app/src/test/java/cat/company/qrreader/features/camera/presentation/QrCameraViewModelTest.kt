@@ -6,6 +6,7 @@ import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.repository.TagRepository
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeDescriptionUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.tags.GenerateTagSuggestionsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -42,6 +43,7 @@ class QrCameraViewModelTest {
     private lateinit var fakeTagRepository: FakeTagRepository
     private lateinit var getAllTagsUseCase: GetAllTagsUseCase
     private lateinit var getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase
+    private lateinit var getAiLanguageUseCase: GetAiLanguageUseCase
     private lateinit var viewModel: QrCameraViewModel
     private val testDispatcher = StandardTestDispatcher()
 
@@ -54,7 +56,8 @@ class QrCameraViewModelTest {
             barcodeContent: String,
             barcodeType: String?,
             barcodeFormat: String?,
-            existingTags: List<String>
+            existingTags: List<String>,
+            language: String
         ): Result<List<SuggestedTagModel>> {
             return if (shouldSucceed) {
                 Result.success(suggestionsToReturn)
@@ -80,7 +83,8 @@ class QrCameraViewModelTest {
         override suspend fun invoke(
             barcodeContent: String,
             barcodeType: String?,
-            barcodeFormat: String?
+            barcodeFormat: String?,
+            language: String
         ): Result<String> {
             return if (shouldSucceed) {
                 Result.success(descriptionToReturn)
@@ -121,6 +125,10 @@ class QrCameraViewModelTest {
         override val aiGenerationEnabled = MutableStateFlow(aiGenerationEnabled)
         override suspend fun setAiGenerationEnabled(value: Boolean) {
             this.aiGenerationEnabled.value = value
+        }
+        override val aiLanguage = MutableStateFlow("en")
+        override suspend fun setAiLanguage(value: String) {
+            this.aiLanguage.value = value
         }
     }
     
@@ -183,11 +191,13 @@ class QrCameraViewModelTest {
         getAllTagsUseCase = GetAllTagsUseCase(fakeTagRepository)
         val fakeSettingsRepository = FakeSettingsRepository()
         getAiGenerationEnabledUseCase = GetAiGenerationEnabledUseCase(fakeSettingsRepository)
+        getAiLanguageUseCase = GetAiLanguageUseCase(fakeSettingsRepository)
         viewModel = QrCameraViewModel(
             fakeGenerateTagSuggestionsUseCase,
             getAllTagsUseCase,
             fakeGenerateBarcodeDescriptionUseCase,
-            getAiGenerationEnabledUseCase
+            getAiGenerationEnabledUseCase,
+            getAiLanguageUseCase
         )
     }
 
@@ -412,7 +422,7 @@ class QrCameraViewModelTest {
 
     @Test
     fun viewModel_canBeCreated_withValidDependencies() {
-        val vm = QrCameraViewModel(fakeGenerateTagSuggestionsUseCase, getAllTagsUseCase, fakeGenerateBarcodeDescriptionUseCase, getAiGenerationEnabledUseCase)
+        val vm = QrCameraViewModel(fakeGenerateTagSuggestionsUseCase, getAllTagsUseCase, fakeGenerateBarcodeDescriptionUseCase, getAiGenerationEnabledUseCase, getAiLanguageUseCase)
 
         assertNotNull(vm)
         assertNotNull(vm.uiState)

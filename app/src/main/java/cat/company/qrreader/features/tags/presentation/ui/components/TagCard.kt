@@ -23,8 +23,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.features.tags.presentation.TagsViewModel
 import cat.company.qrreader.ui.components.common.DeleteConfirmDialog
@@ -93,7 +95,7 @@ private fun TagCardContent(
         IconButton(onClick = { editTag.value = it }, modifier = Modifier.wrapContentSize()) {
             Icon(
                 imageVector = Icons.Filled.Edit,
-                contentDescription = "Edit tag",
+                contentDescription = stringResource(R.string.edit_tag),
                 tint = Utils.colorBasedOnBackground(color)
             )
         }
@@ -102,7 +104,7 @@ private fun TagCardContent(
         }, modifier = Modifier.wrapContentSize()) {
             Icon(
                 imageVector = Icons.Filled.Delete,
-                contentDescription = "Delete tag",
+                contentDescription = stringResource(R.string.delete_tag),
                 tint = Utils.colorBasedOnBackground(color)
             )
         }
