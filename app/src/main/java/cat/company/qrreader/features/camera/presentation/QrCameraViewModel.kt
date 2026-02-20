@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeDescriptionUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.tags.GenerateTagSuggestionsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -24,7 +25,8 @@ class QrCameraViewModel(
     private val generateTagSuggestionsUseCase: GenerateTagSuggestionsUseCase,
     private val getAllTagsUseCase: GetAllTagsUseCase,
     private val generateBarcodeDescriptionUseCase: GenerateBarcodeDescriptionUseCase,
-    private val getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase
+    private val getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase,
+    private val getAiLanguageUseCase: GetAiLanguageUseCase
 ) : ViewModel() {
     
     companion object {
@@ -83,12 +85,15 @@ class QrCameraViewModel(
                         val existingTags = getAllTagsUseCase().first()
                         val existingTagNames = existingTags.map { it.name }
                         
+                        val language = getAiLanguageUseCase().first()
+                        
                         // Generate suggestions with full barcode context
                         val result = generateTagSuggestionsUseCase(
                             barcodeContent = content,
                             barcodeType = barcodeType,
                             barcodeFormat = barcodeFormat,
-                            existingTags = existingTagNames
+                            existingTags = existingTagNames,
+                            language = language
                         )
                         
                         result.onSuccess { suggestions ->
@@ -131,10 +136,12 @@ class QrCameraViewModel(
                     }
                     
                     try {
+                        val language = getAiLanguageUseCase().first()
                         val result = generateBarcodeDescriptionUseCase(
                             barcodeContent = content,
                             barcodeType = barcodeType,
-                            barcodeFormat = barcodeFormat
+                            barcodeFormat = barcodeFormat,
+                            language = language
                         )
                         
                         result.onSuccess { description ->

@@ -2,6 +2,7 @@ package cat.company.qrreader.domain.usecase.tags
 
 import android.util.Log
 import cat.company.qrreader.domain.model.SuggestedTagModel
+import cat.company.qrreader.domain.usecase.languageNameForPrompt
 import com.google.mlkit.genai.common.DownloadStatus
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.Generation
@@ -26,7 +27,8 @@ open class GenerateTagSuggestionsUseCase {
         barcodeContent: String,
         barcodeType: String? = null,
         barcodeFormat: String? = null,
-        existingTags: List<String>
+        existingTags: List<String>,
+        language: String = "en"
     ): Result<List<SuggestedTagModel>> = withContext(Dispatchers.IO) {
         try {
             // Initialize model if not already done
@@ -116,6 +118,7 @@ open class GenerateTagSuggestionsUseCase {
 
             val promptText = """
                 Suggest up to 3 short, relevant tags (1-2 words each) for categorizing this barcode.
+                Respond in ${languageNameForPrompt(language)}.
                 
                 Barcode content: "$barcodeContent"
                 $barcodeContext

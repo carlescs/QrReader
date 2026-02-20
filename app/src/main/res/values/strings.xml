@@ -77,6 +77,21 @@
     <string name="search_across_all_tags_description">When enabled, typing in the search field will search across all tags even if a particular tag is selected.</string>
     <string name="ai_features">AI features</string>
     <string name="ai_features_description">When enabled, AI-generated tag suggestions and barcode descriptions will be shown for scanned barcodes on supported devices.</string>
+    <string name="ai_language">AI language</string>
+    <string name="ai_language_description">Language for AI-generated tags and descriptions</string>
+    <string name="change_language">Change</string>
+
+    <!-- AI language options -->
+    <string name="language_english">English</string>
+    <string name="language_spanish">Spanish</string>
+    <string name="language_french">French</string>
+    <string name="language_german">German</string>
+    <string name="language_italian">Italian</string>
+    <string name="language_portuguese">Portuguese</string>
+    <string name="language_chinese">Chinese</string>
+    <string name="language_japanese">Japanese</string>
+    <string name="language_korean">Korean</string>
+    <string name="language_arabic">Arabic</string>
 
     <!-- AI features -->
     <string name="ai_generated">AI Generated</string>
