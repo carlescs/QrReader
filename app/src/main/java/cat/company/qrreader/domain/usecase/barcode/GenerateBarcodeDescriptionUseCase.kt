@@ -208,8 +208,43 @@ open class GenerateBarcodeDescriptionUseCase {
             .trim()
         val withoutFence = cleaned.removeSurrounding("```").trim()
         val candidate = if (withoutFence.isNotEmpty()) withoutFence else cleaned
-        val start = candidate.indexOf('{')
-        val end = candidate.lastIndexOf('}')
-        return if (start in 0 until end) candidate.substring(start, end + 1) else null
+
+        val startIndex = candidate.indexOf('{')
+        if (startIndex == -1) {
+            return null
+        }
+
+        var depth = 0
+        var inString = false
+        var escape = false
+
+        for (i in startIndex until candidate.length) {
+            val c = candidate[i]
+
+            if (escape) {
+                escape = false
+                continue
+            }
+
+            when (c) {
+                '\\' -> if (inString) {
+                    escape = true
+                }
+                '"' -> {
+                    inString = !inString
+                }
+                '{' -> if (!inString) {
+                    depth++
+                }
+                '}' -> if (!inString && depth > 0) {
+                    depth--
+                    if (depth == 0) {
+                        return candidate.substring(startIndex, i + 1)
+                    }
+                }
+            }
+        }
+
+        return null
     }
 }
