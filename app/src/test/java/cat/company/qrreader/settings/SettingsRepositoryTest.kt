@@ -225,4 +225,41 @@ class SettingsRepositoryTest {
         repository.setAiGenerationEnabled(false)
         assertFalse(repository.aiGenerationEnabled.first())
     }
+
+    /**
+     * Test that AI language can be set to "en" and reads back correctly
+     */
+    @Test
+    fun aiLanguage_canBeSetToEnglish() = runTest {
+        repository.setAiLanguage("en")
+
+        val result = repository.aiLanguage.first()
+        assertEquals("en", result)
+    }
+
+    /**
+     * Test setting AI language to Spanish
+     */
+    @Test
+    fun setAiLanguage_updatesValue() = runTest {
+        repository.setAiLanguage("es")
+
+        val result = repository.aiLanguage.first()
+        assertEquals("es", result)
+    }
+
+    /**
+     * Test toggling AI language between multiple values
+     */
+    @Test
+    fun setAiLanguage_multipleValues_updatesCorrectly() = runTest {
+        repository.setAiLanguage("en")
+        assertEquals("en", repository.aiLanguage.first())
+
+        repository.setAiLanguage("fr")
+        assertEquals("fr", repository.aiLanguage.first())
+
+        repository.setAiLanguage("de")
+        assertEquals("de", repository.aiLanguage.first())
+    }
 }

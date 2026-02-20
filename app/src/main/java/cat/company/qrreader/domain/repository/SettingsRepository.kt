@@ -36,4 +36,15 @@ interface SettingsRepository {
      * Enable or disable AI-generated features (tag suggestions and barcode descriptions)
      */
     suspend fun setAiGenerationEnabled(value: Boolean)
+
+    /**
+     * The language code for AI-generated texts and tags (e.g., "en", "es", "fr").
+     * Defaults to "en" (English).
+     */
+    val aiLanguage: Flow<String>
+
+    /**
+     * Set the language for AI-generated texts and tags
+     */
+    suspend fun setAiLanguage(value: String)
 }

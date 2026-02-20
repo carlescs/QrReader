@@ -13,7 +13,9 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import cat.company.qrreader.features.camera.presentation.ui.components.Title
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.features.history.presentation.ui.components.getTitle
@@ -58,7 +60,7 @@ fun OtherHistoryContent(sdf:SimpleDateFormat, barcode:BarcodeModel){
     if(barcode.aiGeneratedDescription!=null && barcode.aiGeneratedDescription.trim()!="") {
         Spacer(modifier = Modifier.height(5.dp))
         HorizontalDivider()
-        ExpandableText(text = "✨ ${barcode.aiGeneratedDescription}")
+        ExpandableText(text = stringResource(R.string.ai_description_formatted, barcode.aiGeneratedDescription.orEmpty()))
     }
 }
 

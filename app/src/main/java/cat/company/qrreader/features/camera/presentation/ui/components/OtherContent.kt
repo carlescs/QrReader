@@ -55,6 +55,7 @@ fun OtherContent(
     val coroutineScope= CoroutineScope(Dispatchers.IO)
     val saved = remember{ mutableStateOf(false) }
     Title(title = if (barcode.format==Barcode.FORMAT_EAN_13) stringResource(R.string.ean13) else stringResource(R.string.other))
+    val noValue = stringResource(R.string.no_barcode_value)
     when (barcode.format) {
         Barcode.FORMAT_EAN_13,
         Barcode.FORMAT_EAN_8,
@@ -67,7 +68,7 @@ fun OtherContent(
                         textDecoration = TextDecoration.Underline
                     )
                 ) {
-                    append(barcode.displayValue ?: "No")
+                    append(barcode.displayValue ?: noValue)
                 }
             }, modifier = Modifier.clickable {
                 if (barcode.displayValue != null)
@@ -75,7 +76,7 @@ fun OtherContent(
             })
         }
         else -> {
-            Text(text = barcode.displayValue ?: "No")
+            Text(text = barcode.displayValue ?: noValue)
         }
     }
     Spacer(modifier = Modifier.height(20.dp))

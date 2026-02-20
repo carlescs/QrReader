@@ -1,6 +1,7 @@
 package cat.company.qrreader.domain.usecase.barcode
 
 import android.util.Log
+import cat.company.qrreader.domain.usecase.languageNameForPrompt
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.Generation
 import com.google.mlkit.genai.prompt.GenerativeModel
@@ -26,12 +27,14 @@ open class GenerateBarcodeDescriptionUseCase {
      * @param barcodeContent The actual barcode content (URL, text, etc.)
      * @param barcodeType Human-readable type (URL, Email, Product, etc.)
      * @param barcodeFormat Human-readable format (QR Code, EAN-13, etc.)
+     * @param language ISO 639-1 language code for the generated description (e.g., "en", "es")
      * @return Result containing the generated description or error
      */
     open suspend operator fun invoke(
         barcodeContent: String,
         barcodeType: String? = null,
-        barcodeFormat: String? = null
+        barcodeFormat: String? = null,
+        language: String = "en"
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
             // Initialize model if not already done
@@ -115,6 +118,7 @@ open class GenerateBarcodeDescriptionUseCase {
             val promptText = """
                 Generate a brief, helpful description (1-2 sentences, max $MAX_DESCRIPTION_LENGTH characters) for this barcode.
                 Explain what it is and what it might be used for.
+                Respond in ${languageNameForPrompt(language)}.
                 
                 Barcode content: "$barcodeContent"
                 $barcodeContext

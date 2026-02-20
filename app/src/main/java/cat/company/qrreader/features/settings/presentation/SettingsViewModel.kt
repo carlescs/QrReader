@@ -2,9 +2,11 @@ package cat.company.qrreader.features.settings.presentation
 
 import androidx.lifecycle.ViewModel
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.GetSearchAcrossAllTagsUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCase
 import androidx.lifecycle.viewModelScope
@@ -21,7 +23,9 @@ class SettingsViewModel(
     getSearchAcrossAllTagsUseCase: GetSearchAcrossAllTagsUseCase,
     private val setSearchAcrossAllTagsUseCase: SetSearchAcrossAllTagsUseCase,
     getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase,
-    private val setAiGenerationEnabledUseCase: SetAiGenerationEnabledUseCase
+    private val setAiGenerationEnabledUseCase: SetAiGenerationEnabledUseCase,
+    getAiLanguageUseCase: GetAiLanguageUseCase,
+    private val setAiLanguageUseCase: SetAiLanguageUseCase
 ) : ViewModel() {
 
     /**
@@ -38,6 +42,11 @@ class SettingsViewModel(
      * Flow for the 'AI generation enabled' setting
      */
     val aiGenerationEnabled: Flow<Boolean> = getAiGenerationEnabledUseCase()
+
+    /**
+     * Flow for the AI language setting
+     */
+    val aiLanguage: Flow<String> = getAiLanguageUseCase()
 
     /**
      * Update the hide tagged when no tag selected setting
@@ -57,6 +66,12 @@ class SettingsViewModel(
     fun setAiGenerationEnabled(value: Boolean) {
         viewModelScope.launch {
             setAiGenerationEnabledUseCase(value)
+        }
+    }
+
+    fun setAiLanguage(value: String) {
+        viewModelScope.launch {
+            setAiLanguageUseCase(value)
         }
     }
 }

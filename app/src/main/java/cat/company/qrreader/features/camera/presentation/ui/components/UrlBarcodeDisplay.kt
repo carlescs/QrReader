@@ -55,6 +55,7 @@ fun UrlBarcodeDisplay(
     val saved = remember { mutableStateOf(false) }
 
     Title(title = stringResource(R.string.url))
+    val noValue = stringResource(R.string.no_barcode_value)
     Text(text = buildAnnotatedString {
         this.withStyle(
             SpanStyle(
@@ -62,7 +63,7 @@ fun UrlBarcodeDisplay(
                 textDecoration = TextDecoration.Underline
             )
         ) {
-            append(barcode.displayValue ?: "No")
+            append(barcode.displayValue ?: noValue)
         }
     }, modifier = Modifier.clickable {
         if (barcode.displayValue != null)

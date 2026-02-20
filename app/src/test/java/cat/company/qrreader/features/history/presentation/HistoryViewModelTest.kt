@@ -78,6 +78,9 @@ class HistoryViewModelTest {
             override val aiGenerationEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(true)
             override suspend fun setAiGenerationEnabled(value: Boolean) {}
+            override val aiLanguage: kotlinx.coroutines.flow.Flow<String>
+                get() = kotlinx.coroutines.flow.flowOf("en")
+            override suspend fun setAiLanguage(value: String) {}
         }
         val vm = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo)
 
@@ -101,6 +104,9 @@ class HistoryViewModelTest {
             override val aiGenerationEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(true)
             override suspend fun setAiGenerationEnabled(value: Boolean) {}
+            override val aiLanguage: kotlinx.coroutines.flow.Flow<String>
+                get() = kotlinx.coroutines.flow.flowOf("en")
+            override suspend fun setAiLanguage(value: String) {}
         }
         val vm = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo)
 
@@ -126,6 +132,9 @@ class HistoryViewModelTest {
             override val aiGenerationEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(true)
             override suspend fun setAiGenerationEnabled(value: Boolean) {}
+            override val aiLanguage: kotlinx.coroutines.flow.Flow<String>
+                get() = kotlinx.coroutines.flow.flowOf("en")
+            override suspend fun setAiLanguage(value: String) {}
         }
         val vm = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo)
 
@@ -188,6 +197,9 @@ class HistoryViewModelTest {
             override val aiGenerationEnabled: Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(true)
             override suspend fun setAiGenerationEnabled(value: Boolean) {}
+            override val aiLanguage: Flow<String>
+                get() = kotlinx.coroutines.flow.flowOf("en")
+            override suspend fun setAiLanguage(value: String) {}
         }
 
         val getBarcodesUseCase = GetBarcodesWithTagsUseCase(fakeRepository)
