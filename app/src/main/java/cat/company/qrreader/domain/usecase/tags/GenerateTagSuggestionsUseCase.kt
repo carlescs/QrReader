@@ -109,19 +109,24 @@ open class GenerateTagSuggestionsUseCase {
 
             // Build the prompt
             val existingTagsText = if (existingTags.isNotEmpty()) {
-                "Prioritize these existing tags if relevant: ${existingTags.joinToString(", ")}"
+                "Existing tags you can reuse: ${existingTags.joinToString(", ")}"
             } else {
                 ""
             }
 
             val promptText = """
-                Suggest up to 3 short, relevant tags (1-2 words each) for categorizing this barcode.
+                Suggest up to 3 short tags (1-2 words each) to categorize this scanned barcode.
                 
                 Barcode content: "$barcodeContent"
                 $barcodeContext
                 $existingTagsText
                 
-                Return ONLY the tag names separated by commas, nothing else. Example: Shopping, Food, Receipt
+                - Prefer reusing existing tags when they fit
+                - Choose specific, meaningful categories (e.g., Work, Travel, Health, Finance, Shopping)
+                - Capitalize each tag (e.g., "Loyalty Card", "Online Order")
+                - Avoid generic tags like "Barcode", "Item", or "Other"
+                
+                Return ONLY comma-separated tag names, nothing else. Example: Shopping, Loyalty Card, Grocery
             """.trimIndent()
             
             Log.d(TAG, "Generating tags for: $barcodeContent ($barcodeDefinition)")

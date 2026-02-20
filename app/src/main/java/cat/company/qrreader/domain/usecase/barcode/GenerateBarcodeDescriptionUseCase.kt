@@ -113,11 +113,14 @@ open class GenerateBarcodeDescriptionUseCase {
             }
 
             val promptText = """
-                Generate a brief, helpful description (1-2 sentences, max $MAX_DESCRIPTION_LENGTH characters) for this barcode.
-                Explain what it is and what it might be used for.
+                Describe this scanned barcode in 1-2 sentences (under $MAX_DESCRIPTION_LENGTH characters).
                 
                 Barcode content: "$barcodeContent"
                 $barcodeContext
+                
+                - For URLs: name the website or service and what it offers
+                - For products: mention the product type or brand if recognizable
+                - For contacts, Wi-Fi, events, or other types: describe what the barcode provides access to
                 
                 Return ONLY the description, no labels or extra formatting.
             """.trimIndent()
@@ -128,7 +131,7 @@ open class GenerateBarcodeDescriptionUseCase {
             val request = generateContentRequest(
                 TextPart(promptText)
             ) {
-                temperature = 0.5f  // Slightly higher for more creative descriptions
+                temperature = 0.4f  // Slightly lower for more consistent descriptions
                 topK = 20
                 candidateCount = 1
                 maxOutputTokens = 100  // Enough for ~200 characters
