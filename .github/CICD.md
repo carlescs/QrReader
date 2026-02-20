@@ -207,6 +207,12 @@ The following secrets must be configured in GitHub repository settings:
    - Get from [SonarCloud](https://sonarcloud.io/) → Account → Security → Generate Token
    - Configuration stored in `sonar-project.properties` at repository root
 
+7. **GEMINI_API_KEY**
+   - Google Gemini API key for AI-generated release notes on Google Play uploads
+   - When set, the release job uses Gemini to summarise git commits into user-friendly release notes (≤500 characters) attached to the Alpha track upload
+   - When not set, the raw commit messages are used as a fallback
+   - Get from [Google AI Studio](https://aistudio.google.com/) → Get API key
+
 ## SonarCloud Configuration
 
 This project uses SonarCloud for continuous code quality and security analysis. The configuration follows best practices for Android/Gradle projects.
