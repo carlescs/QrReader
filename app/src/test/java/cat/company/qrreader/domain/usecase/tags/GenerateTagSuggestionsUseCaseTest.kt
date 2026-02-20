@@ -33,4 +33,63 @@ class GenerateTagSuggestionsUseCaseTest {
 
         assertEquals(listOf("Work", "Travel", "Health"), tags)
     }
+
+    @Test
+    fun parseTagNames_handlesEmptyResponse() = runTest {
+        val useCase = GenerateTagSuggestionsUseCase()
+        val raw = ""
+
+        val tags = useCase.parseTagNames(raw)
+
+        assertEquals(emptyList<String>(), tags)
+    }
+
+    @Test
+    fun parseTagNames_handlesWhitespaceOnlyResponse() = runTest {
+        val useCase = GenerateTagSuggestionsUseCase()
+        val raw = "   \n\t  "
+
+        val tags = useCase.parseTagNames(raw)
+
+        assertEquals(emptyList<String>(), tags)
+    }
+
+    @Test
+    fun parseTagNames_handlesExtraTextBeforeJsonFence() = runTest {
+        val useCase = GenerateTagSuggestionsUseCase()
+        val raw = """
+            Here's your result:
+            ```json
+            {"tags":["Work"]}
+            ```
+        """.trimIndent()
+
+        val tags = useCase.parseTagNames(raw)
+
+        assertEquals(listOf("Work"), tags)
+    }
+
+    @Test
+    fun parseTagNames_handlesJsonWithPreambleWithoutFence() = runTest {
+        val useCase = GenerateTagSuggestionsUseCase()
+        val raw = "Sure! Here are the tags: {\"tags\":[\"Work\"]}"
+
+        val tags = useCase.parseTagNames(raw)
+
+        assertEquals(listOf("Work"), tags)
+    }
+
+    @Test
+    fun parseTagNames_handlesMalformedJsonInsideFenceGracefully() = runTest {
+        val useCase = GenerateTagSuggestionsUseCase()
+        val raw = """
+            ```json
+            {"tags": ["Work"
+            ```
+        """.trimIndent()
+
+        val tags = useCase.parseTagNames(raw)
+
+        assertEquals(emptyList<String>(), tags)
+    }
 }
