@@ -36,17 +36,24 @@ jobs:
             echo "::error::Invalid version format '$VERSION'. Expected format: 1.2.3 or v1.2.3"
             exit 1
           fi
-          # Fail early if the tag already exists
+          # Handle re-run: if tag already exists check if it points to the current HEAD
           if git rev-parse -q --verify "refs/tags/$VERSION" > /dev/null 2>&1; then
-            echo "::error::Tag $VERSION already exists. Use a different version number."
-            exit 1
+            TAG_COMMIT=$(git rev-list -n 1 "refs/tags/$VERSION")
+            HEAD_COMMIT=$(git rev-parse HEAD)
+            if [ "$TAG_COMMIT" = "$HEAD_COMMIT" ]; then
+              echo "⚠️ Tag $VERSION already exists at the current commit (re-run). Skipping tag creation."
+            else
+              echo "::error::Tag $VERSION already exists at commit $TAG_COMMIT but current HEAD is $HEAD_COMMIT. Use a different version number."
+              exit 1
+            fi
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag "$VERSION"
+            git push origin "$VERSION"
+            echo "✅ Tag $VERSION created and pushed successfully"
           fi
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "$VERSION"
-          git push origin "$VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "✅ Tag $VERSION created and pushed successfully"
 
       - name: Trigger CI/CD pipeline
         env:
