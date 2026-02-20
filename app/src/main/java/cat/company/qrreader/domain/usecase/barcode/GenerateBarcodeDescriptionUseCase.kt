@@ -1,6 +1,7 @@
 package cat.company.qrreader.domain.usecase.barcode
 
 import android.util.Log
+import cat.company.qrreader.domain.usecase.enrichedBarcodeContext
 import cat.company.qrreader.domain.usecase.languageNameForPrompt
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.Generation
@@ -117,13 +118,21 @@ open class GenerateBarcodeDescriptionUseCase {
                 ""
             }
 
+            // Extract additional context from the barcode content itself
+            val extractedContext = enrichedBarcodeContext(barcodeContent, barcodeType)
+            val extractedContextSection = if (extractedContext.isNotEmpty()) {
+                "Extracted context:\n$extractedContext"
+            } else {
+                ""
+            }
+
             val promptText = """
-                Generate a brief, helpful description (1-2 sentences, max $MAX_DESCRIPTION_LENGTH characters) for this barcode.
-                Explain what it is and what it might be used for.
+                Describe this scanned barcode in 1-2 sentences (under $MAX_DESCRIPTION_LENGTH characters).
                 Respond in ${languageNameForPrompt(language)}.
                 
                 Barcode content: "$barcodeContent"
                 $barcodeContext
+                $extractedContextSection
                 
                 - For URLs: name the website or service and what it offers
                 - For products: mention the product type or brand if recognizable

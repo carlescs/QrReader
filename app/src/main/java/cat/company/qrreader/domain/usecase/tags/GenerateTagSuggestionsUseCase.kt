@@ -2,6 +2,7 @@ package cat.company.qrreader.domain.usecase.tags
 
 import android.util.Log
 import cat.company.qrreader.domain.model.SuggestedTagModel
+import cat.company.qrreader.domain.usecase.enrichedBarcodeContext
 import cat.company.qrreader.domain.usecase.languageNameForPrompt
 import com.google.mlkit.genai.common.DownloadStatus
 import com.google.mlkit.genai.common.FeatureStatus
@@ -111,6 +112,14 @@ open class GenerateTagSuggestionsUseCase {
                 ""
             }
 
+            // Extract additional context from the barcode content itself
+            val extractedContext = enrichedBarcodeContext(barcodeContent, barcodeType)
+            val extractedContextSection = if (extractedContext.isNotEmpty()) {
+                "Extracted context:\n$extractedContext"
+            } else {
+                ""
+            }
+
             // Build the prompt
             val existingTagsText = if (existingTags.isNotEmpty()) {
                 "Existing tags you can reuse: ${existingTags.joinToString(", ")}"
@@ -119,11 +128,12 @@ open class GenerateTagSuggestionsUseCase {
             }
 
             val promptText = """
-                Suggest up to 3 short, relevant tags (1-2 words each) for categorizing this barcode.
+                Suggest up to 3 short, relevant tags (1-2 words each) to categorize this scanned barcode.
                 Respond in ${languageNameForPrompt(language)}.
                 
                 Barcode content: "$barcodeContent"
                 $barcodeContext
+                $extractedContextSection
                 $existingTagsText
                 
                 - Prefer reusing existing tags when they fit
