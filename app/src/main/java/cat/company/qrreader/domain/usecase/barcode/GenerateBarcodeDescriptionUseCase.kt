@@ -1,6 +1,7 @@
 package cat.company.qrreader.domain.usecase.barcode
 
 import android.util.Log
+import cat.company.qrreader.domain.usecase.enrichedBarcodeContext
 import cat.company.qrreader.domain.usecase.languageNameForPrompt
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.Generation
@@ -9,6 +10,8 @@ import com.google.mlkit.genai.prompt.TextPart
 import com.google.mlkit.genai.prompt.generateContentRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Use case to generate a human-readable description for a barcode using ML Kit GenAI
@@ -115,15 +118,28 @@ open class GenerateBarcodeDescriptionUseCase {
                 ""
             }
 
+            // Extract additional context from the barcode content itself
+            val extractedContext = enrichedBarcodeContext(barcodeContent, barcodeType)
+            val extractedContextSection = if (extractedContext.isNotEmpty()) {
+                "Extracted context:\n$extractedContext"
+            } else {
+                ""
+            }
+
             val promptText = """
-                Generate a brief, helpful description (1-2 sentences, max $MAX_DESCRIPTION_LENGTH characters) for this barcode.
-                Explain what it is and what it might be used for.
+                Describe this scanned barcode in 1-2 sentences (under $MAX_DESCRIPTION_LENGTH characters).
                 Respond in ${languageNameForPrompt(language)}.
                 
                 Barcode content: "$barcodeContent"
                 $barcodeContext
+                $extractedContextSection
                 
-                Return ONLY the description, no labels or extra formatting.
+                - For URLs: name the website or service and what it offers
+                - For products: mention the product type or brand if recognizable
+                - For contacts, Wi-Fi, events, or other types: describe what the barcode provides access to
+                
+                Respond ONLY with valid JSON in this exact format, nothing else:
+                {"description": "Your description here."}
             """.trimIndent()
             
             Log.d(TAG, "Generating description for: $barcodeContent ($barcodeDefinition)")
@@ -132,7 +148,7 @@ open class GenerateBarcodeDescriptionUseCase {
             val request = generateContentRequest(
                 TextPart(promptText)
             ) {
-                temperature = 0.5f  // Slightly higher for more creative descriptions
+                temperature = 0.4f  // Slightly lower for more consistent descriptions
                 topK = 20
                 candidateCount = 1
                 maxOutputTokens = 100  // Enough for ~200 characters
@@ -150,11 +166,20 @@ open class GenerateBarcodeDescriptionUseCase {
                 )
             }
 
-            // Truncate if necessary and clean up
-            val description = if (text.length > MAX_DESCRIPTION_LENGTH) {
-                text.take(MAX_DESCRIPTION_LENGTH - 3) + "..."
-            } else {
+            // Parse JSON response; fall back to raw text for robustness
+            val rawDescription = try {
+                val json = JSONObject(text)
+                json.getString("description").trim()
+            } catch (e: JSONException) {
+                Log.w(TAG, "JSON parsing failed, using raw text: ${e.message}")
                 text
+            }
+
+            // Truncate if necessary and clean up
+            val description = if (rawDescription.length > MAX_DESCRIPTION_LENGTH) {
+                rawDescription.take(MAX_DESCRIPTION_LENGTH - 3) + "..."
+            } else {
+                rawDescription
             }
 
             Result.success(description)

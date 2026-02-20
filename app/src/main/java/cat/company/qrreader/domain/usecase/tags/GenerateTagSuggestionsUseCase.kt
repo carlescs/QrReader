@@ -2,6 +2,7 @@ package cat.company.qrreader.domain.usecase.tags
 
 import android.util.Log
 import cat.company.qrreader.domain.model.SuggestedTagModel
+import cat.company.qrreader.domain.usecase.enrichedBarcodeContext
 import cat.company.qrreader.domain.usecase.languageNameForPrompt
 import com.google.mlkit.genai.common.DownloadStatus
 import com.google.mlkit.genai.common.FeatureStatus
@@ -12,6 +13,8 @@ import com.google.mlkit.genai.prompt.generateContentRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.withContext
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
  * Use case to generate tag suggestions for a barcode using ML Kit GenAI
@@ -109,22 +112,37 @@ open class GenerateTagSuggestionsUseCase {
                 ""
             }
 
+            // Extract additional context from the barcode content itself
+            val extractedContext = enrichedBarcodeContext(barcodeContent, barcodeType)
+            val extractedContextSection = if (extractedContext.isNotEmpty()) {
+                "Extracted context:\n$extractedContext"
+            } else {
+                ""
+            }
+
             // Build the prompt
             val existingTagsText = if (existingTags.isNotEmpty()) {
-                "Prioritize these existing tags if relevant: ${existingTags.joinToString(", ")}"
+                "Existing tags you can reuse: ${existingTags.joinToString(", ")}"
             } else {
                 ""
             }
 
             val promptText = """
-                Suggest up to 3 short, relevant tags (1-2 words each) for categorizing this barcode.
+                Suggest up to 3 short, relevant tags (1-2 words each) to categorize this scanned barcode.
                 Respond in ${languageNameForPrompt(language)}.
                 
                 Barcode content: "$barcodeContent"
                 $barcodeContext
+                $extractedContextSection
                 $existingTagsText
                 
-                Return ONLY the tag names separated by commas, nothing else. Example: Shopping, Food, Receipt
+                - Prefer reusing existing tags when they fit
+                - Choose specific, meaningful categories (e.g., Work, Travel, Health, Finance, Shopping)
+                - Capitalize each tag (e.g., "Loyalty Card", "Online Order")
+                - Avoid generic tags like "Barcode", "Item", or "Other"
+                
+                Respond ONLY with valid JSON in this exact format, nothing else:
+                {"tags": ["Tag1", "Tag2", "Tag3"]}
             """.trimIndent()
             
             Log.d(TAG, "Generating tags for: $barcodeContent ($barcodeDefinition)")
@@ -136,7 +154,7 @@ open class GenerateTagSuggestionsUseCase {
                 temperature = 0.3f
                 topK = 10
                 candidateCount = 1
-                maxOutputTokens = 50
+                maxOutputTokens = 60
             }
             
             // Generate content synchronously (suspend function)
@@ -151,16 +169,22 @@ open class GenerateTagSuggestionsUseCase {
                 )
             }
 
+            // Parse JSON response; fall back to comma-split for robustness
+            val tagNames: List<String> = try {
+                val json = JSONObject(text)
+                val array = json.getJSONArray("tags")
+                (0 until array.length()).map { array.getString(it).trim() }
+            } catch (e: JSONException) {
+                Log.w(TAG, "JSON parsing failed, falling back to comma-split: ${e.message}")
+                text.split(",").map { it.trim() }
+            }
+
             // Parse the response into tag suggestions
-            val suggestions = text
-                .split(",")
-                .asSequence()
-                .map { it.trim() }
+            val suggestions = tagNames
                 .filter { it.isNotEmpty() && it.length <= 30 }
                 .distinct()
                 .take(3)
                 .map { SuggestedTagModel(name = it, isSelected = true) }
-                .toList()
 
             if (suggestions.isEmpty()) {
                 return@withContext Result.failure(
