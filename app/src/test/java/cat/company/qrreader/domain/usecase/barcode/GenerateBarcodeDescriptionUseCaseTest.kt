@@ -55,4 +55,81 @@ class GenerateBarcodeDescriptionUseCaseTest {
 
         assertEquals("Plain text response without JSON", description)
     }
+
+    @Test
+    fun parseDescriptionText_handlesEmptyResponse() = runTest {
+        val useCase = GenerateBarcodeDescriptionUseCase()
+        val raw = ""
+
+        val description = useCase.parseDescriptionText(raw)
+
+        assertEquals("", description)
+    }
+
+    @Test
+    fun parseDescriptionText_handlesWhitespaceOnlyResponse() = runTest {
+        val useCase = GenerateBarcodeDescriptionUseCase()
+        val raw = "   \n  "
+
+        val description = useCase.parseDescriptionText(raw)
+
+        assertEquals("", description)
+    }
+
+    @Test
+    fun parseDescriptionText_handlesJsonWithPreambleAndFence() = runTest {
+        val useCase = GenerateBarcodeDescriptionUseCase()
+        val raw = """
+            Here's your result:
+            ```json
+            {"description":"Example"}
+            ```
+        """.trimIndent()
+
+        val description = useCase.parseDescriptionText(raw)
+
+        assertEquals("Example", description)
+    }
+
+    @Test
+    fun parseDescriptionText_handlesJsonWithPreambleWithoutFence() = runTest {
+        val useCase = GenerateBarcodeDescriptionUseCase()
+        val raw = "Sure! Here's the description: {\"description\":\"Example\"}"
+
+        val description = useCase.parseDescriptionText(raw)
+
+        assertEquals("Example", description)
+    }
+
+    @Test
+    fun parseDescriptionText_handlesMalformedJsonInsideFence() = runTest {
+        val useCase = GenerateBarcodeDescriptionUseCase()
+        val raw = """
+            ```json
+            {"description": "Example"
+            ```
+        """.trimIndent()
+
+        val description = useCase.parseDescriptionText(raw)
+
+        // Malformed JSON should cause a fallback to the raw text
+        assertEquals(raw, description)
+    }
+
+    @Test
+    fun parseDescriptionText_truncatesLongDescription() = runTest {
+        val useCase = GenerateBarcodeDescriptionUseCase()
+        val longText = "A".repeat(250)
+        val raw = """
+            ```json
+            {"description":"$longText"}
+            ```
+        """.trimIndent()
+
+        val description = useCase.parseDescriptionText(raw)
+
+        // Description should be truncated to the maximum allowed length (200 chars)
+        assertEquals(200, description.length)
+        assertEquals("A".repeat(200), description)
+    }
 }
