@@ -53,6 +53,7 @@ fun UrlBarcodeDisplay(
     val getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
     val coroutineScope = CoroutineScope(Dispatchers.IO)
     val saved = remember { mutableStateOf(false) }
+    val saveDescription = remember(description) { mutableStateOf(true) }
 
     Title(title = stringResource(R.string.url))
     val noValue = stringResource(R.string.no_barcode_value)
@@ -92,6 +93,8 @@ fun UrlBarcodeDisplay(
         description = description,
         isLoading = isLoadingDescription,
         error = descriptionError,
+        saveDescription = saveDescription.value,
+        onToggleSaveDescription = { saveDescription.value = it },
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp)
@@ -119,7 +122,7 @@ fun UrlBarcodeDisplay(
             }
             
             // Save barcode with tags
-            saveBarcodeWithTagsUseCase(barcodeModel, tags, aiGeneratedDescription)
+            saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
         }
         saved.value = true
     }, enabled = !saved.value) {

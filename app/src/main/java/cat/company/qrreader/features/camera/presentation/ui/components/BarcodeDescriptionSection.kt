@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,7 +36,9 @@ fun BarcodeDescriptionSection(
     description: String?,
     isLoading: Boolean,
     error: String?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    saveDescription: Boolean = true,
+    onToggleSaveDescription: (Boolean) -> Unit = {}
 ) {
     // Only show if there's content, loading, or error
     if (description == null && !isLoading && error == null) {
@@ -41,7 +46,7 @@ fun BarcodeDescriptionSection(
     }
     
     Column(modifier = modifier) {
-        // Header with AI icon
+        // Header with AI icon and optional save checkbox
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(bottom = 4.dp)
@@ -58,6 +63,22 @@ fun BarcodeDescriptionSection(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary
             )
+            if (description != null) {
+                Spacer(modifier = Modifier.weight(1f))
+                val saveDescLabel = stringResource(R.string.save_ai_description)
+                Text(
+                    text = saveDescLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Checkbox(
+                    checked = saveDescription,
+                    onCheckedChange = onToggleSaveDescription,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .semantics { contentDescription = saveDescLabel }
+                )
+            }
         }
         
         // Content based on state

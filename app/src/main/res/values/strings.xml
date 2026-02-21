@@ -113,6 +113,7 @@
     <string name="tag_suggestions_unavailable">Tag suggestions unavailable</string>
     <string name="no_tag_suggestions">No tag suggestions</string>
     <string name="tap_to_remove_unwanted_tags">Tap to remove unwanted tags</string>
+    <string name="save_ai_description">Save AI description</string>
 
     <!-- Expandable text -->
     <string name="show_more">Show more</string>

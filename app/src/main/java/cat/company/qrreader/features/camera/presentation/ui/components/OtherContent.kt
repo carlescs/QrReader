@@ -54,6 +54,7 @@ fun OtherContent(
     val getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
     val coroutineScope= CoroutineScope(Dispatchers.IO)
     val saved = remember{ mutableStateOf(false) }
+    val saveDescription = remember(description) { mutableStateOf(true) }
     Title(title = if (barcode.format==Barcode.FORMAT_EAN_13) stringResource(R.string.ean13) else stringResource(R.string.other))
     val noValue = stringResource(R.string.no_barcode_value)
     when (barcode.format) {
@@ -102,6 +103,8 @@ fun OtherContent(
         description = description,
         isLoading = isLoadingDescription,
         error = descriptionError,
+        saveDescription = saveDescription.value,
+        onToggleSaveDescription = { saveDescription.value = it },
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp)
@@ -129,7 +132,7 @@ fun OtherContent(
             }
             
             // Save barcode with tags
-            saveBarcodeWithTagsUseCase(barcodeModel, tags, aiGeneratedDescription)
+            saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
         }
         saved.value=true
     }, enabled = !saved.value) {
