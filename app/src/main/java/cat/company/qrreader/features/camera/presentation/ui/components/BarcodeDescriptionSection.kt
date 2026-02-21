@@ -10,12 +10,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -33,7 +38,9 @@ fun BarcodeDescriptionSection(
     description: String?,
     isLoading: Boolean,
     error: String?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    saveDescription: Boolean = true,
+    onToggleSaveDescription: (Boolean) -> Unit = {}
 ) {
     // Only show if there's content, loading, or error
     if (description == null && !isLoading && error == null) {
@@ -41,7 +48,7 @@ fun BarcodeDescriptionSection(
     }
     
     Column(modifier = modifier) {
-        // Header with AI icon
+        // Header with AI icon and optional save checkbox
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(bottom = 4.dp)
@@ -58,6 +65,21 @@ fun BarcodeDescriptionSection(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary
             )
+            if (description != null) {
+                Spacer(modifier = Modifier.weight(1f))
+                IconToggleButton(
+                    checked = saveDescription,
+                    onCheckedChange = onToggleSaveDescription,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = if (saveDescription) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+                        contentDescription = stringResource(R.string.save_ai_description),
+                        modifier = Modifier.size(16.dp),
+                        tint = if (saveDescription) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
         
         // Content based on state
@@ -69,7 +91,7 @@ fun BarcodeDescriptionSection(
                 ErrorDescription(error)
             }
             description != null -> {
-                DescriptionText(description)
+                DescriptionText(description, enabled = saveDescription)
             }
         }
     }
@@ -119,14 +141,18 @@ private fun ErrorDescription(error: String) {
 }
 
 @Composable
-private fun DescriptionText(description: String) {
-    ExpandableText(
-        text = description,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        style = MaterialTheme.typography.bodyMedium
-    )
+private fun DescriptionText(description: String, enabled: Boolean = true) {
+    CompositionLocalProvider(
+        LocalContentColor provides if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+    ) {
+        ExpandableText(
+            text = description,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
 }
 
 /**
