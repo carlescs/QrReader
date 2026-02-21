@@ -3,6 +3,7 @@ package cat.company.qrreader.domain.usecase.tags
 import android.util.Log
 import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.usecase.enrichedBarcodeContext
+import cat.company.qrreader.domain.usecase.extractJsonObject
 import cat.company.qrreader.domain.usecase.languageNameForPrompt
 import com.google.mlkit.genai.common.DownloadStatus
 import com.google.mlkit.genai.common.FeatureStatus
@@ -171,7 +172,8 @@ open class GenerateTagSuggestionsUseCase {
 
             // Parse JSON response; fall back to comma-split for robustness
             val tagNames: List<String> = try {
-                val json = JSONObject(text)
+                val jsonText = extractJsonObject(text) ?: throw JSONException("No JSON object found")
+                val json = JSONObject(jsonText)
                 val array = json.getJSONArray("tags")
                 (0 until array.length()).map { array.getString(it).trim() }
             } catch (e: JSONException) {
