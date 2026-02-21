@@ -138,19 +138,18 @@ jobs:
             echo "⚠️ No service account configured, version fetching will use git fallback"
           fi
 
+      - name: Set up Python for version fetching
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
       - name: Install Python dependencies for version fetching
         run: |
-          pip install --quiet google-api-python-client google-auth
+          python3 -m pip install --quiet google-api-python-client google-auth
           echo "✅ Python dependencies installed"
 
       - name: Build release bundle
         run: ./gradlew bundleRelease --no-configuration-cache
-
-      - name: Cleanup service account file
-        if: always()
-        run: |
-          rm -f service-account.json
-          echo "🧹 Service account file removed"
 
       - name: Run SonarCloud analysis
         env:
@@ -165,6 +164,12 @@ jobs:
           else
             ./gradlew sonar --no-configuration-cache
           fi
+
+      - name: Cleanup service account file
+        if: always()
+        run: |
+          rm -f service-account.json
+          echo "🧹 Service account file removed"
 
       - name: Upload unsigned bundle
         uses: actions/upload-artifact@v4
@@ -232,6 +237,25 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Set up Python for version fetching and verification
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Google Play API dependencies
+        run: python3 -m pip install --quiet google-api-python-client google-auth
+
+      - name: Setup service account
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > service-account.json
+            echo "✅ Service account configured"
+          else
+            echo "⚠️ No service account configured, version fetching will use git fallback"
+          fi
+
       - name: Print Version Code and Version Name
         run: |
           echo "==========================================="
@@ -270,20 +294,6 @@ jobs:
             exit 1
           fi
           echo "Bundle found: $(ls -lh ./bundle/app-release.aab)"
-
-      - name: Set up Python for version verification
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Install Google Play API dependencies
-        run: pip install --quiet google-api-python-client google-auth
-
-      - name: Setup service account for version verification
-        env:
-          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-        run: |
-          echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > service-account.json
 
       - name: Verify version code against Google Play API
         run: |
@@ -445,6 +455,25 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Set up Python for version fetching
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Google Play API dependencies
+        run: python3 -m pip install --quiet google-api-python-client google-auth
+
+      - name: Setup service account for version fetching
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > service-account.json
+            echo "✅ Service account configured"
+          else
+            echo "⚠️ No service account configured, version fetching will use git fallback"
+          fi
+
       - name: Print Version Code and Version Name
         run: |
           echo "==========================================="
@@ -458,6 +487,10 @@ jobs:
           echo "Branch: ${{ github.ref_name }}"
           echo "Commit: ${{ github.sha }}"
           echo "==========================================="
+
+      - name: Cleanup service account file
+        if: always()
+        run: rm -f service-account.json
 
       - name: Check for required secrets
         env:
@@ -601,6 +634,25 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Set up Python for version fetching
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Google Play API dependencies
+        run: python3 -m pip install --quiet google-api-python-client google-auth
+
+      - name: Setup service account for version fetching
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > service-account.json
+            echo "✅ Service account configured"
+          else
+            echo "⚠️ No service account configured, version fetching will use git fallback"
+          fi
+
       - name: Print Version Code and Version Name
         run: |
           echo "==========================================="
@@ -614,6 +666,10 @@ jobs:
           echo "Branch: ${{ github.ref_name }}"
           echo "Commit: ${{ github.sha }}"
           echo "==========================================="
+
+      - name: Cleanup service account file
+        if: always()
+        run: rm -f service-account.json
 
       - name: Check for required secrets
         env:
