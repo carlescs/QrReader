@@ -9,6 +9,33 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import javax.inject.Inject
 
+abstract class PythonScriptValueSource : ValueSource<String, PythonScriptValueSource.Parameters> {
+    interface Parameters : ValueSourceParameters {
+        val scriptPath: Property<String>
+        val workingDir: Property<File>
+    }
+
+    @get:Inject
+    abstract val execOperations: ExecOperations
+
+    override fun obtain(): String {
+        val scriptFile = File(parameters.scriptPath.get())
+        if (!scriptFile.exists()) return ""
+        val output = ByteArrayOutputStream()
+        return try {
+            val execResult = execOperations.exec {
+                commandLine("python3", scriptFile.absolutePath)
+                workingDir = parameters.workingDir.get()
+                standardOutput = output
+                isIgnoreExitValue = true
+            }
+            if (execResult.exitValue == 0) output.toString().trim() else ""
+        } catch (_: Exception) {
+            ""
+        }
+    }
+}
+
 abstract class GitCommandValueSource : ValueSource<String, GitCommandValueSource.Parameters> {
     interface Parameters : ValueSourceParameters {
         val command: ListProperty<String>
@@ -99,33 +126,21 @@ object GitVersioning {
         }
         
         return try {
-            val process = ProcessBuilder("python3", scriptPath.absolutePath)
-                .directory(project.rootDir)
-                .redirectErrorStream(false)
-                .start()
-            
-            val output = process.inputStream.bufferedReader().use { it.readText().trim() }
-            val exitCode = process.waitFor()
-            
-            if (exitCode == 0 && output.isNotEmpty()) {
-                val versionCode = output.toIntOrNull()
-                if (versionCode != null && versionCode > 0) {
-                    project.logger.lifecycle("Fetched Play Store version: ${versionCode - 1}, using: $versionCode")
-                    return versionCode
-                } else {
-                    project.logger.warn("Play Store fetch script returned unexpected output: '$output'")
-                }
-            } else if (exitCode != 0) {
-                project.logger.warn("Play Store fetch script exited with code $exitCode")
+            val outputProvider = project.providers.of(PythonScriptValueSource::class.java) {
+                parameters.scriptPath.set(scriptPath.absolutePath)
+                parameters.workingDir.set(project.rootDir)
             }
-            
-            // Log error output if available
-            val errorOutput = process.errorStream.bufferedReader().use { it.readText().trim() }
-            if (errorOutput.isNotEmpty()) {
-                project.logger.warn("Play Store fetch error output: $errorOutput")
+            val output = outputProvider.get()
+            if (output.isEmpty()) return null
+
+            val versionCode = output.toIntOrNull()
+            if (versionCode != null && versionCode > 0) {
+                project.logger.lifecycle("Fetched Play Store version: ${versionCode - 1}, using: $versionCode")
+                versionCode
+            } else {
+                project.logger.warn("Play Store fetch script returned unexpected output: '$output'")
+                null
             }
-            
-            null
         } catch (e: Exception) {
             project.logger.warn("Failed to fetch from Google Play: ${e.message}")
             null
