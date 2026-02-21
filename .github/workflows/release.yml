@@ -115,6 +115,7 @@ jobs:
         run: |
           VERSION="${{ steps.create_tag.outputs.version }}"
           gh workflow run android-ci-cd.yml \
-            --ref "$VERSION" \
-            --field upload_to_play_store=true
+            --ref master \
+            --field upload_to_play_store=true \
+            --field use_beta_track=true
           echo "✅ CI/CD pipeline triggered for $VERSION"

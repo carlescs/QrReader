@@ -73,10 +73,10 @@ Publishes to Google Play Alpha track:
 - Validates bundle and secrets
 - Uploads to Google Play Console Alpha track
 
-### 4. Beta Job (Optional - 3-Tier Flow)
-Promotes from Alpha to Beta track (OPTIONAL):
-- **Runs only when**: `use_beta_track=true` is explicitly set via workflow_dispatch
-- **Never runs automatically** on tag push — 3-tier is always opt-in
+### 4. Beta Job (Automatic on Tag Push)
+Promotes from Alpha to Beta track:
+- **Runs automatically** on `v*.*.*` tag push (3-tier is the default for tag-based releases)
+- **Also runs when**: `use_beta_track=true` is explicitly set via workflow_dispatch
 - **Purpose**: Enables 3-tier deployment flow (Alpha → Beta → Production)
 - **Approval**: Optional — requires manual approval only if PlayStore-Beta environment protection is configured in GitHub Settings
 - Downloads latest version from Alpha track
@@ -101,74 +101,59 @@ Promotes to Production track (supports both flows):
 
 The CI/CD pipeline supports **two flexible deployment paths** to accommodate different release scenarios.
 
-Releases are triggered in one of two ways — both use **2-tier (Alpha → Production) by default**:
+Releases are triggered in one of two ways — both use **3-tier (Alpha → Beta → Production) by default**:
 - **Via "Create Release" workflow** (recommended): GitHub Actions → "Create Release" → enter version → the pipeline starts automatically
 - **Via direct tag push**: `git tag v1.2.3 && git push origin v1.2.3` from your local machine
 
 > **⚠️ Note on tag push mechanism**: When the "Create Release" workflow creates a tag, it also explicitly triggers `android-ci-cd.yml` via the GitHub API (because GitHub prevents one workflow from triggering another via a `GITHUB_TOKEN` git push). A manual tag push from a local machine uses the `on.push.tags` trigger directly.
 
-### Flow 1: Fast-Track (2-Tier) - **DEFAULT**
-```
-Code → CI → Alpha (Internal) → Production (Public)
-```
-
-**When to Use:**
-- ✅ Hotfixes and critical bug fixes
-- ✅ Minor updates and patches
-- ✅ Changes with thorough CI/CD testing
-- ✅ Low-risk releases
-- ✅ When speed is important
-
-**Timeline:** 2-3 days (Alpha testing + Production approval)
-
-**How to Trigger (via Create Release - Recommended):**
-1. Ensure your changes are merged to master
-2. Navigate to: GitHub → Actions → "Create Release"
-3. Click "Run workflow" → enter version (e.g. `5.2.0`)
-4. The pipeline runs automatically: tests → build → sign → Alpha deploy (no Beta)
-5. Approve Production promotion when ready
-
-**How to Trigger (via direct tag push):**
-1. Ensure you are on the `master` branch (Production deploys are restricted to master)
-2. Push a tag from your local machine: `git tag v1.2.3 && git push origin v1.2.3`
-3. Pipeline runs automatically: tests → build → sign → Alpha deploy (no Beta)
-4. Approve Production promotion when ready
-
-> **⚠️ Branch restriction**: Production promotion is only allowed when the tag is pushed from the `master` branch. Tags pushed from other branches will build and deploy to Alpha, but the Production promotion step will be skipped.
-
-**How to Trigger (Manual workflow_dispatch - Alternative):**
-1. Navigate to: GitHub → Actions → "Android CI/CD"
-2. Click "Run workflow" button
-3. Select the **master** branch (Production deploys are restricted to master)
-4. ✅ Check "Upload to Google Play Alpha"
-5. Click "Run workflow"
-6. Wait for Alpha testing validation
-7. Approve Production promotion (self-approve if solo developer, or wait for team reviewers)
-
-### Flow 2: Cautious (3-Tier) - **OPT-IN**
+### Flow 1: 3-Tier (Alpha → Beta → Production) - **DEFAULT for tag-based releases**
 ```
 Code → CI → Alpha (Internal) → Beta (External) → Production (Public)
 ```
 
 **When to Use:**
-- ✅ Major feature releases
-- ✅ Significant architectural changes
-- ✅ High-risk updates
-- ✅ Need external beta tester feedback
-- ✅ Regulatory/compliance-sensitive releases
-- ✅ When extra validation is needed
+- ✅ All standard releases via "Create Release" workflow or direct tag push
+- ✅ Changes that benefit from beta tester feedback before going to all users
+- ✅ Major features, substantial changes
 
 **Timeline:** 5-8 days (Alpha 2-3d + Beta 3-5d + Production approval)
+
+**How to Trigger (via Create Release - Recommended):**
+1. Ensure your changes are merged to master
+2. Navigate to: GitHub → Actions → "Create Release"
+3. Click "Run workflow" → enter version (e.g. `5.2.0`)
+4. The pipeline runs automatically: tests → build → sign → Alpha deploy → Beta deploy
+5. Approve Production promotion when ready
+
+**How to Trigger (via direct tag push):**
+1. Ensure you are on the `master` branch
+2. Push a tag from your local machine: `git tag v1.2.3 && git push origin v1.2.3`
+3. Pipeline runs automatically: tests → build → sign → Alpha deploy → Beta deploy
+4. Approve Production promotion when ready
+
+> **⚠️ Branch restriction**: Production promotion is only allowed when the tag commit is on the `master` branch. Tags pushed from other branches will build and deploy to Alpha/Beta, but the Production promotion step will be skipped.
+
+### Flow 2: Fast-Track (2-Tier) - **Manual workflow_dispatch only**
+```
+Code → CI → Alpha (Internal) → Production (Public)
+```
+
+**When to Use:**
+- ✅ Hotfixes and critical bug fixes where speed is essential
+- ✅ Minor updates and patches
+- ✅ When you want to skip beta testing and deploy directly
+
+**Timeline:** 2-3 days (Alpha testing + Production approval)
 
 **How to Trigger (Manual workflow_dispatch):**
 1. Navigate to: GitHub → Actions → "Android CI/CD"
 2. Click "Run workflow" button
-3. Select branch (usually master)
+3. Select the **master** branch (Production deploys are restricted to master)
 4. ✅ Check "Upload to Google Play Alpha"
-5. ✅ Check "Use Beta track before Production" ← **KEY STEP**
+5. Leave "Use Beta track before Production" **unchecked**
 6. Click "Run workflow"
-7. Approve Beta promotion (if configured)
-8. Approve Production promotion (self-approve if solo developer)
+7. Approve Production promotion when ready
 
 ## Required Secrets
 
@@ -571,7 +556,7 @@ This ensures each branch has a unique, traceable version.
 |--------|------------------------|-------------------------|--------------------------|----------------|
 | **Trigger** | Automatic (via workflow API) | Automatic (`on.push.tags`) | Manual | Manual |
 | **Alpha Deploy** | ✅ Automatic | ✅ Automatic | ✅ Manual (must check box) | ✅ Manual (must check box) |
-| **Beta Deploy** | ❌ Skipped (2-tier default) | ❌ Skipped (2-tier default) | ✅ Optional (check use_beta_track) | ✅ Optional (check use_beta_track) |
+| **Beta Deploy** | ✅ Automatic (3-tier default) | ✅ Automatic (3-tier default) | ✅ Optional (check use_beta_track) | ✅ Optional (check use_beta_track) |
 | **Production Promote** | ✅ Available (with approval) | ✅ Available (with approval) | ✅ Available (with approval) | ✅ Available (with approval) |
 | **Version Name** | Clean (e.g., `5.2.0`) | Clean (e.g., `5.2.0`) | Clean or dev | Always dev (e.g., `5.2.0-dev.8+hash`) |
 
@@ -585,8 +570,9 @@ When a `v*.*.*` tag is pushed on master (or when manually triggered with "Upload
 1. ✅ **Test job** runs automatically
 2. ✅ **Build job** runs automatically (after test)
 3. ✅ **Release job** runs (publishes to Alpha track)
-4. ⏸️ **Promote job** starts but **waits for approval** before executing
-5. ✅ **After approval**: Promotes to Production track
+4. ✅ **Beta job** runs automatically (promotes Alpha to Beta track; for tag-based releases)
+5. ⏸️ **Promote job** starts but **waits for approval** before executing
+6. ✅ **After approval**: Promotes to Production track
 
 ### How to Approve/Reject Production Promotion
 
@@ -617,10 +603,10 @@ The workflow uses three GitHub Environments for deployment control:
    - No approval needed (automatic from master branch)
    - Configure in: Repository Settings → Environments
 
-2. **PlayStore-Beta** (Optional - For 3-tier flow)
-   - Used when deploying via Beta track
+2. **PlayStore-Beta** (**Required** - For tag-based releases)
+   - Used when deploying via Beta track (automatically on tag push or Create Release)
    - Recommend: 1 reviewer required
-   - Only needed if using 3-tier deployment flow
+   - Required for all tag-based releases (3-tier is the default)
    - Configure in: Repository Settings → Environments
 
 3. **PlayStore** (Production - **CRITICAL**)
@@ -640,7 +626,7 @@ The workflow uses three GitHub Environments for deployment control:
    - No protection rules needed (leave empty)
    - Click **"Save protection rules"**
 
-3. **Create PlayStore-Beta environment** (if doesn't exist - optional):
+3. **Create PlayStore-Beta environment** (if doesn't exist - **REQUIRED** for tag-based releases):
    - Click **"New environment"**
    - Name it **"PlayStore-Beta"** (exact name, case-sensitive)
    - Click **"Configure environment"**
@@ -669,7 +655,7 @@ After setup, verify environments exist:
 - Navigate to: Repository → Settings → Environments
 - You should see:
   - ✅ PlayStore-Alpha (no protection)
-  - ✅ PlayStore-Beta (1 reviewer - optional, only for 3-tier flow)
+  - ✅ PlayStore-Beta (1 reviewer - required for tag-based releases)
   - ✅ PlayStore (at least 1 reviewer - required for manual approval gate)
 
 ### What Happens During Promotion
@@ -709,11 +695,11 @@ The workflow uses GitHub Environments for deployment gates:
   - Trigger: Automatic on `v*.*.*` tag push, or manual workflow dispatch (must check "Upload to Google Play Alpha")
   - Approval: None (deploys automatically)
 
-- **PlayStore-Beta** (Optional): Used for beta track promotion in 3-tier flow
-  - Used for: External beta testing (optional deployment path)
-  - Trigger: Manual workflow dispatch only, with "Use Beta track" enabled (opt-in)
+- **PlayStore-Beta**: Used for beta track promotion in 3-tier flow
+  - Used for: External beta testing (default for all tag-based releases)
+  - Trigger: Automatic on `v*.*.*` tag push or via Create Release workflow; also manual workflow dispatch with "Use Beta track" enabled
   - Approval: **Optional** — only applies if PlayStore-Beta environment protection is configured in GitHub Settings
-  - Only needed if using 3-tier deployment flow
+  - Required for standard tag-based deployment flows
 
 - **PlayStore** (Production): Used for production promotion (**IMPORTANT**)
   - Used for: Production releases to all users
