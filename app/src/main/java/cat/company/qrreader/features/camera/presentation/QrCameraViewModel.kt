@@ -4,10 +4,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.model.SuggestedTagModel
-import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeDescriptionUseCase
+import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
-import cat.company.qrreader.domain.usecase.tags.GenerateTagSuggestionsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,9 +21,8 @@ import kotlinx.coroutines.launch
  * ViewModel for the camera
  */
 class QrCameraViewModel(
-    private val generateTagSuggestionsUseCase: GenerateTagSuggestionsUseCase,
+    private val generateBarcodeAiDataUseCase: GenerateBarcodeAiDataUseCase,
     private val getAllTagsUseCase: GetAllTagsUseCase,
-    private val generateBarcodeDescriptionUseCase: GenerateBarcodeDescriptionUseCase,
     private val getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase,
     private val getAiLanguageUseCase: GetAiLanguageUseCase
 ) : ViewModel() {
@@ -45,7 +43,7 @@ class QrCameraViewModel(
             try {
                 if (getAiGenerationEnabledUseCase().first()) {
                     Log.d(TAG, "Checking Gemini Nano model availability")
-                    generateTagSuggestionsUseCase.downloadModelIfNeeded()
+                    generateBarcodeAiDataUseCase.downloadModelIfNeeded()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error during model download check", e)
@@ -71,101 +69,62 @@ class QrCameraViewModel(
                 
                 Log.d(TAG, "Generating tags and description for barcode #$barcodeHash: content='$content', type=$barcodeType, format=$barcodeFormat")
                 
-                // Generate tag suggestions
+                // Generate tags and description in a single AI request
                 viewModelScope.launch {
                     if (!getAiGenerationEnabledUseCase().first()) return@launch
 
-                    // Mark this barcode as loading tags
+                    // Mark this barcode as loading both tags and description
                     _uiState.update { state ->
-                        state.copy(isLoadingTags = state.isLoadingTags + barcodeHash)
+                        state.copy(
+                            isLoadingTags = state.isLoadingTags + barcodeHash,
+                            isLoadingDescriptions = state.isLoadingDescriptions + barcodeHash
+                        )
                     }
-                    
+
                     try {
-                        // Get existing tag names
                         val existingTags = getAllTagsUseCase().first()
                         val existingTagNames = existingTags.map { it.name }
-                        
                         val language = getAiLanguageUseCase().first()
-                        
-                        // Generate suggestions with full barcode context
-                        val result = generateTagSuggestionsUseCase(
+
+                        val result = generateBarcodeAiDataUseCase(
                             barcodeContent = content,
                             barcodeType = barcodeType,
                             barcodeFormat = barcodeFormat,
                             existingTags = existingTagNames,
                             language = language
                         )
-                        
-                        result.onSuccess { suggestions ->
-                            _uiState.update { state ->
-                                state.copy(
-                                    barcodeTags = state.barcodeTags + (barcodeHash to suggestions),
-                                    isLoadingTags = state.isLoadingTags - barcodeHash,
-                                    tagSuggestionErrors = state.tagSuggestionErrors - barcodeHash
-                                )
-                            }
-                        }.onFailure { error ->
-                            Log.w(TAG, "Failed to generate tag suggestions for barcode #$barcodeHash: ${error.message}")
-                            _uiState.update { state ->
-                                state.copy(
-                                    barcodeTags = state.barcodeTags + (barcodeHash to emptyList()),
-                                    isLoadingTags = state.isLoadingTags - barcodeHash,
-                                    tagSuggestionErrors = state.tagSuggestionErrors + (barcodeHash to (error.message ?: "Unknown error"))
-                                )
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Exception generating tag suggestions for barcode #$barcodeHash", e)
-                        _uiState.update { state ->
-                            state.copy(
-                                barcodeTags = state.barcodeTags + (barcodeHash to emptyList()),
-                                isLoadingTags = state.isLoadingTags - barcodeHash,
-                                tagSuggestionErrors = state.tagSuggestionErrors + (barcodeHash to (e.message ?: "Unknown error"))
-                            )
-                        }
-                    }
-                }
-                
-                // Generate description
-                viewModelScope.launch {
-                    if (!getAiGenerationEnabledUseCase().first()) return@launch
 
-                    // Mark this barcode as loading description
-                    _uiState.update { state ->
-                        state.copy(isLoadingDescriptions = state.isLoadingDescriptions + barcodeHash)
-                    }
-                    
-                    try {
-                        val language = getAiLanguageUseCase().first()
-                        val result = generateBarcodeDescriptionUseCase(
-                            barcodeContent = content,
-                            barcodeType = barcodeType,
-                            barcodeFormat = barcodeFormat,
-                            language = language
-                        )
-                        
-                        result.onSuccess { description ->
-                            Log.d(TAG, "Generated description for barcode #$barcodeHash: $description")
+                        result.onSuccess { aiData ->
+                            Log.d(TAG, "Generated AI data for barcode #$barcodeHash: ${aiData.tags.size} tags, description=${aiData.description}")
                             _uiState.update { state ->
                                 state.copy(
-                                    barcodeDescriptions = state.barcodeDescriptions + (barcodeHash to description),
+                                    barcodeTags = state.barcodeTags + (barcodeHash to aiData.tags),
+                                    isLoadingTags = state.isLoadingTags - barcodeHash,
+                                    tagSuggestionErrors = state.tagSuggestionErrors - barcodeHash,
+                                    barcodeDescriptions = state.barcodeDescriptions + (barcodeHash to aiData.description),
                                     isLoadingDescriptions = state.isLoadingDescriptions - barcodeHash,
                                     descriptionErrors = state.descriptionErrors - barcodeHash
                                 )
                             }
                         }.onFailure { error ->
-                            Log.w(TAG, "Failed to generate description for barcode #$barcodeHash: ${error.message}")
+                            Log.w(TAG, "Failed to generate AI data for barcode #$barcodeHash: ${error.message}")
                             _uiState.update { state ->
                                 state.copy(
+                                    barcodeTags = state.barcodeTags + (barcodeHash to emptyList()),
+                                    isLoadingTags = state.isLoadingTags - barcodeHash,
+                                    tagSuggestionErrors = state.tagSuggestionErrors + (barcodeHash to (error.message ?: "Unknown error")),
                                     isLoadingDescriptions = state.isLoadingDescriptions - barcodeHash,
                                     descriptionErrors = state.descriptionErrors + (barcodeHash to (error.message ?: "Unknown error"))
                                 )
                             }
                         }
                     } catch (e: Exception) {
-                        Log.e(TAG, "Exception generating description for barcode #$barcodeHash", e)
+                        Log.e(TAG, "Exception generating AI data for barcode #$barcodeHash", e)
                         _uiState.update { state ->
                             state.copy(
+                                barcodeTags = state.barcodeTags + (barcodeHash to emptyList()),
+                                isLoadingTags = state.isLoadingTags - barcodeHash,
+                                tagSuggestionErrors = state.tagSuggestionErrors + (barcodeHash to (e.message ?: "Unknown error")),
                                 isLoadingDescriptions = state.isLoadingDescriptions - barcodeHash,
                                 descriptionErrors = state.descriptionErrors + (barcodeHash to (e.message ?: "Unknown error"))
                             )
@@ -290,8 +249,7 @@ class QrCameraViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        generateTagSuggestionsUseCase.cleanup()
-        generateBarcodeDescriptionUseCase.cleanup()
+        generateBarcodeAiDataUseCase.cleanup()
     }
 }
 
