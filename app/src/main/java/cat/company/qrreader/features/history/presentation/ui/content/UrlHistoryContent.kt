@@ -26,7 +26,7 @@ import java.text.SimpleDateFormat
  * Content for the url history
  */
 @Composable
-fun UrlHistoryContent(sdf:SimpleDateFormat, barcode:BarcodeModel) {
+fun UrlHistoryContent(sdf:SimpleDateFormat, barcode:BarcodeModel, aiGenerationEnabled: Boolean = true) {
     val uriHandler = LocalUriHandler.current
     Title(title = getTitle(barcode))
     Text(text = sdf.format(barcode.date))
@@ -47,7 +47,7 @@ fun UrlHistoryContent(sdf:SimpleDateFormat, barcode:BarcodeModel) {
         HorizontalDivider()
         Text(text = barcode.description)
     }
-    if(barcode.aiGeneratedDescription!=null && barcode.aiGeneratedDescription.trim()!="") {
+    if(barcode.aiGeneratedDescription!=null && barcode.aiGeneratedDescription.trim()!="" && aiGenerationEnabled) {
         Spacer(modifier = Modifier.height(5.dp))
         HorizontalDivider()
         ExpandableText(text = stringResource(R.string.ai_description_formatted, barcode.aiGeneratedDescription.orEmpty()))

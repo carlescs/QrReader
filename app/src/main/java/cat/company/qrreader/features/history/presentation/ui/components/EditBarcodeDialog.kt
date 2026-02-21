@@ -53,6 +53,7 @@ fun EditBarcodeDialog(
     var hasAiContent by remember { mutableStateOf(savedBarcode.aiGeneratedDescription != null) }
 
     val regenerateState by viewModel.regenerateDescriptionState.collectAsState()
+    val aiGenerationEnabled by viewModel.aiGenerationEnabled.collectAsState()
 
     // Update the AI description field when regeneration completes successfully, then clear state
     LaunchedEffect(regenerateState.description) {
@@ -84,21 +85,23 @@ fun EditBarcodeDialog(
                         )
                     TextField(modifier = Modifier.padding(vertical = 5.dp), value = text, singleLine = true, onValueChange = {text=it}, label = { Text(text = stringResource(R.string.title_label)) })
                     TextField(modifier = Modifier.padding(vertical = 5.dp), value = description, onValueChange = {description=it}, label = { Text(text = stringResource(R.string.description_label)) })
-                    AiDescriptionField(
-                        aiDescription = aiDescription,
-                        hasAiContent = hasAiContent,
-                        isRegenerating = regenerateState.isLoading,
-                        error = regenerateState.error,
-                        onValueChange = {
-                            aiDescription = it
-                            if (hasAiContent) hasAiContent = false
-                        },
-                        onRegenerate = { viewModel.regenerateAiDescription(savedBarcode) },
-                        onDelete = {
-                            aiDescription = TextFieldValue("")
-                            hasAiContent = false
-                        }
-                    )
+                    if (aiGenerationEnabled) {
+                        AiDescriptionField(
+                            aiDescription = aiDescription,
+                            hasAiContent = hasAiContent,
+                            isRegenerating = regenerateState.isLoading,
+                            error = regenerateState.error,
+                            onValueChange = {
+                                aiDescription = it
+                                if (hasAiContent) hasAiContent = false
+                            },
+                            onRegenerate = { viewModel.regenerateAiDescription(savedBarcode) },
+                            onDelete = {
+                                aiDescription = TextFieldValue("")
+                                hasAiContent = false
+                            }
+                        )
+                    }
                     Row(modifier = Modifier.align(Alignment.End)){
                         TextButton(onClick = {
                             onRequestClose()
