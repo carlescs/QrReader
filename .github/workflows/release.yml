@@ -3,9 +3,19 @@ name: Create Release
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to release (e.g. 5.2.0 or v5.2.0)'
+      version_bump:
+        description: 'Version bump type'
         required: true
+        type: choice
+        default: patch
+        options:
+          - major
+          - minor
+          - patch
+          - manual
+      version:
+        description: 'Version to release — only used when version_bump is "manual" (e.g. 5.2.0 or v5.2.0)'
+        required: false
         type: string
 
 permissions:
@@ -23,10 +33,54 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Compute version
+        id: compute_version
+        run: |
+          BUMP="${{ github.event.inputs.version_bump }}"
+          if [ "$BUMP" = "manual" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            if [ -z "$VERSION" ]; then
+              echo "::error::A version must be provided when version_bump is 'manual'."
+              exit 1
+            fi
+          else
+            # Determine the latest exact semver tag (vMAJOR.MINOR.PATCH only)
+            LATEST=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+            if [ -z "$LATEST" ]; then
+              LATEST="v0.0.0"
+            fi
+            # Strip leading 'v' and validate X.Y.Z format
+            LATEST_STRIPPED="${LATEST#v}"
+            if ! [[ "$LATEST_STRIPPED" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::Could not parse latest tag '$LATEST' as a valid semver version."
+              exit 1
+            fi
+            MAJOR=$(echo "$LATEST_STRIPPED" | cut -d. -f1)
+            MINOR=$(echo "$LATEST_STRIPPED" | cut -d. -f2)
+            PATCH=$(echo "$LATEST_STRIPPED" | cut -d. -f3)
+            case "$BUMP" in
+              major)
+                MAJOR=$((MAJOR + 1))
+                MINOR=0
+                PATCH=0
+                ;;
+              minor)
+                MINOR=$((MINOR + 1))
+                PATCH=0
+                ;;
+              patch)
+                PATCH=$((PATCH + 1))
+                ;;
+            esac
+            VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+          echo "Computed version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Create and push tag
         id: create_tag
         run: |
-          VERSION="${{ github.event.inputs.version }}"
+          VERSION="${{ steps.compute_version.outputs.version }}"
           # Ensure version starts with 'v'
           if [[ "$VERSION" != v* ]]; then
             VERSION="v$VERSION"
