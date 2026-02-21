@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -53,11 +54,12 @@ fun EditBarcodeDialog(
 
     val regenerateState by viewModel.regenerateDescriptionState.collectAsState()
 
-    // Update the AI description field when regeneration completes successfully
+    // Update the AI description field when regeneration completes successfully, then clear state
     LaunchedEffect(regenerateState.description) {
         regenerateState.description?.let { newDescription ->
             aiDescription = TextFieldValue(newDescription)
             hasAiContent = true
+            viewModel.resetRegenerateDescriptionState()
         }
     }
 
@@ -86,7 +88,11 @@ fun EditBarcodeDialog(
                         aiDescription = aiDescription,
                         hasAiContent = hasAiContent,
                         isRegenerating = regenerateState.isLoading,
-                        onValueChange = { aiDescription = it },
+                        error = regenerateState.error,
+                        onValueChange = {
+                            aiDescription = it
+                            if (hasAiContent) hasAiContent = false
+                        },
                         onRegenerate = { viewModel.regenerateAiDescription(savedBarcode) },
                         onDelete = {
                             aiDescription = TextFieldValue("")
@@ -103,7 +109,7 @@ fun EditBarcodeDialog(
                             val updatedBarcode = savedBarcode.copy(
                                 title = text.text,
                                 description = description.text,
-                                aiGeneratedDescription = if (hasAiContent) aiDescription.text.takeIf { it.isNotEmpty() } else null
+                                aiGeneratedDescription = aiDescription.text.takeIf { hasAiContent && it.isNotEmpty() }
                             )
                             viewModel.updateBarcode(updatedBarcode)
                             onRequestClose()
@@ -122,43 +128,51 @@ private fun AiDescriptionField(
     aiDescription: TextFieldValue,
     hasAiContent: Boolean,
     isRegenerating: Boolean,
+    error: String?,
     onValueChange: (TextFieldValue) -> Unit,
     onRegenerate: () -> Unit,
     onDelete: () -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = 5.dp)
-    ) {
-        TextField(
-            modifier = Modifier.weight(1f),
-            value = aiDescription,
-            onValueChange = onValueChange,
-            label = { Text(text = stringResource(R.string.ai_description)) },
-            enabled = hasAiContent && !isRegenerating
-        )
-        if (isRegenerating) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .size(24.dp),
-                strokeWidth = 2.dp
+    Column(modifier = Modifier.padding(vertical = 5.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextField(
+                modifier = Modifier.weight(1f),
+                value = aiDescription,
+                onValueChange = onValueChange,
+                label = { Text(text = stringResource(R.string.ai_description)) },
+                enabled = !isRegenerating
             )
-        } else {
-            IconButton(onClick = onRegenerate) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = stringResource(R.string.regenerate_ai_description)
+            if (isRegenerating) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .size(24.dp),
+                    strokeWidth = 2.dp
                 )
-            }
-            if (hasAiContent) {
-                IconButton(onClick = onDelete) {
+            } else {
+                IconButton(onClick = onRegenerate) {
                     Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.delete_ai_description)
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = stringResource(R.string.regenerate_ai_description)
                     )
                 }
+                if (hasAiContent) {
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.delete_ai_description)
+                        )
+                    }
+                }
             }
+        }
+        if (error != null) {
+            Text(
+                text = error,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+            )
         }
     }
 }
