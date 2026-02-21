@@ -1,13 +1,13 @@
 package cat.company.qrreader.features.camera.presentation
 
+import cat.company.qrreader.domain.model.BarcodeAiData
 import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.repository.TagRepository
-import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeDescriptionUseCase
+import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
-import cat.company.qrreader.domain.usecase.tags.GenerateTagSuggestionsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.Dispatchers
@@ -38,8 +38,7 @@ import org.robolectric.annotation.Config
 @OptIn(ExperimentalCoroutinesApi::class)
 class QrCameraViewModelTest {
 
-    private lateinit var fakeGenerateTagSuggestionsUseCase: FakeGenerateTagSuggestionsUseCase
-    private lateinit var fakeGenerateBarcodeDescriptionUseCase: FakeGenerateBarcodeDescriptionUseCase
+    private lateinit var fakeGenerateBarcodeAiDataUseCase: FakeGenerateBarcodeAiDataUseCase
     private lateinit var fakeTagRepository: FakeTagRepository
     private lateinit var getAllTagsUseCase: GetAllTagsUseCase
     private lateinit var getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase
@@ -47,50 +46,28 @@ class QrCameraViewModelTest {
     private lateinit var viewModel: QrCameraViewModel
     private val testDispatcher = StandardTestDispatcher()
 
-    // Fake GenerateTagSuggestionsUseCase that returns predetermined results
-    private class FakeGenerateTagSuggestionsUseCase(
+    // Fake GenerateBarcodeAiDataUseCase that returns predetermined results
+    private class FakeGenerateBarcodeAiDataUseCase(
         var shouldSucceed: Boolean = true,
-        var suggestionsToReturn: List<SuggestedTagModel> = emptyList()
-    ) : GenerateTagSuggestionsUseCase() {
+        var suggestionsToReturn: List<SuggestedTagModel> = emptyList(),
+        var descriptionToReturn: String = "Test description"
+    ) : GenerateBarcodeAiDataUseCase() {
         override suspend fun invoke(
             barcodeContent: String,
             barcodeType: String?,
             barcodeFormat: String?,
             existingTags: List<String>,
             language: String
-        ): Result<List<SuggestedTagModel>> {
+        ): Result<BarcodeAiData> {
             return if (shouldSucceed) {
-                Result.success(suggestionsToReturn)
+                Result.success(BarcodeAiData(tags = suggestionsToReturn, description = descriptionToReturn))
             } else {
                 Result.failure(Exception("Test error"))
             }
         }
 
         override suspend fun downloadModelIfNeeded() {
-            // No-op for tests - model is not needed in test environment
-        }
-
-        override fun cleanup() {
             // No-op for tests
-        }
-    }
-
-    // Fake GenerateBarcodeDescriptionUseCase that returns predetermined results
-    private class FakeGenerateBarcodeDescriptionUseCase(
-        var shouldSucceed: Boolean = true,
-        var descriptionToReturn: String = "Test description"
-    ) : GenerateBarcodeDescriptionUseCase() {
-        override suspend fun invoke(
-            barcodeContent: String,
-            barcodeType: String?,
-            barcodeFormat: String?,
-            language: String
-        ): Result<String> {
-            return if (shouldSucceed) {
-                Result.success(descriptionToReturn)
-            } else {
-                Result.failure(Exception("Test error"))
-            }
         }
 
         override fun cleanup() {
@@ -185,17 +162,15 @@ class QrCameraViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        fakeGenerateTagSuggestionsUseCase = FakeGenerateTagSuggestionsUseCase()
-        fakeGenerateBarcodeDescriptionUseCase = FakeGenerateBarcodeDescriptionUseCase()
+        fakeGenerateBarcodeAiDataUseCase = FakeGenerateBarcodeAiDataUseCase()
         fakeTagRepository = FakeTagRepository()
         getAllTagsUseCase = GetAllTagsUseCase(fakeTagRepository)
         val fakeSettingsRepository = FakeSettingsRepository()
         getAiGenerationEnabledUseCase = GetAiGenerationEnabledUseCase(fakeSettingsRepository)
         getAiLanguageUseCase = GetAiLanguageUseCase(fakeSettingsRepository)
         viewModel = QrCameraViewModel(
-            fakeGenerateTagSuggestionsUseCase,
+            fakeGenerateBarcodeAiDataUseCase,
             getAllTagsUseCase,
-            fakeGenerateBarcodeDescriptionUseCase,
             getAiGenerationEnabledUseCase,
             getAiLanguageUseCase
         )
@@ -223,7 +198,7 @@ class QrCameraViewModelTest {
         val barcode = FakeBarcode("https://example.com")
         val barcodeHash = barcode.hashCode()
 
-        fakeGenerateTagSuggestionsUseCase.suggestionsToReturn = listOf(
+        fakeGenerateBarcodeAiDataUseCase.suggestionsToReturn = listOf(
             SuggestedTagModel("Shopping", true),
             SuggestedTagModel("Online", true)
         )
@@ -243,7 +218,7 @@ class QrCameraViewModelTest {
         val barcode = FakeBarcode("test content")
         val barcodeHash = barcode.hashCode()
 
-        fakeGenerateTagSuggestionsUseCase.shouldSucceed = false
+        fakeGenerateBarcodeAiDataUseCase.shouldSucceed = false
 
         viewModel.saveBarcodes(listOf(barcode))
         testDispatcher.scheduler.advanceUntilIdle()
@@ -259,7 +234,7 @@ class QrCameraViewModelTest {
         val barcode = FakeBarcode("test")
         val barcodeHash = barcode.hashCode()
 
-        fakeGenerateTagSuggestionsUseCase.suggestionsToReturn = listOf(
+        fakeGenerateBarcodeAiDataUseCase.suggestionsToReturn = listOf(
             SuggestedTagModel("Tag1", true)
         )
 
@@ -284,7 +259,7 @@ class QrCameraViewModelTest {
         val barcode = FakeBarcode("test")
         val barcodeHash = barcode.hashCode()
 
-        fakeGenerateTagSuggestionsUseCase.suggestionsToReturn = listOf(
+        fakeGenerateBarcodeAiDataUseCase.suggestionsToReturn = listOf(
             SuggestedTagModel("Tag1", true),
             SuggestedTagModel("Tag2", true),
             SuggestedTagModel("Tag3", true)
@@ -422,7 +397,7 @@ class QrCameraViewModelTest {
 
     @Test
     fun viewModel_canBeCreated_withValidDependencies() {
-        val vm = QrCameraViewModel(fakeGenerateTagSuggestionsUseCase, getAllTagsUseCase, fakeGenerateBarcodeDescriptionUseCase, getAiGenerationEnabledUseCase, getAiLanguageUseCase)
+        val vm = QrCameraViewModel(fakeGenerateBarcodeAiDataUseCase, getAllTagsUseCase, getAiGenerationEnabledUseCase, getAiLanguageUseCase)
 
         assertNotNull(vm)
         assertNotNull(vm.uiState)

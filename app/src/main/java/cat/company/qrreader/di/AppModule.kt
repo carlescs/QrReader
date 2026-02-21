@@ -9,7 +9,7 @@ import cat.company.qrreader.db.Migrations
 import cat.company.qrreader.domain.repository.BarcodeRepository
 import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.repository.TagRepository
-import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeDescriptionUseCase
+import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeUseCase
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
 import cat.company.qrreader.domain.usecase.codecreator.GenerateQrCodeUseCase
@@ -27,7 +27,6 @@ import cat.company.qrreader.domain.usecase.settings.SetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCase
 import cat.company.qrreader.domain.usecase.tags.DeleteTagUseCase
-import cat.company.qrreader.domain.usecase.tags.GenerateTagSuggestionsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import cat.company.qrreader.features.camera.presentation.QrCameraViewModel
@@ -75,8 +74,7 @@ val useCaseModule = module {
     factory { SwitchBarcodeTagUseCase(get()) }
     factory { GetAllTagsUseCase(get()) }
     factory { GetOrCreateTagsByNameUseCase(get()) }
-    factory { GenerateTagSuggestionsUseCase() }
-    factory { GenerateBarcodeDescriptionUseCase() }
+    factory { GenerateBarcodeAiDataUseCase() }
     factory { DeleteTagUseCase(get()) }
     factory { GetHideTaggedSettingUseCase(get()) }
     factory { SetHideTaggedSettingUseCase(get()) }
@@ -93,7 +91,7 @@ val useCaseModule = module {
 val viewModelModule = module {
     viewModel { HistoryViewModel(get(), get(), get(), get()) }
     viewModel { TagsViewModel(get(), get()) }
-    viewModel { QrCameraViewModel(get<GenerateTagSuggestionsUseCase>(), get<GetAllTagsUseCase>(), get<GenerateBarcodeDescriptionUseCase>(), get<GetAiGenerationEnabledUseCase>(), get<GetAiLanguageUseCase>()) }
+    viewModel { QrCameraViewModel(get<GenerateBarcodeAiDataUseCase>(), get<GetAllTagsUseCase>(), get<GetAiGenerationEnabledUseCase>(), get<GetAiLanguageUseCase>()) }
     viewModel { CodeCreatorViewModel(get<GenerateQrCodeUseCase>()) }
     viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
 }
