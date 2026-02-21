@@ -9,8 +9,9 @@ For detailed technical information about version code testing and troubleshootin
 ### Version Code (Dynamic + Fallback Approach)
 
 **Primary Method: Google Play API Fetch**
-- Fetches the latest version code directly from Google Play Store at build time
-- Returns `latest_version + 1` for the next build
+- Fetches the highest version code in use across **all** Google Play tracks (internal, alpha, beta, production)
+- Returns `max_version_across_all_tracks + 1` for the next build
+- Checking every track prevents "version code already used" errors that occur when a code was uploaded to a test track but never reached production
 - Eliminates dependency on git history (commit count, branches, etc.)
 - Always accurate regardless of exploratory branches or repository restructuring
 - Requires `service-account.json` credentials file in project root
@@ -91,9 +92,13 @@ For automatic version code fetching from Google Play Store:
 python3 scripts/fetch_play_version.py
 
 # Expected output (to stderr):
+# Track 'internal'   : skipped or max version code
+# Track 'alpha'      : skipped or max version code
+# Track 'beta'       : skipped or max version code
+# Track 'production' : max version code
 # Package: cat.company.qrreader
-# Track: production
-# Latest version code: 367
+# Tracks checked: internal, alpha, beta, production
+# Highest version code across all tracks: 367
 # Next version code: 368
 
 # Version code will be output to stdout: 368
