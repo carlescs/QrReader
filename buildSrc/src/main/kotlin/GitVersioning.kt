@@ -94,7 +94,7 @@ object GitVersioning {
         
         val credentialsPath = File(project.rootDir, "service-account.json")
         if (!credentialsPath.exists()) {
-            project.logger.debug("Service account credentials not found: ${credentialsPath.absolutePath}")
+            project.logger.info("Service account credentials not found: ${credentialsPath.absolutePath}")
             return null
         }
         
@@ -112,18 +112,22 @@ object GitVersioning {
                 if (versionCode != null && versionCode > 0) {
                     project.logger.lifecycle("Fetched Play Store version: ${versionCode - 1}, using: $versionCode")
                     return versionCode
+                } else {
+                    project.logger.warn("Play Store fetch script returned unexpected output: '$output'")
                 }
+            } else if (exitCode != 0) {
+                project.logger.warn("Play Store fetch script exited with code $exitCode")
             }
             
             // Log error output if available
             val errorOutput = process.errorStream.bufferedReader().use { it.readText().trim() }
             if (errorOutput.isNotEmpty()) {
-                project.logger.debug("Play Store fetch error: $errorOutput")
+                project.logger.warn("Play Store fetch error output: $errorOutput")
             }
             
             null
         } catch (e: Exception) {
-            project.logger.debug("Failed to fetch from Google Play: ${e.message}")
+            project.logger.warn("Failed to fetch from Google Play: ${e.message}")
             null
         }
     }
