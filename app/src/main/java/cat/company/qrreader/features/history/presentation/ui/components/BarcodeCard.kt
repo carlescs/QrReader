@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -68,6 +69,7 @@ fun BarcodeCard(
     val coroutineScope = rememberCoroutineScope()
     val ioCoroutineScope = CoroutineScope(Dispatchers.IO)
     val copiedMsg = stringResource(R.string.copied)
+    val aiGenerationEnabled by historyViewModel.aiGenerationEnabled.collectAsState()
 
     // Load tags
     tagsViewModel.loadTags()
@@ -96,9 +98,9 @@ fun BarcodeCard(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     if (barcode.barcode.type == Barcode.TYPE_URL)
-                        UrlHistoryContent(sdf = sdf, barcode = barcode.barcode)
+                        UrlHistoryContent(sdf = sdf, barcode = barcode.barcode, aiGenerationEnabled = aiGenerationEnabled)
                     else
-                        OtherHistoryContent(sdf = sdf, barcode = barcode.barcode)
+                        OtherHistoryContent(sdf = sdf, barcode = barcode.barcode, aiGenerationEnabled = aiGenerationEnabled)
                 }
             }
         }

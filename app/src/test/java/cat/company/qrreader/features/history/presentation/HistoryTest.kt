@@ -6,9 +6,11 @@ import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.domain.model.BarcodeWithTagsModel
 import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.domain.repository.BarcodeRepository
+import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,6 +72,20 @@ class HistoryTest {
         override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
     }
 
+    private class FakeGenerateBarcodeAiDataUseCase : GenerateBarcodeAiDataUseCase() {
+        override suspend fun invoke(
+            barcodeContent: String,
+            barcodeType: String?,
+            barcodeFormat: String?,
+            existingTags: List<String>,
+            language: String
+        ) = Result.failure<cat.company.qrreader.domain.model.BarcodeAiData>(
+            UnsupportedOperationException("AI not available in tests")
+        )
+        override suspend fun downloadModelIfNeeded() {}
+        override fun cleanup() {}
+    }
+
     @Before
     fun setup() {
         fakeRepository = FakeBarcodeRepository()
@@ -98,7 +114,7 @@ class HistoryTest {
                 get() = kotlinx.coroutines.flow.flowOf("en")
             override suspend fun setAiLanguage(value: String) {}
         }
-        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo)
+        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo, FakeGenerateBarcodeAiDataUseCase(), GetAiLanguageUseCase(fakeSettingsRepo))
 
         // Test query change
         viewModel.onQueryChange("test")
@@ -141,7 +157,7 @@ class HistoryTest {
                 get() = kotlinx.coroutines.flow.flowOf("en")
             override suspend fun setAiLanguage(value: String) {}
         }
-        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo)
+        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo, FakeGenerateBarcodeAiDataUseCase(), GetAiLanguageUseCase(fakeSettingsRepo))
 
         // Initial state should be empty
         assertEquals("", viewModel.searchQuery.value)
@@ -177,7 +193,7 @@ class HistoryTest {
                 get() = kotlinx.coroutines.flow.flowOf("en")
             override suspend fun setAiLanguage(value: String) {}
         }
-        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo)
+        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo, FakeGenerateBarcodeAiDataUseCase(), GetAiLanguageUseCase(fakeSettingsRepo))
 
         // Initial state should be null
         assertNull(viewModel.selectedTagId.value)
