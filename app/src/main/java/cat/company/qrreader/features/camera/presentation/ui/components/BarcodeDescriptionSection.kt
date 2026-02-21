@@ -10,18 +10,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material3.Checkbox
+import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -65,19 +65,18 @@ fun BarcodeDescriptionSection(
             )
             if (description != null) {
                 Spacer(modifier = Modifier.weight(1f))
-                val saveDescLabel = stringResource(R.string.save_ai_description)
-                Text(
-                    text = saveDescLabel,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Checkbox(
+                IconToggleButton(
                     checked = saveDescription,
                     onCheckedChange = onToggleSaveDescription,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .semantics { contentDescription = saveDescLabel }
-                )
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = if (saveDescription) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+                        contentDescription = stringResource(R.string.save_ai_description),
+                        modifier = Modifier.size(16.dp),
+                        tint = if (saveDescription) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
         
