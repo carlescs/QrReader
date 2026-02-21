@@ -555,12 +555,13 @@ jobs:
     needs: [release, beta]
     # Run after release (2-tier: Alpha → Production) OR after beta (3-tier: Alpha → Beta → Production)
     # Skip beta if it didn't run (always() allows this job even if beta was skipped)
-    # Only master branch can deploy to Production (verified by git in "Verify master branch" step below)
+    # workflow_dispatch: only allowed from the master branch
+    # tag push: allowed only when the tag commit is on master (verified at runtime in "Verify master branch" step)
     if: |
       always() && 
       needs.release.result == 'success' &&
       (needs.beta.result == 'success' || needs.beta.result == 'skipped') &&
-      (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')))
+      ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')))
     environment:
       name: PlayStore
       # Configure required reviewers in GitHub Settings → Environments → PlayStore
