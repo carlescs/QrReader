@@ -566,4 +566,69 @@ class QrCameraViewModelTest {
         assertTrue(state.isLoadingDescriptions.isEmpty())
         assertTrue(state.descriptionErrors.isEmpty())
     }
+
+    // ==================== Tests for BarcodeState description data class ====================
+
+    @Test
+    fun barcodeState_dataClassCopy_preservesDescriptionFields() {
+        val state = BarcodeState(
+            barcodeDescriptions = mapOf(1 to "A barcode."),
+            isLoadingDescriptions = setOf(1),
+            descriptionErrors = mapOf(1 to "Error")
+        )
+
+        val copied = state.copy(isLoadingDescriptions = emptySet())
+
+        assertEquals(emptySet<Int>(), copied.isLoadingDescriptions)
+        assertEquals(mapOf(1 to "A barcode."), copied.barcodeDescriptions)
+        assertEquals(mapOf(1 to "Error"), copied.descriptionErrors)
+    }
+
+    @Test
+    fun barcodeState_withDifferentDescriptions_notEqual() {
+        val state1 = BarcodeState(barcodeDescriptions = emptyMap())
+        val state2 = BarcodeState(barcodeDescriptions = mapOf(1 to "Some description."))
+
+        assertFalse(state1 == state2)
+    }
+
+    @Test
+    fun barcodeState_withDifferentDescriptionErrors_notEqual() {
+        val state1 = BarcodeState(descriptionErrors = emptyMap())
+        val state2 = BarcodeState(descriptionErrors = mapOf(1 to "Error"))
+
+        assertFalse(state1 == state2)
+    }
+
+    @Test
+    fun barcodeState_withDifferentDescriptionLoadingState_notEqual() {
+        val state1 = BarcodeState(isLoadingDescriptions = emptySet())
+        val state2 = BarcodeState(isLoadingDescriptions = setOf(1))
+
+        assertFalse(state1 == state2)
+    }
+
+    @Test
+    fun barcodeState_equality_includesDescriptionFields() {
+        val state1 = BarcodeState(
+            barcodeDescriptions = mapOf(1 to "desc"),
+            isLoadingDescriptions = setOf(2),
+            descriptionErrors = mapOf(3 to "err")
+        )
+        val state2 = BarcodeState(
+            barcodeDescriptions = mapOf(1 to "desc"),
+            isLoadingDescriptions = setOf(2),
+            descriptionErrors = mapOf(3 to "err")
+        )
+
+        assertEquals(state1, state2)
+    }
+
+    @Test
+    fun barcodeState_hashCode_consistentWithEquality_forDescriptionFields() {
+        val state1 = BarcodeState(barcodeDescriptions = mapOf(1 to "desc"))
+        val state2 = BarcodeState(barcodeDescriptions = mapOf(1 to "desc"))
+
+        assertEquals(state1.hashCode(), state2.hashCode())
+    }
 }
