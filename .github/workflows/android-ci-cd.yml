@@ -271,6 +271,69 @@ jobs:
           fi
           echo "Bundle found: $(ls -lh ./bundle/app-release.aab)"
 
+      - name: Set up Python for version verification
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Google Play API dependencies
+        run: pip install --quiet google-api-python-client google-auth
+
+      - name: Setup service account for version verification
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          echo "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > service-account.json
+
+      - name: Verify version code against Google Play API
+        run: |
+          python3 << 'PYTHON_EOF'
+          import json, sys
+          from pathlib import Path
+          from googleapiclient.discovery import build
+          from google.oauth2 import service_account
+
+          PACKAGE_NAME = "cat.company.qrreader"
+          ALL_TRACKS = ["internal", "alpha", "beta", "production"]
+
+          creds = service_account.Credentials.from_service_account_file(
+              "service-account.json",
+              scopes=["https://www.googleapis.com/auth/androidpublisher"],
+          )
+          service = build("androidpublisher", "v3", credentials=creds)
+
+          edit_id = service.edits().insert(body={}, packageName=PACKAGE_NAME).execute()["id"]
+          try:
+              max_vc = 0
+              print("=== Google Play version codes per track ===")
+              for track in ALL_TRACKS:
+                  try:
+                      resp = service.edits().tracks().get(
+                          editId=edit_id, track=track, packageName=PACKAGE_NAME
+                      ).execute()
+                      codes = [
+                          int(vc)
+                          for rel in resp.get("releases", [])
+                          for vc in rel.get("versionCodes", [])
+                      ]
+                      track_max = max(codes) if codes else 0
+                      max_vc = max(max_vc, track_max)
+                      print(f"  {track:12s}: {track_max if codes else 'no releases'}")
+                  except Exception as e:
+                      print(f"  {track:12s}: skipped ({e})")
+              print(f"\nHighest used version code (all tracks): {max_vc}")
+              print(f"Next safe version code:                  {max_vc + 1}")
+          finally:
+              try:
+                  service.edits().delete(editId=edit_id, packageName=PACKAGE_NAME).execute()
+              except Exception:
+                  pass
+          PYTHON_EOF
+
+      - name: Cleanup service account file
+        if: always()
+        run: rm -f service-account.json
+
       - name: Generate AI Release Notes
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -352,7 +415,7 @@ jobs:
           releaseFiles: ./bundle/app-release.aab
           track: alpha
           status: completed
-          releaseNotes: whatsnew/
+          whatsNewDirectory: whatsnew/
 
   beta:
     name: Promote to Beta (Optional)
