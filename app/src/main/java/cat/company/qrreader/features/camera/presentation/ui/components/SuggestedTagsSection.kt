@@ -89,9 +89,10 @@ fun SuggestedTagsSection(
                 )
             }
             else -> {
-                Row(
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     suggestedTags.forEach { tag ->
                         SuggestedTagChip(
