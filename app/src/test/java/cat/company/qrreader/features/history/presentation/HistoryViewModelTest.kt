@@ -4,9 +4,11 @@ import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.domain.model.BarcodeWithTagsModel
 import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.domain.repository.BarcodeRepository
+import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -61,55 +63,57 @@ class HistoryViewModelTest {
         }
     }
 
+    private class FakeGenerateBarcodeAiDataUseCase : GenerateBarcodeAiDataUseCase() {
+        override suspend fun invoke(
+            barcodeContent: String,
+            barcodeType: String?,
+            barcodeFormat: String?,
+            existingTags: List<String>,
+            language: String
+        ) = Result.failure<cat.company.qrreader.domain.model.BarcodeAiData>(
+            UnsupportedOperationException("AI not available in tests")
+        )
+        override suspend fun downloadModelIfNeeded() {}
+        override fun cleanup() {}
+    }
+
+    private fun makeFakeSettingsRepo() = object : cat.company.qrreader.domain.repository.SettingsRepository {
+        override val hideTaggedWhenNoTagSelected: Flow<Boolean>
+            get() = flowOf(false)
+        override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
+        override val searchAcrossAllTagsWhenFiltering: Flow<Boolean>
+            get() = flowOf(false)
+        override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
+        override val aiGenerationEnabled: Flow<Boolean>
+            get() = flowOf(true)
+        override suspend fun setAiGenerationEnabled(value: Boolean) {}
+        override val aiLanguage: Flow<String>
+            get() = flowOf("en")
+        override suspend fun setAiLanguage(value: String) {}
+    }
+
+    private fun makeViewModel(repository: FakeBarcodeRepository): HistoryViewModel {
+        val fakeSettingsRepo = makeFakeSettingsRepo()
+        return HistoryViewModel(
+            GetBarcodesWithTagsUseCase(repository),
+            UpdateBarcodeUseCase(repository),
+            DeleteBarcodeUseCase(repository),
+            fakeSettingsRepo,
+            FakeGenerateBarcodeAiDataUseCase(),
+            GetAiLanguageUseCase(fakeSettingsRepo)
+        )
+    }
 
     @Test
     fun onQueryChange_updatesState() {
-        val repository = FakeBarcodeRepository()
-        val getBarcodesUseCase = GetBarcodesWithTagsUseCase(repository)
-        val updateBarcodeUseCase = UpdateBarcodeUseCase(repository)
-        val deleteBarcodeUseCase = DeleteBarcodeUseCase(repository)
-        val fakeSettingsRepo = object : cat.company.qrreader.domain.repository.SettingsRepository {
-            override val hideTaggedWhenNoTagSelected: Flow<Boolean>
-                get() = kotlinx.coroutines.flow.flowOf(false)
-            override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
-            override val searchAcrossAllTagsWhenFiltering: Flow<Boolean>
-                get() = kotlinx.coroutines.flow.flowOf(false)
-            override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
-            override val aiGenerationEnabled: kotlinx.coroutines.flow.Flow<Boolean>
-                get() = kotlinx.coroutines.flow.flowOf(true)
-            override suspend fun setAiGenerationEnabled(value: Boolean) {}
-            override val aiLanguage: kotlinx.coroutines.flow.Flow<String>
-                get() = kotlinx.coroutines.flow.flowOf("en")
-            override suspend fun setAiLanguage(value: String) {}
-        }
-        val vm = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo)
-
+        val vm = makeViewModel(FakeBarcodeRepository())
         vm.onQueryChange("abc")
         assertEquals("abc", vm.searchQuery.value)
     }
 
     @Test
     fun onTagSelected_updatesState() {
-        val repository = FakeBarcodeRepository()
-        val getBarcodesUseCase = GetBarcodesWithTagsUseCase(repository)
-        val updateBarcodeUseCase = UpdateBarcodeUseCase(repository)
-        val deleteBarcodeUseCase = DeleteBarcodeUseCase(repository)
-        val fakeSettingsRepo = object : cat.company.qrreader.domain.repository.SettingsRepository {
-            override val hideTaggedWhenNoTagSelected: Flow<Boolean>
-                get() = kotlinx.coroutines.flow.flowOf(false)
-            override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
-            override val searchAcrossAllTagsWhenFiltering: Flow<Boolean>
-                get() = kotlinx.coroutines.flow.flowOf(false)
-            override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
-            override val aiGenerationEnabled: kotlinx.coroutines.flow.Flow<Boolean>
-                get() = kotlinx.coroutines.flow.flowOf(true)
-            override suspend fun setAiGenerationEnabled(value: Boolean) {}
-            override val aiLanguage: kotlinx.coroutines.flow.Flow<String>
-                get() = kotlinx.coroutines.flow.flowOf("en")
-            override suspend fun setAiLanguage(value: String) {}
-        }
-        val vm = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo)
-
+        val vm = makeViewModel(FakeBarcodeRepository())
         vm.onTagSelected(42)
         assertEquals(42, vm.selectedTagId.value)
     }
@@ -119,24 +123,7 @@ class HistoryViewModelTest {
     @Test
     fun savedBarcodes_respectsDebounce_and_emitsResults() = runTest {
         val fakeRepository = FakeBarcodeRepository()
-        val getBarcodesUseCase = GetBarcodesWithTagsUseCase(fakeRepository)
-        val updateBarcodeUseCase = UpdateBarcodeUseCase(fakeRepository)
-        val deleteBarcodeUseCase = DeleteBarcodeUseCase(fakeRepository)
-        val fakeSettingsRepo = object : cat.company.qrreader.domain.repository.SettingsRepository {
-            override val hideTaggedWhenNoTagSelected: Flow<Boolean>
-                get() = kotlinx.coroutines.flow.flowOf(false)
-            override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
-            override val searchAcrossAllTagsWhenFiltering: Flow<Boolean>
-                get() = kotlinx.coroutines.flow.flowOf(false)
-            override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
-            override val aiGenerationEnabled: kotlinx.coroutines.flow.Flow<Boolean>
-                get() = kotlinx.coroutines.flow.flowOf(true)
-            override suspend fun setAiGenerationEnabled(value: Boolean) {}
-            override val aiLanguage: kotlinx.coroutines.flow.Flow<String>
-                get() = kotlinx.coroutines.flow.flowOf("en")
-            override suspend fun setAiLanguage(value: String) {}
-        }
-        val vm = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo)
+        val vm = makeViewModel(fakeRepository)
 
         val collected = mutableListOf<List<BarcodeWithTagsModel>>()
         val job = launch { vm.savedBarcodes.collect { collected.add(it) } }
@@ -195,18 +182,21 @@ class HistoryViewModelTest {
                 settingsSearchAcrossAll.value = value
             }
             override val aiGenerationEnabled: Flow<Boolean>
-                get() = kotlinx.coroutines.flow.flowOf(true)
+                get() = flowOf(true)
             override suspend fun setAiGenerationEnabled(value: Boolean) {}
             override val aiLanguage: Flow<String>
-                get() = kotlinx.coroutines.flow.flowOf("en")
+                get() = flowOf("en")
             override suspend fun setAiLanguage(value: String) {}
         }
 
-        val getBarcodesUseCase = GetBarcodesWithTagsUseCase(fakeRepository)
-        val updateBarcodeUseCase = UpdateBarcodeUseCase(fakeRepository)
-        val deleteBarcodeUseCase = DeleteBarcodeUseCase(fakeRepository)
-
-        val vm = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepository)
+        val vm = HistoryViewModel(
+            GetBarcodesWithTagsUseCase(fakeRepository),
+            UpdateBarcodeUseCase(fakeRepository),
+            DeleteBarcodeUseCase(fakeRepository),
+            fakeSettingsRepository,
+            FakeGenerateBarcodeAiDataUseCase(),
+            GetAiLanguageUseCase(fakeSettingsRepository)
+        )
 
         val collected = mutableListOf<List<BarcodeWithTagsModel>>()
         val job = launch { vm.savedBarcodes.collect { collected.add(it) } }

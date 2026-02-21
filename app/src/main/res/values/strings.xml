@@ -57,6 +57,8 @@
     <string name="title_label">Title</string>
     <string name="description_label">Description</string>
     <string name="ai_description">AI Description</string>
+    <string name="regenerate_ai_description">Regenerate AI description</string>
+    <string name="delete_ai_description">Delete AI description</string>
 
     <!-- Delete confirm dialog -->
     <string name="delete_confirm_message">Do you really want to delete this entry?</string>

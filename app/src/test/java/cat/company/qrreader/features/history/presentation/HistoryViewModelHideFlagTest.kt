@@ -4,9 +4,11 @@ import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.domain.model.BarcodeWithTagsModel
 import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.domain.repository.BarcodeRepository
+import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,6 +55,20 @@ class HistoryViewModelHideFlagTest {
         override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
     }
 
+    private class FakeGenerateBarcodeAiDataUseCase : GenerateBarcodeAiDataUseCase() {
+        override suspend fun invoke(
+            barcodeContent: String,
+            barcodeType: String?,
+            barcodeFormat: String?,
+            existingTags: List<String>,
+            language: String
+        ) = Result.failure<cat.company.qrreader.domain.model.BarcodeAiData>(
+            UnsupportedOperationException("AI not available in tests")
+        )
+        override suspend fun downloadModelIfNeeded() {}
+        override fun cleanup() {}
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun savedBarcodes_includes_hide_flag_in_dao_query() = runTest {
@@ -80,7 +96,9 @@ class HistoryViewModelHideFlagTest {
             getBarcodesWithTagsUseCase,
             updateBarcodeUseCase,
             deleteBarcodeUseCase,
-            fakeSettingsRepo
+            fakeSettingsRepo,
+            FakeGenerateBarcodeAiDataUseCase(),
+            GetAiLanguageUseCase(fakeSettingsRepo)
         )
 
         // Collect savedBarcodes to trigger the Flow
