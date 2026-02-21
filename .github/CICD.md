@@ -123,8 +123,9 @@ Code → CI → Alpha (Internal) → Beta (External) → Production (Public)
 1. Ensure your changes are merged to master
 2. Navigate to: GitHub → Actions → "Create Release"
 3. Click "Run workflow" → enter version (e.g. `5.2.0`)
-4. The pipeline runs automatically: tests → build → sign → Alpha deploy → Beta deploy
-5. Approve Production promotion when ready
+4. Optionally check "Use Beta track before Production" (default: unchecked → 2-tier; checked → 3-tier)
+5. The pipeline runs automatically: tests → build → sign → Alpha deploy (→ Beta deploy if checked)
+6. Approve Production promotion when ready
 
 **How to Trigger (via direct tag push):**
 1. Ensure you are on the `master` branch
@@ -556,7 +557,7 @@ This ensures each branch has a unique, traceable version.
 |--------|------------------------|-------------------------|--------------------------|----------------|
 | **Trigger** | Automatic (via workflow API) | Automatic (`on.push.tags`) | Manual | Manual |
 | **Alpha Deploy** | ✅ Automatic | ✅ Automatic | ✅ Manual (must check box) | ✅ Manual (must check box) |
-| **Beta Deploy** | ✅ Automatic (3-tier default) | ✅ Automatic (3-tier default) | ✅ Optional (check use_beta_track) | ✅ Optional (check use_beta_track) |
+| **Beta Deploy** | ✅ Optional (check use_beta_track, default: off) | ✅ Automatic (3-tier default) | ✅ Optional (check use_beta_track) | ✅ Optional (check use_beta_track) |
 | **Production Promote** | ✅ Available (with approval) | ✅ Available (with approval) | ✅ Available (with approval) | ✅ Available (with approval) |
 | **Version Name** | Clean (e.g., `5.2.0`) | Clean (e.g., `5.2.0`) | Clean or dev | Always dev (e.g., `5.2.0-dev.8+hash`) |
 
