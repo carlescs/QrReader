@@ -2,6 +2,7 @@ package cat.company.qrreader.domain.usecase.barcode
 
 import android.util.Log
 import cat.company.qrreader.domain.usecase.enrichedBarcodeContext
+import cat.company.qrreader.domain.usecase.extractJsonObject
 import cat.company.qrreader.domain.usecase.languageNameForPrompt
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.Generation
@@ -168,7 +169,8 @@ open class GenerateBarcodeDescriptionUseCase {
 
             // Parse JSON response; fall back to raw text for robustness
             val rawDescription = try {
-                val json = JSONObject(text)
+                val jsonText = extractJsonObject(text) ?: throw JSONException("No JSON object found")
+                val json = JSONObject(jsonText)
                 json.getString("description").trim()
             } catch (e: JSONException) {
                 Log.w(TAG, "JSON parsing failed, using raw text: ${e.message}")
