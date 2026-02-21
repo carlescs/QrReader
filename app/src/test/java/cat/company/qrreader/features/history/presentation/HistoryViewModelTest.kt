@@ -9,19 +9,38 @@ import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 import java.util.Date
 
 class HistoryViewModelTest {
+
+    private val testDispatcher = StandardTestDispatcher()
+
+    @Before
+    fun setup() {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
 
     // Minimal fake implementation of BarcodeRepository for unit tests
     private class FakeBarcodeRepository : BarcodeRepository {
@@ -248,7 +267,7 @@ class HistoryViewModelTest {
 
         val barcode = BarcodeModel(id = 1, type = 4, format = 256, barcode = "https://example.com", date = Date())
         vm.regenerateAiDescription(barcode)
-        runCurrent()
+        advanceUntilIdle()
 
         assertEquals(successDescription, vm.regenerateDescriptionState.value.description)
         assertEquals(null, vm.regenerateDescriptionState.value.error)
@@ -284,7 +303,7 @@ class HistoryViewModelTest {
 
         val barcode = BarcodeModel(id = 1, type = 4, format = 256, barcode = "https://example.com", date = Date())
         vm.regenerateAiDescription(barcode)
-        runCurrent()
+        advanceUntilIdle()
 
         assertEquals(null, vm.regenerateDescriptionState.value.description)
         assertEquals(errorMessage, vm.regenerateDescriptionState.value.error)
@@ -320,7 +339,7 @@ class HistoryViewModelTest {
         // Trigger a failure to put the ViewModel in an error state
         val barcode = BarcodeModel(id = 1, type = 4, format = 256, barcode = "https://example.com", date = Date())
         vm.regenerateAiDescription(barcode)
-        runCurrent()
+        advanceUntilIdle()
         assertEquals(errorMessage, vm.regenerateDescriptionState.value.error)
 
         // Reset should clear all state
