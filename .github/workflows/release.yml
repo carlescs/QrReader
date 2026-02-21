@@ -17,11 +17,6 @@ on:
         description: 'Version to release — only used when version_bump is "manual" (e.g. 5.2.0 or v5.2.0)'
         required: false
         type: string
-      use_beta_track:
-        description: 'Use Beta track before Production (3-tier: Alpha → Beta → Production)'
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -122,5 +117,5 @@ jobs:
           gh workflow run android-ci-cd.yml \
             --ref master \
             --field upload_to_play_store=true \
-            --field use_beta_track=${{ inputs.use_beta_track }}
+            --field use_beta_track=true
           echo "✅ CI/CD pipeline triggered for $VERSION"
