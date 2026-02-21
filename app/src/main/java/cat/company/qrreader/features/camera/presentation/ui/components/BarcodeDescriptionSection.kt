@@ -16,9 +16,11 @@ import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -89,7 +91,7 @@ fun BarcodeDescriptionSection(
                 ErrorDescription(error)
             }
             description != null -> {
-                DescriptionText(description)
+                DescriptionText(description, enabled = saveDescription)
             }
         }
     }
@@ -139,14 +141,18 @@ private fun ErrorDescription(error: String) {
 }
 
 @Composable
-private fun DescriptionText(description: String) {
-    ExpandableText(
-        text = description,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        style = MaterialTheme.typography.bodyMedium
-    )
+private fun DescriptionText(description: String, enabled: Boolean = true) {
+    CompositionLocalProvider(
+        LocalContentColor provides if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+    ) {
+        ExpandableText(
+            text = description,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
 }
 
 /**
