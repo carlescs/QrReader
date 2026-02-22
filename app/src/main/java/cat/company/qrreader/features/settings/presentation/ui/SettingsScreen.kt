@@ -1,6 +1,7 @@
 package cat.company.qrreader.features.settings.presentation.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,8 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -46,19 +50,43 @@ private val SUPPORTED_LANGUAGES = listOf(
 )
 
 /**
- * Settings screen
+ * Main settings screen showing navigation items for each settings section.
  */
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
+fun SettingsScreen(
+    viewModel: SettingsViewModel = koinViewModel(),
+    onNavigateToHistorySettings: () -> Unit = {},
+    onNavigateToAiSettings: () -> Unit = {}
+) {
+    val isAiAvailableOnDevice by viewModel.isAiAvailableOnDevice.collectAsState()
+
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        SettingsNavigationItem(
+            title = stringResource(R.string.history),
+            subtitle = stringResource(R.string.history_settings_description),
+            onClick = onNavigateToHistorySettings
+        )
+        HorizontalDivider()
+        if (isAiAvailableOnDevice) {
+            SettingsNavigationItem(
+                title = stringResource(R.string.settings_section_ai),
+                subtitle = stringResource(R.string.ai_settings_description),
+                onClick = onNavigateToAiSettings
+            )
+            HorizontalDivider()
+        }
+    }
+}
+
+/**
+ * History settings sub-screen showing history display preferences.
+ */
+@Composable
+fun HistorySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val hideTaggedState by viewModel.hideTaggedWhenNoTagSelected.collectAsState(initial = false)
     val searchAcrossAllState by viewModel.searchAcrossAllTagsWhenFiltering.collectAsState(initial = false)
-    val aiGenerationState by viewModel.aiGenerationEnabled.collectAsState(initial = true)
-    val aiLanguageState by viewModel.aiLanguage.collectAsState(initial = "en")
-    val isAiAvailableOnDevice by viewModel.isAiAvailableOnDevice.collectAsState()
-    var showLanguageDialog by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
-        SettingsSectionHeader(title = stringResource(R.string.history))
         ListItem(
             headlineContent = { Text(text = stringResource(R.string.hide_tagged_when_no_tag_selected)) },
             supportingContent = { Text(text = stringResource(R.string.hide_tagged_description)) },
@@ -80,34 +108,44 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
             },
             colors = androidx.compose.material3.ListItemDefaults.colors()
         )
-        if (isAiAvailableOnDevice) {
-            SettingsSectionHeader(title = stringResource(R.string.settings_section_ai))
-            ListItem(
-                headlineContent = { Text(text = stringResource(R.string.ai_features)) },
-                supportingContent = { Text(text = stringResource(R.string.ai_features_description)) },
-                trailingContent = {
-                    Switch(checked = aiGenerationState, onCheckedChange = { newValue ->
-                        viewModel.setAiGenerationEnabled(newValue)
-                    })
-                },
-                colors = androidx.compose.material3.ListItemDefaults.colors()
-            )
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            val currentLanguageName = SUPPORTED_LANGUAGES.firstOrNull { it.code == aiLanguageState }
-                ?.let { stringResource(it.nameRes) }
-                ?: stringResource(R.string.language_english)
-            ListItem(
-                headlineContent = { Text(text = stringResource(R.string.ai_language)) },
-                supportingContent = { Text(text = stringResource(R.string.ai_language_description)) },
-                trailingContent = {
-                    TextButton(onClick = { showLanguageDialog = true }) {
-                        Text(text = currentLanguageName)
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = androidx.compose.material3.ListItemDefaults.colors()
-            )
-        }
+    }
+}
+
+/**
+ * AI settings sub-screen showing AI feature configuration options.
+ */
+@Composable
+fun AiSettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
+    val aiGenerationState by viewModel.aiGenerationEnabled.collectAsState(initial = true)
+    val aiLanguageState by viewModel.aiLanguage.collectAsState(initial = "en")
+    var showLanguageDialog by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.ai_features)) },
+            supportingContent = { Text(text = stringResource(R.string.ai_features_description)) },
+            trailingContent = {
+                Switch(checked = aiGenerationState, onCheckedChange = { newValue ->
+                    viewModel.setAiGenerationEnabled(newValue)
+                })
+            },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        val currentLanguageName = SUPPORTED_LANGUAGES.firstOrNull { it.code == aiLanguageState }
+            ?.let { stringResource(it.nameRes) }
+            ?: stringResource(R.string.language_english)
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.ai_language)) },
+            supportingContent = { Text(text = stringResource(R.string.ai_language_description)) },
+            trailingContent = {
+                TextButton(onClick = { showLanguageDialog = true }) {
+                    Text(text = currentLanguageName)
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
     }
 
     if (showLanguageDialog) {
@@ -123,12 +161,24 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
 }
 
 @Composable
-private fun SettingsSectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
+private fun SettingsNavigationItem(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    ListItem(
+        headlineContent = { Text(text = title, style = MaterialTheme.typography.titleMedium) },
+        supportingContent = { Text(text = subtitle) },
+        trailingContent = {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null
+            )
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = androidx.compose.material3.ListItemDefaults.colors()
     )
 }
 
