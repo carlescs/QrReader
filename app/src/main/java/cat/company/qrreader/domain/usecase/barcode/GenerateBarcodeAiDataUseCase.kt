@@ -305,6 +305,24 @@ open class GenerateBarcodeAiDataUseCase {
         }
     }
 
+    /**
+     * Check whether the current device supports AI features (Gemini Nano / ML Kit Prompt API).
+     *
+     * @return `true` if the device can run AI features (model is available, downloadable, or
+     *         currently downloading), `false` if it is permanently unavailable on this device.
+     */
+    open suspend fun isAiSupportedOnDevice(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            if (model == null) {
+                model = Generation.getClient()
+            }
+            model?.checkStatus() != FeatureStatus.UNAVAILABLE
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking AI device support", e)
+            false
+        }
+    }
+
     open fun cleanup() {
         model = null
     }

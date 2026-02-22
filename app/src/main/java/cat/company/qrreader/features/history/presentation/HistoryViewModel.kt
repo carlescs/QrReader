@@ -48,9 +48,19 @@ class HistoryViewModel(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    /** Whether AI generation features are currently enabled in settings. */
-    val aiGenerationEnabled: StateFlow<Boolean> = settingsRepository.aiGenerationEnabled
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    private val _isAiSupportedOnDevice = MutableStateFlow(false)
+
+    init {
+        viewModelScope.launch {
+            _isAiSupportedOnDevice.value = generateBarcodeAiDataUseCase.isAiSupportedOnDevice()
+        }
+    }
+
+    /** Whether AI generation features are available (device support AND user setting enabled). */
+    val aiGenerationEnabled: StateFlow<Boolean> =
+        combine(settingsRepository.aiGenerationEnabled, _isAiSupportedOnDevice) { enabled, supported ->
+            enabled && supported
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     // Debounce input to avoid querying DB on every keystroke
     @OptIn(FlowPreview::class)

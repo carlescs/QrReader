@@ -103,6 +103,7 @@ fun OtherContent(
         description = description,
         isLoading = isLoadingDescription,
         error = descriptionError,
+        aiGenerationEnabled = aiGenerationEnabled,
         saveDescription = saveDescription.value,
         onToggleSaveDescription = { saveDescription.value = it },
         modifier = Modifier

@@ -82,6 +82,7 @@ class HistoryTest {
         ) = Result.failure<cat.company.qrreader.domain.model.BarcodeAiData>(
             UnsupportedOperationException("AI not available in tests")
         )
+        override suspend fun isAiSupportedOnDevice(): Boolean = true
         override suspend fun downloadModelIfNeeded() {}
         override fun cleanup() {}
     }

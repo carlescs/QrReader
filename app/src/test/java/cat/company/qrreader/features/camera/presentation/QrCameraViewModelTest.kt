@@ -66,6 +66,8 @@ class QrCameraViewModelTest {
             }
         }
 
+        override suspend fun isAiSupportedOnDevice(): Boolean = true
+
         override suspend fun downloadModelIfNeeded() {
             // No-op for tests
         }

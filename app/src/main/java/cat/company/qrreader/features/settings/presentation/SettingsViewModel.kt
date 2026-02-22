@@ -1,6 +1,7 @@
 package cat.company.qrreader.features.settings.presentation
 
 import androidx.lifecycle.ViewModel
+import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
@@ -11,6 +12,9 @@ import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCase
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -25,8 +29,23 @@ class SettingsViewModel(
     getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase,
     private val setAiGenerationEnabledUseCase: SetAiGenerationEnabledUseCase,
     getAiLanguageUseCase: GetAiLanguageUseCase,
-    private val setAiLanguageUseCase: SetAiLanguageUseCase
+    private val setAiLanguageUseCase: SetAiLanguageUseCase,
+    private val generateBarcodeAiDataUseCase: GenerateBarcodeAiDataUseCase
 ) : ViewModel() {
+
+    private val _isAiAvailableOnDevice = MutableStateFlow(false)
+
+    init {
+        viewModelScope.launch {
+            _isAiAvailableOnDevice.value = generateBarcodeAiDataUseCase.isAiSupportedOnDevice()
+        }
+    }
+
+    /**
+     * Whether AI features are available on the current device (Gemini Nano support).
+     * When `false`, the AI settings section should be hidden entirely.
+     */
+    val isAiAvailableOnDevice: StateFlow<Boolean> = _isAiAvailableOnDevice.asStateFlow()
 
     /**
      * Flow of the hide tagged when no tag selected setting
