@@ -52,6 +52,8 @@ import cat.company.qrreader.features.codeCreator.presentation.ui.CodeCreatorScre
 import cat.company.qrreader.events.SharedEvents
 import cat.company.qrreader.features.history.presentation.ui.History
 import cat.company.qrreader.ui.components.navigation.items
+import cat.company.qrreader.features.settings.presentation.ui.AiSettingsScreen
+import cat.company.qrreader.features.settings.presentation.ui.HistorySettingsScreen
 import cat.company.qrreader.features.settings.presentation.ui.SettingsScreen
 import com.google.firebase.analytics.FirebaseAnalytics
 
@@ -74,6 +76,8 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics) {
                 "camera" -> "Camera"
                 "codeCreator" -> "Code Creator"
                 "settings" -> "Settings"
+                "settings/history" -> "Settings - History"
+                "settings/ai" -> "Settings - AI"
                 else -> destination.route ?: "Unknown"
             }
             params.putString(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
@@ -149,7 +153,16 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics) {
                         CodeCreatorScreen()
                     }
                     composable("settings") {
-                        SettingsScreen()
+                        SettingsScreen(
+                            onNavigateToHistorySettings = { navController.navigate("settings/history") },
+                            onNavigateToAiSettings = { navController.navigate("settings/ai") }
+                        )
+                    }
+                    composable("settings/history") {
+                        HistorySettingsScreen()
+                    }
+                    composable("settings/ai") {
+                        AiSettingsScreen()
                     }
                 }
             }
