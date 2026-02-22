@@ -175,6 +175,10 @@ object GitVersioning {
 
     @JvmStatic
     fun getVersionName(project: Project): String {
+        // When FORCE_DEV_VERSION is set (e.g. manual workflow_dispatch trigger), always
+        // produce a dev version name regardless of branch or tag state.
+        val forceDevVersion = System.getenv("FORCE_DEV_VERSION") == "true"
+
         // Get current branch
         val branchProvider = gitCommand(project, listOf("git", "rev-parse", "--abbrev-ref", "HEAD"))
         val branch = branchProvider.orNull?.trim() ?: ""
@@ -190,15 +194,15 @@ object GitVersioning {
             val tagCommitProvider = gitCommand(project, listOf("git", "rev-list", "-n", "1", tag))
             val tagCommit = tagCommitProvider.orNull?.trim() ?: ""
 
-            if (currentCommit == tagCommit && currentCommit.isNotEmpty()) {
-                // Clean release build (tagged commit)
+            if (!forceDevVersion && currentCommit == tagCommit && currentCommit.isNotEmpty()) {
+                // Clean release build (tagged commit, automatic trigger)
                 return tag.removePrefix("v")
-            } else if (branch == "master" || branch == "main") {
+            } else if (!forceDevVersion && (branch == "master" || branch == "main")) {
                 // Master/main branch: use clean version without -dev suffix
                 // This ensures production deployments from master have proper version names
                 return tag.removePrefix("v")
             } else {
-                // Development build with commit hash (for feature branches)
+                // Development build with commit hash (for feature branches or manual triggers)
                 val shortHashProvider = gitCommand(project, listOf("git", "rev-parse", "--short", "HEAD"))
                 val shortHash = shortHashProvider.orNull?.trim() ?: "unknown"
                 val commitsSinceTagProvider = gitCommand(project, listOf("git", "rev-list", "$tag..HEAD", "--count"))
@@ -208,11 +212,11 @@ object GitVersioning {
         }
         
         // No tags found
-        if (branch == "master" || branch == "main") {
+        if (!forceDevVersion && (branch == "master" || branch == "main")) {
             // Master/main branch: use simple version without -dev suffix
             return "1.0.0"
         } else {
-            // Development branch: use version with -dev suffix and commit hash
+            // Development branch or manual trigger: use version with -dev suffix and commit hash
             val shortHashProvider = gitCommand(project, listOf("git", "rev-parse", "--short", "HEAD"))
             val shortHash = shortHashProvider.orNull?.trim() ?: "unknown"
             return "0.0.1-dev+$shortHash"
