@@ -1,5 +1,6 @@
 package cat.company.qrreader.db.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.Date
@@ -17,5 +18,5 @@ data class SavedBarcode(
     var description: String?=null,
     val barcode: String,
     var aiGeneratedDescription: String?=null,
-    var isFavorite: Boolean = false,
+    @ColumnInfo(name = "is_favorite") var isFavorite: Boolean = false,
 )

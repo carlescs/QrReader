@@ -359,4 +359,120 @@ class HistoryViewModelTest {
         vm.resetRegenerateDescriptionState()
         assertEquals(HistoryViewModel.RegenerateDescriptionState(), vm.regenerateDescriptionState.value)
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun toggleFavoritesFilter_changesSavedBarcodesRequest() = runTest {
+        // Repository that records the showOnlyFavorites parameter
+        var lastShowOnlyFavorites = false
+        val repo = object : BarcodeRepository {
+            private val resultFlow = MutableStateFlow<List<BarcodeWithTagsModel>>(emptyList())
+            override fun getAllBarcodes(): Flow<List<BarcodeModel>> = flowOf(emptyList())
+            override fun getBarcodesWithTags(): Flow<List<BarcodeWithTagsModel>> = resultFlow
+            override fun getBarcodesWithTagsByFilter(
+                tagId: Int?, query: String?,
+                hideTaggedWhenNoTagSelected: Boolean,
+                searchAcrossAllTagsWhenFiltering: Boolean,
+                showOnlyFavorites: Boolean
+            ): Flow<List<BarcodeWithTagsModel>> {
+                lastShowOnlyFavorites = showOnlyFavorites
+                return resultFlow
+            }
+            override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
+            override suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long = 0L
+            override suspend fun updateBarcode(barcode: BarcodeModel): Int = 0
+            override suspend fun deleteBarcode(barcode: BarcodeModel) {}
+            override suspend fun addTagToBarcode(barcodeId: Int, tagId: Int) {}
+            override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
+            override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
+            override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
+        }
+        val fakeSettingsRepo = makeFakeSettingsRepo()
+        val vm = HistoryViewModel(
+            GetBarcodesWithTagsUseCase(repo),
+            UpdateBarcodeUseCase(repo),
+            DeleteBarcodeUseCase(repo),
+            fakeSettingsRepo,
+            FakeGenerateBarcodeAiDataUseCase(),
+            GetAiLanguageUseCase(fakeSettingsRepo),
+            ToggleFavoriteUseCase(repo)
+        )
+
+        val job = launch { vm.savedBarcodes.collect { } }
+
+        // Initially, showOnlyFavorites should be false
+        advanceTimeBy(250)
+        runCurrent()
+        assertEquals(false, lastShowOnlyFavorites)
+        assertEquals(false, vm.showOnlyFavorites.value)
+
+        // Toggle favorites filter on
+        vm.toggleFavoritesFilter()
+        advanceTimeBy(250)
+        runCurrent()
+        assertEquals(true, lastShowOnlyFavorites)
+        assertEquals(true, vm.showOnlyFavorites.value)
+
+        // Toggle favorites filter off again
+        vm.toggleFavoritesFilter()
+        advanceTimeBy(250)
+        runCurrent()
+        assertEquals(false, lastShowOnlyFavorites)
+        assertEquals(false, vm.showOnlyFavorites.value)
+
+        job.cancel()
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun toggleFavorite_callsUseCaseWithCorrectArguments() = runTest {
+        var lastBarcodeId: Int? = null
+        var lastIsFavorite: Boolean? = null
+        val repo = object : BarcodeRepository {
+            private val resultFlow = MutableStateFlow<List<BarcodeWithTagsModel>>(emptyList())
+            override fun getAllBarcodes(): Flow<List<BarcodeModel>> = flowOf(emptyList())
+            override fun getBarcodesWithTags(): Flow<List<BarcodeWithTagsModel>> = resultFlow
+            override fun getBarcodesWithTagsByFilter(
+                tagId: Int?, query: String?,
+                hideTaggedWhenNoTagSelected: Boolean,
+                searchAcrossAllTagsWhenFiltering: Boolean,
+                showOnlyFavorites: Boolean
+            ): Flow<List<BarcodeWithTagsModel>> = resultFlow
+            override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
+            override suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long = 0L
+            override suspend fun updateBarcode(barcode: BarcodeModel): Int = 0
+            override suspend fun deleteBarcode(barcode: BarcodeModel) {}
+            override suspend fun addTagToBarcode(barcodeId: Int, tagId: Int) {}
+            override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
+            override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
+            override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {
+                lastBarcodeId = barcodeId
+                lastIsFavorite = isFavorite
+            }
+        }
+        val fakeSettingsRepo = makeFakeSettingsRepo()
+        val vm = HistoryViewModel(
+            GetBarcodesWithTagsUseCase(repo),
+            UpdateBarcodeUseCase(repo),
+            DeleteBarcodeUseCase(repo),
+            fakeSettingsRepo,
+            FakeGenerateBarcodeAiDataUseCase(),
+            GetAiLanguageUseCase(fakeSettingsRepo),
+            ToggleFavoriteUseCase(repo)
+        )
+
+        // Mark barcode 42 as favorite
+        vm.toggleFavorite(42, true)
+        advanceUntilIdle()
+
+        assertEquals(42, lastBarcodeId)
+        assertEquals(true, lastIsFavorite)
+
+        // Remove favorite from barcode 7
+        vm.toggleFavorite(7, false)
+        advanceUntilIdle()
+
+        assertEquals(7, lastBarcodeId)
+        assertEquals(false, lastIsFavorite)
+    }
 }
