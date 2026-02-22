@@ -154,8 +154,16 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics) {
                     }
                     composable("settings") {
                         SettingsScreen(
-                            onNavigateToHistorySettings = { navController.navigate("settings/history") },
-                            onNavigateToAiSettings = { navController.navigate("settings/ai") }
+                            onNavigateToHistorySettings = {
+                                navController.navigate("settings/history") {
+                                    launchSingleTop = true
+                                }
+                            },
+                            onNavigateToAiSettings = {
+                                navController.navigate("settings/ai") {
+                                    launchSingleTop = true
+                                }
+                            }
                         )
                     }
                     composable("settings/history") {
