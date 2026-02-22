@@ -17,4 +17,5 @@ data class SavedBarcode(
     var description: String?=null,
     val barcode: String,
     var aiGeneratedDescription: String?=null,
+    var isFavorite: Boolean = false,
 )

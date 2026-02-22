@@ -27,7 +27,8 @@ interface BarcodeRepository {
         tagId: Int?,
         query: String?,
         hideTaggedWhenNoTagSelected: Boolean,
-        searchAcrossAllTagsWhenFiltering: Boolean
+        searchAcrossAllTagsWhenFiltering: Boolean,
+        showOnlyFavorites: Boolean = false
     ): Flow<List<BarcodeWithTagsModel>>
 
     /**
@@ -61,8 +62,12 @@ interface BarcodeRepository {
     suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int)
 
     /**
+     * Toggle the favorite state of a barcode
+     */
+    suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean)
+
+    /**
      * Toggle a tag on a barcode (add if not present, remove if present)
      */
     suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel)
 }
-

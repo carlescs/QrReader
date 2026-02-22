@@ -9,6 +9,7 @@ import cat.company.qrreader.domain.repository.BarcodeRepository
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
+import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -51,7 +52,8 @@ class HistoryTest {
             tagId: Int?,
             query: String?,
             hideTaggedWhenNoTagSelected: Boolean,
-            searchAcrossAllTagsWhenFiltering: Boolean
+            searchAcrossAllTagsWhenFiltering: Boolean,
+            showOnlyFavorites: Boolean
         ): Flow<List<BarcodeWithTagsModel>> {
             lastRequest = Triple(tagId, query, hideTaggedWhenNoTagSelected)
             return resultFlow
@@ -70,6 +72,8 @@ class HistoryTest {
         override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
 
         override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
+
+        override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
     }
 
     private class FakeGenerateBarcodeAiDataUseCase : GenerateBarcodeAiDataUseCase() {
@@ -115,7 +119,7 @@ class HistoryTest {
                 get() = kotlinx.coroutines.flow.flowOf("en")
             override suspend fun setAiLanguage(value: String) {}
         }
-        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo, FakeGenerateBarcodeAiDataUseCase(), GetAiLanguageUseCase(fakeSettingsRepo))
+        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo, FakeGenerateBarcodeAiDataUseCase(), GetAiLanguageUseCase(fakeSettingsRepo), ToggleFavoriteUseCase(fakeRepository))
 
         // Test query change
         viewModel.onQueryChange("test")
@@ -158,7 +162,7 @@ class HistoryTest {
                 get() = kotlinx.coroutines.flow.flowOf("en")
             override suspend fun setAiLanguage(value: String) {}
         }
-        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo, FakeGenerateBarcodeAiDataUseCase(), GetAiLanguageUseCase(fakeSettingsRepo))
+        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo, FakeGenerateBarcodeAiDataUseCase(), GetAiLanguageUseCase(fakeSettingsRepo), ToggleFavoriteUseCase(fakeRepository))
 
         // Initial state should be empty
         assertEquals("", viewModel.searchQuery.value)
@@ -194,7 +198,7 @@ class HistoryTest {
                 get() = kotlinx.coroutines.flow.flowOf("en")
             override suspend fun setAiLanguage(value: String) {}
         }
-        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo, FakeGenerateBarcodeAiDataUseCase(), GetAiLanguageUseCase(fakeSettingsRepo))
+        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo, FakeGenerateBarcodeAiDataUseCase(), GetAiLanguageUseCase(fakeSettingsRepo), ToggleFavoriteUseCase(fakeRepository))
 
         // Initial state should be null
         assertNull(viewModel.selectedTagId.value)

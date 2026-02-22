@@ -4,6 +4,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,9 +17,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalNavigationDrawer
@@ -151,6 +156,7 @@ private fun HistoryContent(
     val lazyListState = rememberLazyListState()
     val items by viewModel.savedBarcodes.collectAsStateWithLifecycle(initialValue = emptyList())
     val query by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val showOnlyFavorites by viewModel.showOnlyFavorites.collectAsStateWithLifecycle()
     var searchActive by rememberSaveable { mutableStateOf(false) }
 
 
@@ -165,6 +171,11 @@ private fun HistoryContent(
             onQueryChange = viewModel::onQueryChange,
             onSearchActiveChange = { searchActive = it },
             sdf = sdf
+        )
+
+        FavoritesFilterBar(
+            showOnlyFavorites = showOnlyFavorites,
+            onToggle = viewModel::toggleFavoritesFilter
         )
 
         HistoryResults(
@@ -455,6 +466,41 @@ private fun SearchResultsList(
                 onDismissSearch = onDismissSearch
             )
         }
+    }
+}
+
+/**
+ * Filter chip bar for showing only favorited barcodes.
+ *
+ * Displays a [FilterChip] that toggles the favorites-only filter.
+ * When selected, only barcodes marked as favorites are shown in the results list.
+ *
+ * @param showOnlyFavorites Whether the favorites filter is currently active
+ * @param onToggle Callback invoked when the user taps the chip to toggle the filter
+ */
+@Composable
+private fun FavoritesFilterBar(
+    showOnlyFavorites: Boolean,
+    onToggle: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.Start
+    ) {
+        FilterChip(
+            selected = showOnlyFavorites,
+            onClick = onToggle,
+            label = { Text(stringResource(R.string.favorites)) },
+            leadingIcon = {
+                Icon(
+                    imageVector = if (showOnlyFavorites) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                    contentDescription = null,
+                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                )
+            }
+        )
     }
 }
 

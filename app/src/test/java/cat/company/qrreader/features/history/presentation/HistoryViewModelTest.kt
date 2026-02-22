@@ -7,6 +7,7 @@ import cat.company.qrreader.domain.repository.BarcodeRepository
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
+import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import kotlinx.coroutines.Dispatchers
@@ -57,7 +58,8 @@ class HistoryViewModelTest {
             tagId: Int?,
             query: String?,
             hideTaggedWhenNoTagSelected: Boolean,
-            searchAcrossAllTagsWhenFiltering: Boolean
+            searchAcrossAllTagsWhenFiltering: Boolean,
+            showOnlyFavorites: Boolean
         ): Flow<List<BarcodeWithTagsModel>> {
             lastRequest = Triple(tagId, query, hideTaggedWhenNoTagSelected)
             return resultFlow
@@ -76,6 +78,8 @@ class HistoryViewModelTest {
         override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
 
         override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
+
+        override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
 
         fun emitResult(list: List<BarcodeWithTagsModel>) {
             resultFlow.value = list
@@ -120,7 +124,8 @@ class HistoryViewModelTest {
             DeleteBarcodeUseCase(repository),
             fakeSettingsRepo,
             FakeGenerateBarcodeAiDataUseCase(),
-            GetAiLanguageUseCase(fakeSettingsRepo)
+            GetAiLanguageUseCase(fakeSettingsRepo),
+            ToggleFavoriteUseCase(repository)
         )
     }
 
@@ -215,7 +220,8 @@ class HistoryViewModelTest {
             DeleteBarcodeUseCase(fakeRepository),
             fakeSettingsRepository,
             FakeGenerateBarcodeAiDataUseCase(),
-            GetAiLanguageUseCase(fakeSettingsRepository)
+            GetAiLanguageUseCase(fakeSettingsRepository),
+            ToggleFavoriteUseCase(fakeRepository)
         )
 
         val collected = mutableListOf<List<BarcodeWithTagsModel>>()
@@ -264,7 +270,8 @@ class HistoryViewModelTest {
             DeleteBarcodeUseCase(FakeBarcodeRepository()),
             fakeSettingsRepo,
             fakeAiUseCase,
-            GetAiLanguageUseCase(fakeSettingsRepo)
+            GetAiLanguageUseCase(fakeSettingsRepo),
+            ToggleFavoriteUseCase(FakeBarcodeRepository())
         )
 
         val barcode = BarcodeModel(id = 1, type = 4, format = 256, barcode = "https://example.com", date = Date())
@@ -301,7 +308,8 @@ class HistoryViewModelTest {
             DeleteBarcodeUseCase(FakeBarcodeRepository()),
             fakeSettingsRepo,
             fakeAiUseCase,
-            GetAiLanguageUseCase(fakeSettingsRepo)
+            GetAiLanguageUseCase(fakeSettingsRepo),
+            ToggleFavoriteUseCase(FakeBarcodeRepository())
         )
 
         val barcode = BarcodeModel(id = 1, type = 4, format = 256, barcode = "https://example.com", date = Date())
@@ -337,7 +345,8 @@ class HistoryViewModelTest {
             DeleteBarcodeUseCase(FakeBarcodeRepository()),
             fakeSettingsRepo,
             fakeAiUseCase,
-            GetAiLanguageUseCase(fakeSettingsRepo)
+            GetAiLanguageUseCase(fakeSettingsRepo),
+            ToggleFavoriteUseCase(FakeBarcodeRepository())
         )
 
         // Trigger a failure to put the ViewModel in an error state

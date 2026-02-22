@@ -7,6 +7,7 @@ import cat.company.qrreader.domain.repository.BarcodeRepository
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
+import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,7 +35,8 @@ class HistoryViewModelHideFlagTest {
             tagId: Int?,
             query: String?,
             hideTaggedWhenNoTagSelected: Boolean,
-            searchAcrossAllTagsWhenFiltering: Boolean
+            searchAcrossAllTagsWhenFiltering: Boolean,
+            showOnlyFavorites: Boolean
         ): Flow<List<BarcodeWithTagsModel>> {
             lastRequest = Triple(tagId, query, hideTaggedWhenNoTagSelected)
             return resultFlow
@@ -53,6 +55,8 @@ class HistoryViewModelHideFlagTest {
         override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
 
         override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
+
+        override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
     }
 
     private class FakeGenerateBarcodeAiDataUseCase : GenerateBarcodeAiDataUseCase() {
@@ -99,7 +103,8 @@ class HistoryViewModelHideFlagTest {
             deleteBarcodeUseCase,
             fakeSettingsRepo,
             FakeGenerateBarcodeAiDataUseCase(),
-            GetAiLanguageUseCase(fakeSettingsRepo)
+            GetAiLanguageUseCase(fakeSettingsRepo),
+            ToggleFavoriteUseCase(fakeRepository)
         )
 
         // Collect savedBarcodes to trigger the Flow
