@@ -103,9 +103,10 @@ jobs:
     # tag pushes, manual triggers, and pull-request validation builds.
     if: github.event_name != 'push' || startsWith(github.ref, 'refs/tags/')
     env:
-      # Force dev version name on manual (workflow_dispatch) runs.
-      # Tag-push triggers produce clean release version names instead.
-      FORCE_DEV_VERSION: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
+      # Force dev version name only on manual (workflow_dispatch) runs that are NOT
+      # release builds. Release builds (upload_to_play_store=true) and tag-push
+      # triggers should always produce clean release version names.
+      FORCE_DEV_VERSION: ${{ (github.event_name == 'workflow_dispatch' && inputs.upload_to_play_store != true) && 'true' || 'false' }}
 
     steps:
       - name: Checkout code
