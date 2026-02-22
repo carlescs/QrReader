@@ -49,14 +49,22 @@ abstract class SavedBarcodeDao {
             description LIKE '%' || TRIM(:query) || '%' COLLATE NOCASE OR
             barcode LIKE '%' || TRIM(:query) || '%' COLLATE NOCASE
         )
+        AND (
+            -- Favorites filter: only show favorites when flag is true
+            NOT :showOnlyFavorites OR is_favorite = 1
+        )
         """
     )
     abstract fun getSavedBarcodesWithTagsByTagIdAndQuery(
         tagId: Int?,
         query: String?,
         hideTaggedWhenNoTagSelected: Boolean,
-        searchAcrossAllTagsWhenFiltering: Boolean
+        searchAcrossAllTagsWhenFiltering: Boolean,
+        showOnlyFavorites: Boolean
     ): Flow<List<SavedBarcodeWithTags>>
+
+    @Query("UPDATE saved_barcodes SET is_favorite = :isFavorite WHERE id = :id")
+    abstract suspend fun setFavorite(id: Int, isFavorite: Boolean)
 
     @Insert
     abstract suspend fun insertAll(vararg savedBarcodes: SavedBarcode)

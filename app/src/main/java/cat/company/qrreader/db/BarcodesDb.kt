@@ -13,7 +13,7 @@ import cat.company.qrreader.db.entities.SavedBarcode
 /**
  * Database for the barcodes
  */
-@Database(entities = [SavedBarcode::class, Tag::class, BarcodeTagCrossRef::class], version = 5, exportSchema = false)
+@Database(entities = [SavedBarcode::class, Tag::class, BarcodeTagCrossRef::class], version = 6, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class BarcodesDb :RoomDatabase(){
     abstract fun savedBarcodeDao(): SavedBarcodeDao

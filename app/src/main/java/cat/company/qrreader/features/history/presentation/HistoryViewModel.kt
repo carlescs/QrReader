@@ -9,6 +9,7 @@ import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
+import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.utils.getBarcodeFormatName
@@ -39,7 +40,8 @@ class HistoryViewModel(
     private val deleteBarcodeUseCase: DeleteBarcodeUseCase,
     settingsRepository: SettingsRepository,
     private val generateBarcodeAiDataUseCase: GenerateBarcodeAiDataUseCase,
-    private val getAiLanguageUseCase: GetAiLanguageUseCase
+    private val getAiLanguageUseCase: GetAiLanguageUseCase,
+    private val toggleFavoriteUseCase: ToggleFavoriteUseCase
 ) : ViewModel() {
 
     private val _selectedTagId = MutableStateFlow<Int?>(null)
@@ -47,6 +49,9 @@ class HistoryViewModel(
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
+
+    private val _showOnlyFavorites = MutableStateFlow(false)
+    val showOnlyFavorites = _showOnlyFavorites.asStateFlow()
 
     private val _isAiSupportedOnDevice = MutableStateFlow(false)
 
@@ -74,14 +79,15 @@ class HistoryViewModel(
             _selectedTagId,
             debouncedQuery,
             settingsRepository.hideTaggedWhenNoTagSelected,
-            settingsRepository.searchAcrossAllTagsWhenFiltering
-        ) { tagId, query, hideTagged, searchAcrossAll ->
-            Quad(tagId, query, hideTagged, searchAcrossAll)
+            settingsRepository.searchAcrossAllTagsWhenFiltering,
+            _showOnlyFavorites
+        ) { tagId, query, hideTagged, searchAcrossAll, showFavorites ->
+            FilterParams(tagId, query, hideTagged, searchAcrossAll, showFavorites)
         }
-            .flatMapLatest { (tagId, query, hideTagged, searchAcrossAll) ->
+            .flatMapLatest { (tagId, query, hideTagged, searchAcrossAll, showFavorites) ->
                 val q = query.takeIf { it.isNotBlank() }
                 val effectiveTagId = if (searchAcrossAll && q != null) null else tagId
-                getBarcodesWithTagsUseCase(effectiveTagId, q, hideTagged, searchAcrossAll)
+                getBarcodesWithTagsUseCase(effectiveTagId, q, hideTagged, searchAcrossAll, showFavorites)
             }
 
     fun onTagSelected(tagId: Int?) {
@@ -90,6 +96,16 @@ class HistoryViewModel(
 
     fun onQueryChange(query: String) {
         _searchQuery.value = query
+    }
+
+    fun toggleFavoritesFilter() {
+        _showOnlyFavorites.value = !_showOnlyFavorites.value
+    }
+
+    fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {
+        viewModelScope.launch {
+            toggleFavoriteUseCase(barcodeId, isFavorite)
+        }
     }
 
     fun updateBarcode(barcode: BarcodeModel) {
@@ -159,5 +175,11 @@ class HistoryViewModel(
     }
 
     // small data holder for combine result
-    private data class Quad<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
+    private data class FilterParams(
+        val tagId: Int?,
+        val query: String,
+        val hideTagged: Boolean,
+        val searchAcrossAll: Boolean,
+        val showFavorites: Boolean
+    )
 }

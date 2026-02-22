@@ -56,7 +56,8 @@ class SavedBarcodeDaoRobolectricTest {
             tagId = null,
             query = "ABC",
             hideTaggedWhenNoTagSelected = true,
-            searchAcrossAllTagsWhenFiltering = false
+            searchAcrossAllTagsWhenFiltering = false,
+            showOnlyFavorites = false
         ).first()
 
         // Should hide tagged items because searchAcrossAllTagsWhenFiltering is false
@@ -83,7 +84,8 @@ class SavedBarcodeDaoRobolectricTest {
             tagId = null,
             query = "ABC",
             hideTaggedWhenNoTagSelected = true,
-            searchAcrossAllTagsWhenFiltering = true
+            searchAcrossAllTagsWhenFiltering = true,
+            showOnlyFavorites = false
         ).first()
 
         // Should show ALL matching items (both tagged and untagged) because searchAcrossAllTagsWhenFiltering is true
@@ -109,7 +111,8 @@ class SavedBarcodeDaoRobolectricTest {
             tagId = null,
             query = null,
             hideTaggedWhenNoTagSelected = true,
-            searchAcrossAllTagsWhenFiltering = false
+            searchAcrossAllTagsWhenFiltering = false,
+            showOnlyFavorites = false
         ).first()
 
         // Should only return the untagged barcode
@@ -135,7 +138,8 @@ class SavedBarcodeDaoRobolectricTest {
             tagId = null,
             query = "  ",
             hideTaggedWhenNoTagSelected = true,
-            searchAcrossAllTagsWhenFiltering = false
+            searchAcrossAllTagsWhenFiltering = false,
+            showOnlyFavorites = false
         ).first()
 
         // Should only return the untagged barcode (empty/whitespace query = no search)
@@ -161,7 +165,8 @@ class SavedBarcodeDaoRobolectricTest {
             tagId = null,
             query = null,
             hideTaggedWhenNoTagSelected = false,
-            searchAcrossAllTagsWhenFiltering = false
+            searchAcrossAllTagsWhenFiltering = false,
+            showOnlyFavorites = false
         ).first()
 
         // Should return both barcodes
@@ -190,7 +195,8 @@ class SavedBarcodeDaoRobolectricTest {
             tagId = null,
             query = "SearchTerm",
             hideTaggedWhenNoTagSelected = true,
-            searchAcrossAllTagsWhenFiltering = true
+            searchAcrossAllTagsWhenFiltering = true,
+            showOnlyFavorites = false
         ).first()
 
         // Should return only the 3 matching barcodes, not the non-matching one
@@ -220,7 +226,8 @@ class SavedBarcodeDaoRobolectricTest {
             tagId = 1,
             query = "Find",
             hideTaggedWhenNoTagSelected = true,
-            searchAcrossAllTagsWhenFiltering = false
+            searchAcrossAllTagsWhenFiltering = false,
+            showOnlyFavorites = false
         ).first()
 
         // Should return only barcode1Tag1 (has tag1 AND matches "Find")
@@ -249,7 +256,8 @@ class SavedBarcodeDaoRobolectricTest {
             tagId = 1,
             query = "Find",
             hideTaggedWhenNoTagSelected = false,
-            searchAcrossAllTagsWhenFiltering = true
+            searchAcrossAllTagsWhenFiltering = true,
+            showOnlyFavorites = false
         ).first()
 
         // Should return BOTH barcodes that match "Find", ignoring the tag filter

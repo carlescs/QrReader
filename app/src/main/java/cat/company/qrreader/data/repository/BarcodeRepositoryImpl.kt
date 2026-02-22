@@ -34,13 +34,15 @@ class BarcodeRepositoryImpl(database: BarcodesDb) : BarcodeRepository {
         tagId: Int?,
         query: String?,
         hideTaggedWhenNoTagSelected: Boolean,
-        searchAcrossAllTagsWhenFiltering: Boolean
+        searchAcrossAllTagsWhenFiltering: Boolean,
+        showOnlyFavorites: Boolean
     ): Flow<List<BarcodeWithTagsModel>> {
         return barcodeDao.getSavedBarcodesWithTagsByTagIdAndQuery(
             tagId = tagId,
             query = query,
             hideTaggedWhenNoTagSelected = hideTaggedWhenNoTagSelected,
-            searchAcrossAllTagsWhenFiltering = searchAcrossAllTagsWhenFiltering
+            searchAcrossAllTagsWhenFiltering = searchAcrossAllTagsWhenFiltering,
+            showOnlyFavorites = showOnlyFavorites
         ).map { list ->
             list.map { it.toDomainModel() }
         }
@@ -76,6 +78,10 @@ class BarcodeRepositoryImpl(database: BarcodesDb) : BarcodeRepository {
         } else {
             addTagToBarcode(barcode.barcode.id, tag.id)
         }
+    }
+
+    override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {
+        barcodeDao.setFavorite(barcodeId, isFavorite)
     }
 }
 

@@ -29,7 +29,8 @@ class SaveBarcodeWithTagsUseCaseTest {
         override fun getBarcodesWithTagsByFilter(
             tagId: Int?, query: String?,
             hideTaggedWhenNoTagSelected: Boolean,
-            searchAcrossAllTagsWhenFiltering: Boolean
+            searchAcrossAllTagsWhenFiltering: Boolean,
+            showOnlyFavorites: Boolean
         ): Flow<List<BarcodeWithTagsModel>> = flowOf(emptyList())
 
         override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {
@@ -48,6 +49,7 @@ class SaveBarcodeWithTagsUseCaseTest {
         }
         override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
         override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
+        override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
     }
 
     @Test

@@ -23,7 +23,7 @@ class GetBarcodesWithTagsUseCaseTest {
             private val flow = flowOf(listOf(sample))
             override fun getAllBarcodes(): Flow<List<BarcodeModel>> = flowOf(emptyList())
             override fun getBarcodesWithTags(): Flow<List<BarcodeWithTagsModel>> = flow
-            override fun getBarcodesWithTagsByFilter(tagId: Int?, query: String?, hideTaggedWhenNoTagSelected: Boolean, searchAcrossAllTagsWhenFiltering: Boolean): Flow<List<BarcodeWithTagsModel>> {
+            override fun getBarcodesWithTagsByFilter(tagId: Int?, query: String?, hideTaggedWhenNoTagSelected: Boolean, searchAcrossAllTagsWhenFiltering: Boolean, showOnlyFavorites: Boolean): Flow<List<BarcodeWithTagsModel>> {
                 recorded.add(Triple(tagId, query, hideTaggedWhenNoTagSelected))
                 return flow
             }
@@ -34,6 +34,7 @@ class GetBarcodesWithTagsUseCaseTest {
             override suspend fun addTagToBarcode(barcodeId: Int, tagId: Int) {}
             override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
             override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
+            override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
         }
 
         val uc = GetBarcodesWithTagsUseCase(repo)
