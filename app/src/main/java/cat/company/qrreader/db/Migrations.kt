@@ -30,7 +30,7 @@ class Migrations {
                 db.execSQL("ALTER TABLE saved_barcodes ADD aiGeneratedDescription VARCHAR(200)")
             }
         }
-        val MIGRATION_5_6 = object : Migration(5,6){
+        val MIGRATION_5_6 = object : Migration(5, 6){
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE saved_barcodes ADD is_favorite INTEGER NOT NULL DEFAULT 0")
             }

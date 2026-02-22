@@ -175,5 +175,11 @@ class HistoryViewModel(
     }
 
     // small data holder for combine result
-    private data class FilterParams(val a: Int?, val b: String, val c: Boolean, val d: Boolean, val e: Boolean)
+    private data class FilterParams(
+        val tagId: Int?,
+        val query: String,
+        val hideTagged: Boolean,
+        val searchAcrossAll: Boolean,
+        val showFavorites: Boolean
+    )
 }
