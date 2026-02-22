@@ -425,6 +425,73 @@ class HistoryViewModelTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
+    fun favoritesFilter_overridesTagAndSearchFilters() = runTest {
+        // Repository that records the last call parameters
+        var lastTagId: Int? = -1 // use -1 as sentinel "not yet called"
+        var lastQuery: String? = "sentinel"
+        var lastShowOnlyFavorites = false
+        val repo = object : BarcodeRepository {
+            private val resultFlow = MutableStateFlow<List<BarcodeWithTagsModel>>(emptyList())
+            override fun getAllBarcodes(): Flow<List<BarcodeModel>> = flowOf(emptyList())
+            override fun getBarcodesWithTags(): Flow<List<BarcodeWithTagsModel>> = resultFlow
+            override fun getBarcodesWithTagsByFilter(
+                tagId: Int?, query: String?,
+                hideTaggedWhenNoTagSelected: Boolean,
+                searchAcrossAllTagsWhenFiltering: Boolean,
+                showOnlyFavorites: Boolean
+            ): Flow<List<BarcodeWithTagsModel>> {
+                lastTagId = tagId
+                lastQuery = query
+                lastShowOnlyFavorites = showOnlyFavorites
+                return resultFlow
+            }
+            override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
+            override suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long = 0L
+            override suspend fun updateBarcode(barcode: BarcodeModel): Int = 0
+            override suspend fun deleteBarcode(barcode: BarcodeModel) {}
+            override suspend fun addTagToBarcode(barcodeId: Int, tagId: Int) {}
+            override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
+            override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
+            override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
+        }
+        val fakeSettingsRepo = makeFakeSettingsRepo()
+        val vm = HistoryViewModel(
+            GetBarcodesWithTagsUseCase(repo),
+            UpdateBarcodeUseCase(repo),
+            DeleteBarcodeUseCase(repo),
+            fakeSettingsRepo,
+            FakeGenerateBarcodeAiDataUseCase(),
+            GetAiLanguageUseCase(fakeSettingsRepo),
+            ToggleFavoriteUseCase(repo)
+        )
+
+        val job = launch { vm.savedBarcodes.collect { } }
+
+        // Set a tag and a search query
+        vm.onTagSelected(5)
+        vm.onQueryChange("hello")
+        advanceTimeBy(250)
+        runCurrent()
+
+        // Sanity check: tag and query are forwarded normally without favorites
+        assertEquals(5, lastTagId)
+        assertEquals("hello", lastQuery)
+        assertEquals(false, lastShowOnlyFavorites)
+
+        // Enable favorites filter — must ignore tag and search
+        vm.toggleFavoritesFilter()
+        advanceTimeBy(250)
+        runCurrent()
+
+        assertEquals(null, lastTagId)
+        assertEquals(null, lastQuery)
+        assertEquals(true, lastShowOnlyFavorites)
+
+        job.cancel()
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
     fun toggleFavorite_callsUseCaseWithCorrectArguments() = runTest {
         var lastBarcodeId: Int? = null
         var lastIsFavorite: Boolean? = null

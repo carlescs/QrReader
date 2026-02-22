@@ -85,9 +85,14 @@ class HistoryViewModel(
             FilterParams(tagId, query, hideTagged, searchAcrossAll, showFavorites)
         }
             .flatMapLatest { (tagId, query, hideTagged, searchAcrossAll, showFavorites) ->
-                val q = query.takeIf { it.isNotBlank() }
-                val effectiveTagId = if (searchAcrossAll && q != null) null else tagId
-                getBarcodesWithTagsUseCase(effectiveTagId, q, hideTagged, searchAcrossAll, showFavorites)
+                if (showFavorites) {
+                    // Favorites filter takes precedence: ignore tag, search, and hide-tagged filters
+                    getBarcodesWithTagsUseCase(null, null, false, false, true)
+                } else {
+                    val q = query.takeIf { it.isNotBlank() }
+                    val effectiveTagId = if (searchAcrossAll && q != null) null else tagId
+                    getBarcodesWithTagsUseCase(effectiveTagId, q, hideTagged, searchAcrossAll, false)
+                }
             }
 
     fun onTagSelected(tagId: Int?) {
