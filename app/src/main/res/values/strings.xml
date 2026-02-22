@@ -35,6 +35,10 @@
     <string name="contact">Contact</string>
     <string name="ean13">EAN13</string>
     <string name="other">Other</string>
+    <string name="wifi">Wi-Fi</string>
+    <string name="wifi_ssid">Network: %s</string>
+    <string name="wifi_security">Security: %s</string>
+    <string name="wifi_connect">Connect to Wi-Fi</string>
     <string name="email_label">eMail: </string>
     <string name="copied">Copied!</string>
     <string name="no_barcode_value">No</string>

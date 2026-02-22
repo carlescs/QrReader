@@ -7,6 +7,26 @@ import com.google.mlkit.vision.barcode.common.Barcode
  */
 
 /**
+ * Parsed WiFi credentials extracted from a raw WIFI: QR string.
+ *
+ * @property ssid The network name (SSID), or null if not present.
+ * @property password The network password, or null for open networks.
+ * @property securityType The security type string (e.g. "WPA", "WEP", "nopass"), or null.
+ */
+data class WifiInfo(val ssid: String?, val password: String?, val securityType: String?)
+
+/**
+ * Parses a raw WiFi QR code string in the format `WIFI:T:<type>;S:<ssid>;P:<password>;;`
+ * and returns the extracted [WifiInfo].
+ */
+fun parseWifiContent(content: String): WifiInfo {
+    val ssid = Regex("S:([^;]+)").find(content)?.groupValues?.getOrNull(1)
+    val password = Regex("P:([^;]*)").find(content)?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
+    val securityType = Regex("T:([^;]+)").find(content)?.groupValues?.getOrNull(1)
+    return WifiInfo(ssid, password, securityType)
+}
+
+/**
  * Convert ML Kit barcode value type to a human-readable name.
  */
 fun getBarcodeTypeName(valueType: Int): String = when (valueType) {
