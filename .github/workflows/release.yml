@@ -20,7 +20,6 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 jobs:
   create-tag:
@@ -108,14 +107,3 @@ jobs:
             echo "✅ Tag $VERSION created and pushed successfully"
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Trigger CI/CD pipeline
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION="${{ steps.create_tag.outputs.version }}"
-          gh workflow run android-ci-cd.yml \
-            --ref master \
-            --field upload_to_play_store=true \
-            --field use_beta_track=true
-          echo "✅ CI/CD pipeline triggered for $VERSION"
