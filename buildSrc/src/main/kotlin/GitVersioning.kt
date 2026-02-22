@@ -177,7 +177,26 @@ object GitVersioning {
     fun getVersionName(project: Project): String {
         // When FORCE_DEV_VERSION is set (e.g. manual workflow_dispatch trigger), always
         // produce a dev version name regardless of branch or tag state.
-        val forceDevVersion = System.getenv("FORCE_DEV_VERSION") == "true"
+        val forceDevVersion = project.providers.environmentVariable("FORCE_DEV_VERSION")
+            .map { it == "true" }
+            .orElse(false)
+            .get()
+
+        // In CI, when triggered by a tag push (GITHUB_REF = refs/tags/v*.*.*), use the tag
+        // name directly. This is more reliable than git commands in detached HEAD state and
+        // ensures tag-based deployments always receive a clean release version name.
+        val githubRef = project.providers.environmentVariable("GITHUB_REF")
+            .orElse("")
+            .get()
+        if (!forceDevVersion && githubRef.startsWith("refs/tags/")) {
+            val tagName = githubRef
+                .removePrefix("refs/tags/")
+                .removePrefix("v")
+                .trim()
+            if (tagName.isNotEmpty()) {
+                return tagName
+            }
+        }
 
         // Get current branch
         val branchProvider = gitCommand(project, listOf("git", "rev-parse", "--abbrev-ref", "HEAD"))
