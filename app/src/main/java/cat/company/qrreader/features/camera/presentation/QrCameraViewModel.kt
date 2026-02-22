@@ -14,6 +14,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -32,23 +33,29 @@ class QrCameraViewModel(
     companion object {
         private const val TAG = "QrCameraViewModel"
     }
-    
+
+    private val _isAiSupportedOnDevice = MutableStateFlow(false)
+
     init {
-        // Observe AI generation setting and keep state in sync
-        viewModelScope.launch {
-            getAiGenerationEnabledUseCase().collectLatest { enabled ->
-                _uiState.update { it.copy(aiGenerationEnabled = enabled) }
-            }
-        }
-        // Attempt to download Gemini Nano model on initialization, only if AI features are enabled
+        // Check device AI support and combine with user setting to compute visible AI state
         viewModelScope.launch {
             try {
-                if (getAiGenerationEnabledUseCase().first()) {
+                val supported = generateBarcodeAiDataUseCase.isAiSupportedOnDevice()
+                _isAiSupportedOnDevice.value = supported
+                if (supported && getAiGenerationEnabledUseCase().first()) {
                     Log.d(TAG, "Checking Gemini Nano model availability")
                     generateBarcodeAiDataUseCase.downloadModelIfNeeded()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error during model download check", e)
+            }
+        }
+        // Observe combined AI generation setting (user preference AND device support)
+        viewModelScope.launch {
+            combine(getAiGenerationEnabledUseCase(), _isAiSupportedOnDevice) { enabled, supported ->
+                enabled && supported
+            }.collectLatest { aiVisible ->
+                _uiState.update { it.copy(aiGenerationEnabled = aiVisible) }
             }
         }
     }
@@ -73,7 +80,7 @@ class QrCameraViewModel(
                 
                 // Generate tags and description in a single AI request
                 viewModelScope.launch {
-                    if (!getAiGenerationEnabledUseCase().first()) return@launch
+                    if (!_uiState.value.aiGenerationEnabled) return@launch
 
                     // Mark this barcode as loading both tags and description
                     _uiState.update { state ->

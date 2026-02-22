@@ -41,6 +41,16 @@ class GenerateBarcodeAiDataUseCaseTest {
     }
 
     @Test
+    fun `isAiSupportedOnDevice returns false on device without Gemini Nano`() = runTest {
+        val useCase = GenerateBarcodeAiDataUseCase()
+
+        val supported = useCase.isAiSupportedOnDevice()
+
+        // Gemini Nano is not present in the unit-test JVM environment
+        assertFalse(supported)
+    }
+
+    @Test
     fun `cleanup can be called without crashing`() {
         val useCase = GenerateBarcodeAiDataUseCase()
         useCase.cleanup() // Should not throw
@@ -142,6 +152,7 @@ class GenerateBarcodeAiDataUseCaseTest {
             language: String
         ): Result<BarcodeAiData> = resultToReturn
 
+        override suspend fun isAiSupportedOnDevice(): Boolean = true
         override suspend fun downloadModelIfNeeded() { /* no-op */ }
         override fun cleanup() { /* no-op */ }
     }

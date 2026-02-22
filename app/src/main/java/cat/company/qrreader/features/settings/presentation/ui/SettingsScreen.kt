@@ -54,6 +54,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val searchAcrossAllState by viewModel.searchAcrossAllTagsWhenFiltering.collectAsState(initial = false)
     val aiGenerationState by viewModel.aiGenerationEnabled.collectAsState(initial = true)
     val aiLanguageState by viewModel.aiLanguage.collectAsState(initial = "en")
+    val isAiAvailableOnDevice by viewModel.isAiAvailableOnDevice.collectAsState()
     var showLanguageDialog by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
@@ -79,32 +80,34 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
             },
             colors = androidx.compose.material3.ListItemDefaults.colors()
         )
-        SettingsSectionHeader(title = stringResource(R.string.settings_section_ai))
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.ai_features)) },
-            supportingContent = { Text(text = stringResource(R.string.ai_features_description)) },
-            trailingContent = {
-                Switch(checked = aiGenerationState, onCheckedChange = { newValue ->
-                    viewModel.setAiGenerationEnabled(newValue)
-                })
-            },
-            colors = androidx.compose.material3.ListItemDefaults.colors()
-        )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        val currentLanguageName = SUPPORTED_LANGUAGES.firstOrNull { it.code == aiLanguageState }
-            ?.let { stringResource(it.nameRes) }
-            ?: stringResource(R.string.language_english)
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.ai_language)) },
-            supportingContent = { Text(text = stringResource(R.string.ai_language_description)) },
-            trailingContent = {
-                TextButton(onClick = { showLanguageDialog = true }) {
-                    Text(text = currentLanguageName)
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = androidx.compose.material3.ListItemDefaults.colors()
-        )
+        if (isAiAvailableOnDevice) {
+            SettingsSectionHeader(title = stringResource(R.string.settings_section_ai))
+            ListItem(
+                headlineContent = { Text(text = stringResource(R.string.ai_features)) },
+                supportingContent = { Text(text = stringResource(R.string.ai_features_description)) },
+                trailingContent = {
+                    Switch(checked = aiGenerationState, onCheckedChange = { newValue ->
+                        viewModel.setAiGenerationEnabled(newValue)
+                    })
+                },
+                colors = androidx.compose.material3.ListItemDefaults.colors()
+            )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            val currentLanguageName = SUPPORTED_LANGUAGES.firstOrNull { it.code == aiLanguageState }
+                ?.let { stringResource(it.nameRes) }
+                ?: stringResource(R.string.language_english)
+            ListItem(
+                headlineContent = { Text(text = stringResource(R.string.ai_language)) },
+                supportingContent = { Text(text = stringResource(R.string.ai_language_description)) },
+                trailingContent = {
+                    TextButton(onClick = { showLanguageDialog = true }) {
+                        Text(text = currentLanguageName)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = androidx.compose.material3.ListItemDefaults.colors()
+            )
+        }
     }
 
     if (showLanguageDialog) {

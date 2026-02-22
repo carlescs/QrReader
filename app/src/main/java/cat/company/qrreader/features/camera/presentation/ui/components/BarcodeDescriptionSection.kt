@@ -39,9 +39,11 @@ fun BarcodeDescriptionSection(
     isLoading: Boolean,
     error: String?,
     modifier: Modifier = Modifier,
+    aiGenerationEnabled: Boolean = true,
     saveDescription: Boolean = true,
     onToggleSaveDescription: (Boolean) -> Unit = {}
 ) {
+    if (!aiGenerationEnabled) return
     // Only show if there's content, loading, or error
     if (description == null && !isLoading && error == null) {
         return
