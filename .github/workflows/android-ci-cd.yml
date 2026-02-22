@@ -98,6 +98,10 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     needs: test
+    env:
+      # Force dev version name on manual (workflow_dispatch) runs.
+      # Tag-push triggers produce clean release version names instead.
+      FORCE_DEV_VERSION: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
 
     steps:
       - name: Checkout code
