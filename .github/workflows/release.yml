@@ -114,6 +114,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ steps.create_tag.outputs.version }}"
+          # Explicitly trigger the pipeline because GITHUB_TOKEN-based tag pushes
+          # do not fire workflow triggers in other workflows.
+          # Production promotion is safely blocked on workflow_dispatch in android-ci-cd.yml.
           gh workflow run android-ci-cd.yml \
             --ref master \
             --field upload_to_play_store=true \
