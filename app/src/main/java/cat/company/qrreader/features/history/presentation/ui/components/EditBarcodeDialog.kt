@@ -91,10 +91,6 @@ fun EditBarcodeDialog(
                             hasAiContent = hasAiContent,
                             isRegenerating = regenerateState.isLoading,
                             error = regenerateState.error,
-                            onValueChange = {
-                                aiDescription = it
-                                if (hasAiContent) hasAiContent = false
-                            },
                             onRegenerate = { viewModel.regenerateAiDescription(savedBarcode) },
                             onDelete = {
                                 aiDescription = TextFieldValue("")
@@ -132,7 +128,6 @@ private fun AiDescriptionField(
     hasAiContent: Boolean,
     isRegenerating: Boolean,
     error: String?,
-    onValueChange: (TextFieldValue) -> Unit,
     onRegenerate: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -141,9 +136,9 @@ private fun AiDescriptionField(
             TextField(
                 modifier = Modifier.weight(1f),
                 value = aiDescription,
-                onValueChange = onValueChange,
+                onValueChange = {}, // read-only; value only changes via AI generation
                 label = { Text(text = stringResource(R.string.ai_description)) },
-                enabled = !isRegenerating
+                readOnly = true
             )
             if (isRegenerating) {
                 CircularProgressIndicator(
