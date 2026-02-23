@@ -1,8 +1,6 @@
 package cat.company.qrreader.features.history.presentation.ui.components
 
-import android.content.Intent
 import android.graphics.Bitmap
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -28,17 +26,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.usecase.codecreator.GenerateQrCodeUseCase
-import cat.company.qrreader.domain.usecase.codecreator.SaveBitmapToMediaStoreUseCase
 import org.koin.compose.koinInject
 
 /**
- * Dialog that displays a WiFi network as a scannable QR code and allows sharing it.
+ * Dialog that displays a WiFi network as a scannable QR code.
+ *
+ * Show this dialog to the recipient so they can scan the QR code with their
+ * camera app to import the WiFi credentials directly on their device.
  *
  * @param wifiContent The raw WiFi QR string (e.g. `WIFI:T:WPA;S:MyNet;P:pass;;`).
  * @param ssid The network SSID shown as the dialog title.
@@ -49,10 +48,8 @@ fun WifiQrCodeDialog(
     wifiContent: String,
     ssid: String?,
     onDismiss: () -> Unit,
-    generateQrCodeUseCase: GenerateQrCodeUseCase = koinInject(),
-    saveBitmapToMediaStoreUseCase: SaveBitmapToMediaStoreUseCase = koinInject()
+    generateQrCodeUseCase: GenerateQrCodeUseCase = koinInject()
 ) {
-    val context = LocalContext.current
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     LaunchedEffect(wifiContent) {
@@ -86,21 +83,6 @@ fun WifiQrCodeDialog(
                             .padding(8.dp)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextButton(onClick = {
-                        val uri = saveBitmapToMediaStoreUseCase(context, currentBitmap)
-                        if (uri == null) {
-                            Toast.makeText(context, context.getString(R.string.error), Toast.LENGTH_SHORT).show()
-                            return@TextButton
-                        }
-                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "image/jpeg"
-                            putExtra(Intent.EXTRA_STREAM, uri)
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }
-                        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.wifi_share_qr_code)))
-                    }) {
-                        Text(text = stringResource(R.string.wifi_share_qr_code))
-                    }
                 } else {
                     Box(
                         modifier = Modifier.size(200.dp),
