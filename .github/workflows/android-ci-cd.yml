@@ -365,12 +365,35 @@ jobs:
           import urllib.request
           import urllib.error
 
-          # Get commits since the previous tag (or last 20 if no prior tag)
+          # Get commits since the previous tag (or last 20 if no prior tag).
+          # When HEAD is exactly at a tag (tag-push event), tags[0] is the current
+          # release tag and git log tags[0]..HEAD returns nothing.  In that case
+          # use tags[1] (the prior release) as the comparison base.
+          # git describe --exact-match exits non-zero when HEAD is not at a tag,
+          # which is the expected normal case for workflow_dispatch runs.
+          # Redirect stderr to DEVNULL to avoid noisy error output in that case.
           try:
-              tags = subprocess.check_output(
-                  ['git', 'tag', '--sort=-version:refname'], text=True
-              ).strip().split('\n')
-              prev_tag = tags[0] if tags and tags[0].strip() else ''
+              current_tag = subprocess.check_output(
+                  ['git', 'describe', '--exact-match', '--tags', 'HEAD'],
+                  text=True, stderr=subprocess.DEVNULL
+              ).strip()
+          except subprocess.CalledProcessError:
+              current_tag = ''
+
+          try:
+              tags = [
+                  t.strip() for t in subprocess.check_output(
+                      ['git', 'tag', '--sort=-version:refname'], text=True
+                  ).strip().split('\n') if t.strip()
+              ]
+              if current_tag:
+                  # HEAD is the newly pushed tag; compare from the previous one.
+                  # If this is the very first tag ever (len == 1), prev_tag stays ''
+                  # and the fallback below will use the last 20 commits instead.
+                  prev_tag = tags[1] if len(tags) >= 2 else ''
+              else:
+                  # workflow_dispatch: HEAD is beyond the latest tag
+                  prev_tag = tags[0] if tags else ''
           except Exception:
               prev_tag = ''
 
