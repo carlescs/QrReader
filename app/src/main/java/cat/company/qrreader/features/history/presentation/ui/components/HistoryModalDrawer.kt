@@ -3,20 +3,17 @@ package cat.company.qrreader.features.history.presentation.ui.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -33,7 +30,7 @@ import cat.company.qrreader.features.tags.presentation.ui.components.TagsFilterL
 /**
  * Content of the history modal drawer.
  *
- * Displays a favorites filter chip and a tag filter list, allowing the user to:
+ * Displays a favorites filter item and a tag filter list, allowing the user to:
  * - Toggle the favorites-only filter
  * - Select a tag to filter by (using a modern icon + name chip style)
  * - Add, edit, or delete tags
@@ -69,18 +66,16 @@ fun HistoryModalDrawerContent(
                         Icon(imageVector = Icons.Filled.Clear, contentDescription = stringResource(R.string.clear_filter))
                     }
                 })
-            FilterChip(
-                selected = showOnlyFavorites,
-                onClick = onToggleFavorites,
-                label = { Text(stringResource(R.string.favorites)) },
-                leadingIcon = {
+            NavigationDrawerItem(
+                icon = {
                     Icon(
-                        imageVector = if (showOnlyFavorites) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                        contentDescription = null,
-                        modifier = Modifier.size(FilterChipDefaults.IconSize)
+                        imageVector = Icons.Filled.Star,
+                        contentDescription = null
                     )
                 },
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                label = { Text(stringResource(R.string.favorites)) },
+                selected = showOnlyFavorites,
+                onClick = onToggleFavorites
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             TagsFilterList(selectedTagId = selectedTagId) {
