@@ -1,5 +1,6 @@
 package cat.company.qrreader
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.Box
@@ -28,6 +29,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -63,7 +65,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 @ExperimentalGetImage
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun MainScreen(firebaseAnalytics: FirebaseAnalytics) {
+fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -89,6 +91,14 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics) {
             .currentBackStackEntryFlow
             .collectAsState(initial = navController.currentBackStackEntry)
         val currentBackStackEntry by navController.currentBackStackEntryAsState()
+
+        LaunchedEffect(sharedImageUri) {
+            if (sharedImageUri != null) {
+                navController.navigate("camera") {
+                    launchSingleTop = true
+                }
+            }
+        }
 
         val showBackButton by remember(currentBackStackEntry) {
             derivedStateOf {
@@ -141,7 +151,7 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics) {
                         route = "camera",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://camera" })
                     ) {
-                        QrCameraScreen(snackBarHostState)
+                        QrCameraScreen(snackBarHostState, sharedImageUri = sharedImageUri)
                     }
                     composable("history") {
                         History(snackBarHostState)

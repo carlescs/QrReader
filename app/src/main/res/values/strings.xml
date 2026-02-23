@@ -29,6 +29,7 @@
     <string name="camera_permissions_rationale">The camera is important for this app. Please grant the permission.</string>
     <string name="camera_permission_request">Camera permission required for this feature to be available. Please grant the permission</string>
     <string name="request_permission">Request permission</string>
+    <string name="no_barcodes_found_in_image">No barcodes found in the image</string>
 
     <!-- Camera bottom sheet barcode types -->
     <string name="url">URL</string>
