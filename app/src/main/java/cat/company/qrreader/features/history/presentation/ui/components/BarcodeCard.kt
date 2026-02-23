@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.BarcodeWithTagsModel
 import cat.company.qrreader.features.history.presentation.HistoryViewModel
+import cat.company.qrreader.features.history.presentation.ui.content.ContactHistoryContent
 import cat.company.qrreader.features.history.presentation.ui.content.OtherHistoryContent
 import cat.company.qrreader.features.history.presentation.ui.content.UrlHistoryContent
 import cat.company.qrreader.features.history.presentation.ui.content.WifiHistoryContent
@@ -105,6 +106,8 @@ fun BarcodeCard(
                         UrlHistoryContent(sdf = sdf, barcode = barcode.barcode, aiGenerationEnabled = aiGenerationEnabled)
                     else if (barcode.barcode.type == Barcode.TYPE_WIFI)
                         WifiHistoryContent(sdf = sdf, barcode = barcode.barcode, aiGenerationEnabled = aiGenerationEnabled)
+                    else if (barcode.barcode.type == Barcode.TYPE_CONTACT_INFO)
+                        ContactHistoryContent(sdf = sdf, barcode = barcode.barcode, aiGenerationEnabled = aiGenerationEnabled)
                     else
                         OtherHistoryContent(sdf = sdf, barcode = barcode.barcode, aiGenerationEnabled = aiGenerationEnabled)
                 }

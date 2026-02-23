@@ -33,6 +33,7 @@
     <!-- Camera bottom sheet barcode types -->
     <string name="url">URL</string>
     <string name="contact">Contact</string>
+    <string name="add_to_contacts">Add to contacts</string>
     <string name="ean13">EAN13</string>
     <string name="other">Other</string>
     <string name="wifi">Wi-Fi</string>
