@@ -22,8 +22,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.TagModel
@@ -80,14 +78,9 @@ fun HistoryModalDrawerContent(
                 selected = showOnlyFavorites,
                 onClick = onToggleFavorites,
                 badge = {
-                    val switchDescription = stringResource(
-                        if (showOnlyFavorites) R.string.favorites_filter_on
-                        else R.string.favorites_filter_off
-                    )
                     Switch(
                         checked = showOnlyFavorites,
-                        onCheckedChange = null,
-                        modifier = Modifier.semantics { contentDescription = switchDescription }
+                        onCheckedChange = { onToggleFavorites() }
                     )
                 }
             )
