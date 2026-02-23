@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
@@ -224,12 +223,6 @@ private fun TopAppBar(
         },
         actions = {
             var menuExpanded by remember { mutableStateOf(false) }
-            // Add settings icon visible when on history
-            if (currentRoute.value?.destination?.route.equals("history")) {
-                IconButton(onClick = { navController.navigate("settings") }) {
-                    Icon(imageVector = Icons.Filled.Settings, contentDescription = stringResource(R.string.settings))
-                }
-            }
             if (currentRoute.value?.destination?.route.equals("codeCreator")) {
                 IconButton(onClick = {
                     if (!shareDisabled.value) {
