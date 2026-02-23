@@ -406,15 +406,37 @@ jobs:
                   "git log --pretty=format:'- %s' --no-merges -20"
               )
 
+          # Filter out infrastructure/devops/CI commits that don't affect app functionality.
+          # This covers conventional-commit prefixes (ci, cd, build, chore, deps) and common
+          # infrastructure keywords so the AI only sees user-facing changes.
+          import re
+          INFRA_PATTERN = re.compile(
+              r'^-\s+'
+              r'('
+              r'ci(\([^)]*\))?!?:'        # ci: / ci(scope):
+              r'|cd(\([^)]*\))?!?:'       # cd: / cd(scope):
+              r'|build(\([^)]*\))?!?:'    # build: / build(scope):
+              r'|chore(\([^)]*\))?!?:'    # chore: / chore(scope):
+              r'|deps(\([^)]*\))?!?:'     # deps: / deps(scope):
+              r')',
+              re.IGNORECASE
+          )
+          commits_filtered = '\n'.join(
+              line for line in commits_raw.splitlines()
+              if line.strip() and not INFRA_PATTERN.match(line)
+          )
+
           gemini_api_key = os.environ.get('GEMINI_API_KEY', '').strip()
 
-          if not gemini_api_key or not commits_raw.strip():
-              notes = commits_raw.strip() or 'Bug fixes and improvements.'
+          if not gemini_api_key or not commits_filtered.strip():
+              notes = commits_filtered.strip() or 'Bug fixes and improvements.'
           else:
               prompt = (
                   'Write concise release notes for a QR code scanner Android app based on these '
-                  'commits. Focus on user-visible improvements. Keep under 400 characters. '
-                  'Plain text only, no markdown.\n\nCommits:\n' + commits_raw
+                  'commits. Focus only on user-visible improvements and new features. '
+                  'Exclude any infrastructure, CI/CD, build system, devops, or dependency '
+                  'update changes. Keep under 400 characters. '
+                  'Plain text only, no markdown.\n\nCommits:\n' + commits_filtered
               )
               payload = json.dumps({
                   'contents': [{'parts': [{'text': prompt}]}],
@@ -435,7 +457,7 @@ jobs:
                   notes = result['candidates'][0]['content']['parts'][0]['text'].strip()
               except Exception as e:
                   print(f'AI generation failed: {e}', file=sys.stderr)
-                  notes = commits_raw.strip() or 'Bug fixes and improvements.'
+                  notes = commits_filtered.strip() or 'Bug fixes and improvements.'
 
           # Google Play limits release notes to 500 characters; truncate at a word boundary
           if len(notes) > 500:
