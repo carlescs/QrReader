@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -75,7 +76,13 @@ fun HistoryModalDrawerContent(
                 },
                 label = { Text(stringResource(R.string.favorites)) },
                 selected = showOnlyFavorites,
-                onClick = onToggleFavorites
+                onClick = onToggleFavorites,
+                badge = {
+                    Checkbox(
+                        checked = showOnlyFavorites,
+                        onCheckedChange = null
+                    )
+                }
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             TagsFilterList(selectedTagId = selectedTagId) {
