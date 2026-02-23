@@ -413,8 +413,15 @@ jobs:
           else:
               prompt = (
                   'Write concise release notes for a QR code scanner Android app based on these '
-                  'commits. Focus on user-visible improvements. Keep under 400 characters. '
-                  'Plain text only, no markdown.\n\nCommits:\n' + commits_raw
+                  'commits. Include ONLY changes that affect app functionality visible to users '
+                  '(new features, bug fixes, UI improvements, performance). '
+                  'Silently ignore any commits related to: CI/CD pipelines, deployment, '
+                  'build system, GitHub Actions workflows, Google Play publishing, '
+                  'Gradle configuration, infrastructure, devops, version bumps, '
+                  'documentation, or code maintenance. '
+                  'If there are no user-facing changes, reply with "Bug fixes and improvements." '
+                  'Keep under 400 characters. Plain text only, no markdown.\n\nCommits:\n'
+                  + commits_raw
               )
               payload = json.dumps({
                   'contents': [{'parts': [{'text': prompt}]}],
