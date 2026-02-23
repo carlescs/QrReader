@@ -144,7 +144,14 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics) {
                         QrCameraScreen(snackBarHostState)
                     }
                     composable("history") {
-                        History(snackBarHostState)
+                        History(
+                            snackBarHostState,
+                            onNavigateToSettings = {
+                                navController.navigate("settings") {
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
                     }
                     composable(
                         route="codeCreator",
