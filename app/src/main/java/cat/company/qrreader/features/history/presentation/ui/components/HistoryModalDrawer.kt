@@ -1,5 +1,6 @@
 package cat.company.qrreader.features.history.presentation.ui.components
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Switch
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,10 +37,12 @@ import cat.company.qrreader.features.tags.presentation.ui.components.TagsFilterL
  * - Toggle the favorites-only filter
  * - Select a tag to filter by (using a modern icon + name chip style)
  * - Add, edit, or delete tags
+ * - Navigate to the Settings screen via a pinned item at the bottom
  *
  * @param selectedTagId Currently selected tag ID, or null if no tag is selected
  * @param showOnlyFavorites Whether the favorites filter is currently active
  * @param onToggleFavorites Callback invoked when the user toggles the favorites filter
+ * @param onNavigateToSettings Callback invoked when the user taps the Settings item
  * @param selectTag Callback invoked when the user selects or clears a tag filter
  */
 @Composable
@@ -47,6 +51,7 @@ fun HistoryModalDrawerContent(
     selectedTagId: Int?,
     showOnlyFavorites: Boolean,
     onToggleFavorites: () -> Unit,
+    onNavigateToSettings: () -> Unit,
     selectTag: (TagModel?) -> Unit
 ) {
     ModalDrawerSheet {
@@ -85,14 +90,28 @@ fun HistoryModalDrawerContent(
                 }
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-            TagsFilterList(selectedTagId = selectedTagId) {
-                selectTag(it)
+            Box(modifier = Modifier.weight(1f)) {
+                TagsFilterList(selectedTagId = selectedTagId) {
+                    selectTag(it)
+                }
             }
             if (dialogState.value) {
                 AddTagDialog(tag = null) {
                     dialogState.value = false
                 }
             }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            NavigationDrawerItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Filled.Settings,
+                        contentDescription = null
+                    )
+                },
+                label = { Text(stringResource(R.string.settings)) },
+                selected = false,
+                onClick = onNavigateToSettings
+            )
         }
     }
 }

@@ -74,7 +74,8 @@ import java.util.Locale
 @Composable
 fun History(
     snackbarHostState: SnackbarHostState,
-    viewModel: HistoryViewModel = koinViewModel()
+    viewModel: HistoryViewModel = koinViewModel(),
+    onNavigateToSettings: () -> Unit = {}
 ) {
     val drawerState = remember { mutableStateOf(DrawerValue.Closed) }
     val selectedTagId by viewModel.selectedTagId.collectAsStateWithLifecycle()
@@ -88,7 +89,8 @@ fun History(
             HistoryModalDrawerContent(
                 selectedTagId = selectedTagId,
                 showOnlyFavorites = showOnlyFavorites,
-                onToggleFavorites = viewModel::toggleFavoritesFilter
+                onToggleFavorites = viewModel::toggleFavoritesFilter,
+                onNavigateToSettings = onNavigateToSettings
             ) {
                 viewModel.onTagSelected(it?.id)
                 drawerState.value = DrawerValue.Closed
