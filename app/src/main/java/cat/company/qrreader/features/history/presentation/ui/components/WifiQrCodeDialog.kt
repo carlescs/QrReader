@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.usecase.codecreator.GenerateQrCodeUseCase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 
 /**
@@ -53,7 +55,9 @@ fun WifiQrCodeDialog(
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     LaunchedEffect(wifiContent) {
-        bitmap = generateQrCodeUseCase(wifiContent)
+        bitmap = withContext(Dispatchers.Default) {
+            generateQrCodeUseCase(wifiContent)
+        }
     }
 
     Dialog(onDismissRequest = onDismiss) {
