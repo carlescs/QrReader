@@ -69,3 +69,127 @@ class BarcodeUtilsTest {
         assertNull(result.securityType)
     }
 }
+
+/**
+ * Unit tests for parseContactVCard utility function
+ */
+class ParseContactVCardTest {
+
+    @Test
+    fun parseContactVCard_standardVCard_parsesAllFields() {
+        val content = """
+            BEGIN:VCARD
+            VERSION:3.0
+            FN:John Doe
+            TEL:+1234567890
+            EMAIL:john@example.com
+            ORG:Example Corp
+            END:VCARD
+        """.trimIndent()
+        val result = parseContactVCard(content)
+        assertEquals("John Doe", result.name)
+        assertEquals("+1234567890", result.phone)
+        assertEquals("john@example.com", result.email)
+        assertEquals("Example Corp", result.organization)
+    }
+
+    @Test
+    fun parseContactVCard_parametrizedKeys_parsesFields() {
+        val content = """
+            BEGIN:VCARD
+            VERSION:2.1
+            FN;CHARSET=UTF-8:Jane Smith
+            TEL;TYPE=CELL:+9876543210
+            EMAIL;TYPE=WORK:jane@work.com
+            ORG;TYPE=work:Acme Inc
+            END:VCARD
+        """.trimIndent()
+        val result = parseContactVCard(content)
+        assertEquals("Jane Smith", result.name)
+        assertEquals("+9876543210", result.phone)
+        assertEquals("jane@work.com", result.email)
+        assertEquals("Acme Inc", result.organization)
+    }
+
+    @Test
+    fun parseContactVCard_fnTakesPrecedenceOverN() {
+        val content = """
+            BEGIN:VCARD
+            N:Doe;John;;;
+            FN:John Doe
+            END:VCARD
+        """.trimIndent()
+        val result = parseContactVCard(content)
+        assertEquals("John Doe", result.name)
+    }
+
+    @Test
+    fun parseContactVCard_nFieldFallback_constructsName() {
+        val content = """
+            BEGIN:VCARD
+            N:Doe;John;;;
+            END:VCARD
+        """.trimIndent()
+        val result = parseContactVCard(content)
+        assertEquals("John Doe", result.name)
+    }
+
+    @Test
+    fun parseContactVCard_foldedLines_unfoldsCorrectly() {
+        val content = "BEGIN:VCARD\r\nFN:Jo\r\n hn Doe\r\nEND:VCARD"
+        val result = parseContactVCard(content)
+        assertEquals("John Doe", result.name)
+    }
+
+    @Test
+    fun parseContactVCard_missingFields_returnsNull() {
+        val content = """
+            BEGIN:VCARD
+            VERSION:3.0
+            FN:Only Name
+            END:VCARD
+        """.trimIndent()
+        val result = parseContactVCard(content)
+        assertEquals("Only Name", result.name)
+        assertNull(result.phone)
+        assertNull(result.email)
+        assertNull(result.organization)
+    }
+
+    @Test
+    fun parseContactVCard_emptyContent_returnsAllNull() {
+        val result = parseContactVCard("")
+        assertNull(result.name)
+        assertNull(result.phone)
+        assertNull(result.email)
+        assertNull(result.organization)
+    }
+
+    @Test
+    fun parseContactVCard_mecardFormat_parsesAllFields() {
+        val content = "MECARD:N:John Doe;TEL:123456789;EMAIL:john@example.com;ORG:Example Corp;;"
+        val result = parseContactVCard(content)
+        assertEquals("John Doe", result.name)
+        assertEquals("123456789", result.phone)
+        assertEquals("john@example.com", result.email)
+        assertEquals("Example Corp", result.organization)
+    }
+
+    @Test
+    fun parseContactVCard_mecardWithoutOptionalFields_returnsNulls() {
+        val content = "MECARD:N:Jane Smith;TEL:987654321;;"
+        val result = parseContactVCard(content)
+        assertEquals("Jane Smith", result.name)
+        assertEquals("987654321", result.phone)
+        assertNull(result.email)
+        assertNull(result.organization)
+    }
+
+    @Test
+    fun parseContactVCard_mecardCaseInsensitive_parsesCorrectly() {
+        val content = "mecard:N:Bob;TEL:111;;"
+        val result = parseContactVCard(content)
+        assertEquals("Bob", result.name)
+        assertEquals("111", result.phone)
+    }
+}
