@@ -11,6 +11,11 @@ on:
       - master
   workflow_dispatch:
     inputs:
+      branch:
+        description: 'Branch to run the workflow on (defaults to master)'
+        required: false
+        type: string
+        default: 'master'
       upload_to_play_store:
         description: 'Upload to Google Play Alpha (manual trigger)'
         required: false
@@ -42,6 +47,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.branch || github.ref }}
           fetch-depth: 0
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
@@ -112,6 +118,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.branch || github.ref }}
           fetch-depth: 0
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
