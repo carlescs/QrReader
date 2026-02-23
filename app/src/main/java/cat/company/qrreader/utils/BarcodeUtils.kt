@@ -16,6 +16,59 @@ import com.google.mlkit.vision.barcode.common.Barcode
 data class WifiInfo(val ssid: String?, val password: String?, val securityType: String?)
 
 /**
+ * Parsed contact information extracted from a raw vCard string.
+ *
+ * @property name The formatted display name, or null if not present.
+ * @property phone The first phone number, or null if not present.
+ * @property email The first email address, or null if not present.
+ * @property organization The organization/company name, or null if not present.
+ */
+data class ContactInfo(
+    val name: String?,
+    val phone: String?,
+    val email: String?,
+    val organization: String?
+)
+
+/**
+ * Parses a raw vCard string and returns the extracted [ContactInfo].
+ * Supports common vCard 2.1 and 3.0 fields: FN, N, TEL, EMAIL, ORG.
+ */
+fun parseContactVCard(content: String): ContactInfo {
+    val lines = content.lines()
+    var name: String? = null
+    var phone: String? = null
+    var email: String? = null
+    var organization: String? = null
+
+    for (line in lines) {
+        when {
+            line.startsWith("FN:") -> name = line.removePrefix("FN:").trim()
+            line.startsWith("N:") && name == null -> {
+                val parts = line.removePrefix("N:").split(";")
+                val last = parts.getOrNull(0)?.trim()
+                val first = parts.getOrNull(1)?.trim()
+                name = listOfNotNull(
+                    first?.takeIf { it.isNotEmpty() },
+                    last?.takeIf { it.isNotEmpty() }
+                ).joinToString(" ").takeIf { it.isNotEmpty() }
+            }
+            line.startsWith("TEL") && phone == null -> phone = line.substringAfter(":").trim()
+            line.startsWith("EMAIL") && email == null -> email = line.substringAfter(":").trim()
+            line.startsWith("ORG:") -> organization = line.removePrefix("ORG:").trim()
+        }
+    }
+
+    return ContactInfo(
+        name = name?.takeIf { it.isNotEmpty() },
+        phone = phone?.takeIf { it.isNotEmpty() },
+        email = email?.takeIf { it.isNotEmpty() },
+        organization = organization?.takeIf { it.isNotEmpty() }
+    )
+}
+
+
+/**
  * Parses a raw WiFi QR code string in the format `WIFI:T:<type>;S:<ssid>;P:<password>;;`
  * and returns the extracted [WifiInfo].
  */
