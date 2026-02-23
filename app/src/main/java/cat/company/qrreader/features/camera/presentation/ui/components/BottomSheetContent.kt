@@ -110,6 +110,23 @@ fun BottomSheetContent(
                                     Barcode.TYPE_CONTACT_INFO -> {
                                         ContactBarcodeDisplay(barcode = barcode)
                                     }
+                                    Barcode.TYPE_WIFI -> {
+                                        WifiBarcodeDisplay(
+                                            barcode = barcode,
+                                            selectedTagNames = selectedTagNames,
+                                            aiGeneratedDescription = aiDescription,
+                                            aiGenerationEnabled = state.aiGenerationEnabled,
+                                            suggestedTags = suggestedTags,
+                                            isLoadingTags = isLoading,
+                                            tagError = error,
+                                            description = aiDescription,
+                                            isLoadingDescription = isLoadingDescription,
+                                            descriptionError = descriptionError,
+                                            onToggleTag = { tagName ->
+                                                onToggleTag(barcodeHash, tagName)
+                                            }
+                                        )
+                                    }
                                     else -> {
                                         OtherContent(
                                             barcode = barcode,

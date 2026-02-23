@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.ui.graphics.vector.ImageVector
 import cat.company.qrreader.domain.model.BarcodeModel
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -19,6 +20,7 @@ fun getBarcodeIcon(type: Int): ImageVector {
         Barcode.TYPE_CONTACT_INFO -> Icons.Filled.AccountBox
         Barcode.TYPE_EMAIL -> Icons.Filled.Email
         Barcode.TYPE_PHONE -> Icons.Filled.Phone
+        Barcode.TYPE_WIFI -> Icons.Filled.Wifi
         else -> Icons.Filled.QrCode
     }
 }
@@ -36,6 +38,7 @@ fun getTitle(barcode: BarcodeModel): String {
         Barcode.TYPE_CONTACT_INFO -> "Contact"
         Barcode.TYPE_EMAIL -> "Email"
         Barcode.TYPE_PHONE -> "Phone"
+        Barcode.TYPE_WIFI -> "Wi-Fi"
         else ->
             when (barcode.format) {
                 Barcode.FORMAT_EAN_13 -> "EAN13"
