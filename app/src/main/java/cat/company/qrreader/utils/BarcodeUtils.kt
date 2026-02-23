@@ -31,21 +31,41 @@ data class ContactInfo(
 )
 
 /**
- * Parses a raw vCard string and returns the extracted [ContactInfo].
- * Supports common vCard 2.1 and 3.0 fields: FN, N, TEL, EMAIL, ORG.
+ * Parses a raw vCard or MECARD string and returns the extracted [ContactInfo].
+ * Supports common vCard 2.1 and 3.0 fields (FN, N, TEL, EMAIL, ORG) including
+ * parameterized keys (e.g. `TEL;TYPE=CELL:`) and folded lines, as well as MECARD format.
  */
 fun parseContactVCard(content: String): ContactInfo {
-    val lines = content.lines()
+    if (content.trimStart().startsWith("MECARD:", ignoreCase = true)) {
+        return parseMecardContact(content)
+    }
+
+    // Unfold folded vCard lines (lines starting with space/tab continue the previous line).
+    val rawLines = content.lines()
+    val lines = mutableListOf<String>()
+    for (rawLine in rawLines) {
+        if (rawLine.isEmpty()) continue
+        if ((rawLine.startsWith(" ") || rawLine.startsWith("\t")) && lines.isNotEmpty()) {
+            lines[lines.lastIndex] = lines.last() + rawLine.trimStart()
+        } else {
+            lines += rawLine
+        }
+    }
+
     var name: String? = null
     var phone: String? = null
     var email: String? = null
     var organization: String? = null
 
     for (line in lines) {
-        when {
-            line.startsWith("FN:") -> name = line.removePrefix("FN:").trim()
-            line.startsWith("N:") && name == null -> {
-                val parts = line.removePrefix("N:").split(";")
+        if (!line.contains(':')) continue
+        val key = line.substringBefore(':').substringBefore(';').uppercase()
+        val value = line.substringAfter(':').trim()
+
+        when (key) {
+            "FN" -> if (value.isNotEmpty()) name = value
+            "N" -> if (name == null && value.isNotEmpty()) {
+                val parts = value.split(";")
                 val last = parts.getOrNull(0)?.trim()
                 val first = parts.getOrNull(1)?.trim()
                 name = listOfNotNull(
@@ -53,9 +73,44 @@ fun parseContactVCard(content: String): ContactInfo {
                     last?.takeIf { it.isNotEmpty() }
                 ).joinToString(" ").takeIf { it.isNotEmpty() }
             }
-            line.startsWith("TEL") && phone == null -> phone = line.substringAfter(":").trim()
-            line.startsWith("EMAIL") && email == null -> email = line.substringAfter(":").trim()
-            line.startsWith("ORG:") -> organization = line.removePrefix("ORG:").trim()
+            "TEL" -> if (phone == null && value.isNotEmpty()) phone = value
+            "EMAIL" -> if (email == null && value.isNotEmpty()) email = value
+            "ORG" -> if (value.isNotEmpty()) organization = value
+        }
+    }
+
+    return ContactInfo(
+        name = name?.takeIf { it.isNotEmpty() },
+        phone = phone?.takeIf { it.isNotEmpty() },
+        email = email?.takeIf { it.isNotEmpty() },
+        organization = organization?.takeIf { it.isNotEmpty() }
+    )
+}
+
+/**
+ * Parses a MECARD-formatted contact string and returns the extracted [ContactInfo].
+ *
+ * Example: `MECARD:N:John Doe;TEL:123456789;EMAIL:john@example.com;ORG:Example Corp;;`
+ */
+private fun parseMecardContact(content: String): ContactInfo {
+    val body = content.substringAfter(":", missingDelimiterValue = "")
+    val fields = body.split(';')
+
+    var name: String? = null
+    var phone: String? = null
+    var email: String? = null
+    var organization: String? = null
+
+    for (field in fields) {
+        if (field.isEmpty()) continue
+        val key = field.substringBefore(':').uppercase()
+        val value = field.substringAfter(':', missingDelimiterValue = "").trim()
+
+        when (key) {
+            "N", "FN" -> if (name == null && value.isNotEmpty()) name = value
+            "TEL" -> if (phone == null && value.isNotEmpty()) phone = value
+            "EMAIL" -> if (email == null && value.isNotEmpty()) email = value
+            "ORG" -> if (organization == null && value.isNotEmpty()) organization = value
         }
     }
 

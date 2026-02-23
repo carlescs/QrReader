@@ -29,25 +29,37 @@ import java.text.SimpleDateFormat
 fun ContactHistoryContent(sdf: SimpleDateFormat, barcode: BarcodeModel, aiGenerationEnabled: Boolean = true) {
     val context = LocalContext.current
     val contactInfo = remember(barcode.barcode) { parseContactVCard(barcode.barcode) }
+    val hasContactFields = remember(contactInfo) {
+        contactInfo.name != null ||
+            contactInfo.phone != null ||
+            contactInfo.email != null ||
+            contactInfo.organization != null
+    }
 
     Title(title = getTitle(barcode))
     Text(text = sdf.format(barcode.date))
 
-    contactInfo.name?.let { Text(text = it) }
-    contactInfo.phone?.let { Text(text = it) }
-    contactInfo.email?.let { Text(text = it) }
+    if (hasContactFields) {
+        contactInfo.name?.let { Text(text = it) }
+        contactInfo.phone?.let { Text(text = it) }
+        contactInfo.email?.let { Text(text = it) }
+    } else {
+        Text(text = barcode.barcode)
+    }
 
-    TextButton(onClick = {
-        val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
-            type = ContactsContract.RawContacts.CONTENT_TYPE
-            contactInfo.name?.let { putExtra(ContactsContract.Intents.Insert.NAME, it) }
-            contactInfo.phone?.let { putExtra(ContactsContract.Intents.Insert.PHONE, it) }
-            contactInfo.email?.let { putExtra(ContactsContract.Intents.Insert.EMAIL, it) }
-            contactInfo.organization?.let { putExtra(ContactsContract.Intents.Insert.COMPANY, it) }
+    if (hasContactFields) {
+        TextButton(onClick = {
+            val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
+                type = ContactsContract.RawContacts.CONTENT_TYPE
+                contactInfo.name?.let { putExtra(ContactsContract.Intents.Insert.NAME, it) }
+                contactInfo.phone?.let { putExtra(ContactsContract.Intents.Insert.PHONE, it) }
+                contactInfo.email?.let { putExtra(ContactsContract.Intents.Insert.EMAIL, it) }
+                contactInfo.organization?.let { putExtra(ContactsContract.Intents.Insert.COMPANY, it) }
+            }
+            context.startActivity(intent)
+        }) {
+            Text(text = stringResource(R.string.add_to_contacts))
         }
-        context.startActivity(intent)
-    }) {
-        Text(text = stringResource(R.string.add_to_contacts))
     }
 
     if (barcode.description != null && barcode.description.isNotBlank()) {
