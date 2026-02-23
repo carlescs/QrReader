@@ -1,5 +1,6 @@
 package cat.company.qrreader.ui.components.common
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -28,15 +29,16 @@ import cat.company.qrreader.utils.Utils
  */
 @Composable
 fun Tag(it: TagModel) {
-    val color = Utils.parseColor(it.color)
+    val color = Utils.parseColor(it.color) ?: MaterialTheme.colorScheme.primary
     Card(
         modifier = Modifier
             .wrapContentHeight()
             .wrapContentWidth()
             .padding(2.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = color.copy(alpha = 0.15f)
         ),
+        border = BorderStroke(1.dp, color),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
@@ -46,7 +48,7 @@ fun Tag(it: TagModel) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.Label,
                 contentDescription = null,
-                tint = color ?: MaterialTheme.colorScheme.primary,
+                tint = color,
                 modifier = Modifier.size(12.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
@@ -54,7 +56,7 @@ fun Tag(it: TagModel) {
                 text = it.name,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
