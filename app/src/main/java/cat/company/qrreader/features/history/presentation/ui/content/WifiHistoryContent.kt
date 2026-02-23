@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.features.camera.presentation.ui.components.Title
+import cat.company.qrreader.features.history.presentation.ui.components.WifiQrCodeDialog
 import cat.company.qrreader.features.history.presentation.ui.components.getTitle
 import cat.company.qrreader.ui.components.common.ExpandableText
 import cat.company.qrreader.utils.parseWifiContent
@@ -36,6 +37,7 @@ fun WifiHistoryContent(sdf: SimpleDateFormat, barcode: BarcodeModel, aiGeneratio
     val context = LocalContext.current
     val connectivityManager = remember { context.getSystemService(ConnectivityManager::class.java) }
     var networkCallback by remember { mutableStateOf<ConnectivityManager.NetworkCallback?>(null) }
+    var showQrCodeDialog by remember { mutableStateOf(false) }
 
     val wifiInfo = remember(barcode.barcode) { parseWifiContent(barcode.barcode) }
 
@@ -78,6 +80,18 @@ fun WifiHistoryContent(sdf: SimpleDateFormat, barcode: BarcodeModel, aiGeneratio
         }) {
             Text(text = stringResource(R.string.wifi_connect))
         }
+    }
+
+    TextButton(onClick = { showQrCodeDialog = true }) {
+        Text(text = stringResource(R.string.wifi_show_qr_code))
+    }
+
+    if (showQrCodeDialog) {
+        WifiQrCodeDialog(
+            wifiContent = barcode.barcode,
+            ssid = wifiInfo.ssid,
+            onDismiss = { showQrCodeDialog = false }
+        )
     }
 
     if (barcode.description != null && barcode.description.trim() != "") {
