@@ -13,20 +13,17 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import cat.company.qrreader.R
 import cat.company.qrreader.features.camera.presentation.ui.components.Title
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.features.history.presentation.ui.components.getTitle
-import cat.company.qrreader.ui.components.common.ExpandableText
 import java.text.SimpleDateFormat
 
 /**
  * Content for the url history
  */
 @Composable
-fun UrlHistoryContent(sdf:SimpleDateFormat, barcode:BarcodeModel, aiGenerationEnabled: Boolean = true) {
+fun UrlHistoryContent(sdf:SimpleDateFormat, barcode:BarcodeModel) {
     val uriHandler = LocalUriHandler.current
     Title(title = getTitle(barcode))
     Text(text = sdf.format(barcode.date))
@@ -46,11 +43,6 @@ fun UrlHistoryContent(sdf:SimpleDateFormat, barcode:BarcodeModel, aiGenerationEn
         Spacer(modifier = Modifier.height(5.dp))
         HorizontalDivider()
         Text(text = barcode.description)
-    }
-    if(barcode.aiGeneratedDescription!=null && barcode.aiGeneratedDescription.trim()!="" && aiGenerationEnabled) {
-        Spacer(modifier = Modifier.height(5.dp))
-        HorizontalDivider()
-        ExpandableText(text = stringResource(R.string.ai_description_formatted, barcode.aiGeneratedDescription.orEmpty()))
     }
 }
 
