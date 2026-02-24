@@ -4,14 +4,21 @@ import android.Manifest
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -71,6 +78,28 @@ fun QrCameraScreen(
     val noBarcodes = stringResource(R.string.no_barcodes_found)
     val imageProcessingFailed = stringResource(R.string.image_processing_failed)
 
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            coroutineScope.launch {
+                try {
+                    val barcodes = scanImageUseCase(context, uri)
+                    if (barcodes.isNotEmpty()) {
+                        viewModel.saveBarcodes(barcodes)
+                        openBottomSheet = true
+                        bottomSheetState.show()
+                    } else {
+                        snackbarHostState.showSnackbar(noBarcodes)
+                    }
+                } catch (e: Exception) {
+                    Log.e("QrCameraScreen", "Failed to process picked image", e)
+                    snackbarHostState.showSnackbar(imageProcessingFailed)
+                }
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
         bottomSheetState.hide()
     }
@@ -101,15 +130,31 @@ fun QrCameraScreen(
         verticalArrangement = Arrangement.Center
     ) {
         if (!permissionState.status.isGranted) {
-            PermissionPrompt(permissionState)
+            PermissionPrompt(
+                permissionState = permissionState,
+                onPickImage = { imagePickerLauncher.launch("image/*") }
+            )
         } else {
-            CameraPreview {
-                if (it?.isNotEmpty() == true && !openBottomSheet) {
-                    openBottomSheet = true
-                    viewModel.saveBarcodes(it)
-                    coroutineScope.launch {
-                        bottomSheetState.show()
+            Box(modifier = Modifier.fillMaxSize()) {
+                CameraPreview {
+                    if (it?.isNotEmpty() == true && !openBottomSheet) {
+                        openBottomSheet = true
+                        viewModel.saveBarcodes(it)
+                        coroutineScope.launch {
+                            bottomSheetState.show()
+                        }
                     }
+                }
+                FilledIconButton(
+                    onClick = { imagePickerLauncher.launch("image/*") },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Image,
+                        contentDescription = stringResource(R.string.upload_image)
+                    )
                 }
             }
         }
@@ -144,7 +189,7 @@ fun QrCameraScreen(
 
 @Composable
 @OptIn(ExperimentalPermissionsApi::class)
-private fun PermissionPrompt(permissionState: PermissionState) {
+private fun PermissionPrompt(permissionState: PermissionState, onPickImage: () -> Unit) {
     Column(
         Modifier.padding(20.dp),
         verticalArrangement = Arrangement.Center,
@@ -158,6 +203,14 @@ private fun PermissionPrompt(permissionState: PermissionState) {
         Text(textToShow, Modifier.padding(0.dp, 20.dp))
         Button(onClick = { permissionState.launchPermissionRequest() }) {
             Text(stringResource(R.string.request_permission))
+        }
+        Button(onClick = onPickImage, Modifier.padding(top = 8.dp)) {
+            Icon(
+                imageVector = Icons.Filled.Image,
+                contentDescription = null,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Text(stringResource(R.string.upload_image))
         }
     }
 }
