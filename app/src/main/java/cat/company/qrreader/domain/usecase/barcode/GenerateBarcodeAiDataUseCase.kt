@@ -194,7 +194,7 @@ open class GenerateBarcodeAiDataUseCase {
                 .filter { it.isNotEmpty() && it.length <= 30 }
                 .distinct()
                 .take(3)
-                .map { SuggestedTagModel(name = it, isSelected = true) }
+                .map { SuggestedTagModel(name = it, isSelected = false) }
 
             val rawDescription = try {
                 json.getString("description").trim()
