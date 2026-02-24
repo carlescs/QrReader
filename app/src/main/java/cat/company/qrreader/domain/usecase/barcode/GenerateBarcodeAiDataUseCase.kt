@@ -135,14 +135,14 @@ open class GenerateBarcodeAiDataUseCase {
                 ""
             }
 
-            val descriptionRules = if (humorous) {
-                "- Write in a funny, witty, and light-hearted tone — make the user smile!"
-            } else {
-                """
-                - For URLs: name the website or service and what it offers
-                - For products: mention the product type or brand if recognizable
-                - For contacts, Wi-Fi, events, or other types: describe what the barcode provides access to
-                """.trimIndent()
+            val descriptionRules = buildString {
+                appendLine("- For URLs: name the website or service and what it offers")
+                appendLine("- For products: mention the product type or brand if recognizable")
+                append("- For contacts, Wi-Fi, events, or other types: describe what the barcode provides access to")
+                if (humorous) {
+                    appendLine()
+                    append("- Use a funny, witty, and light-hearted tone — make the user smile!")
+                }
             }
 
             val promptText = """
