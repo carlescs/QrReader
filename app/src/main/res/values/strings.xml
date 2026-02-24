@@ -65,6 +65,7 @@
 
     <!-- Edit barcode dialog -->
     <string name="edit_barcode">Edit barcode</string>
+    <string name="delete_barcode">Delete barcode</string>
     <string name="title_label">Title</string>
     <string name="description_label">Description</string>
     <string name="ai_description">AI Description</string>
