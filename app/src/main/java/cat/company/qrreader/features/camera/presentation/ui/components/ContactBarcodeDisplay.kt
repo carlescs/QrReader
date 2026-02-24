@@ -2,14 +2,24 @@ package cat.company.qrreader.features.camera.presentation.ui.components
 
 import android.content.Intent
 import android.provider.ContactsContract
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -24,8 +34,6 @@ import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.util.Date
@@ -51,7 +59,7 @@ fun ContactBarcodeDisplay(
     val context = LocalContext.current
     val saveBarcodeWithTagsUseCase: SaveBarcodeWithTagsUseCase = koinInject()
     val getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
-    val coroutineScope = CoroutineScope(Dispatchers.IO)
+    val coroutineScope = rememberCoroutineScope()
     val saved = remember { mutableStateOf(false) }
     val saveDescription = remember(description) { mutableStateOf(true) }
 
@@ -79,27 +87,6 @@ fun ContactBarcodeDisplay(
             withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(emailLabel) }
             append(email)
         })
-    }
-
-    TextButton(onClick = {
-        val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
-            type = ContactsContract.RawContacts.CONTENT_TYPE
-            if (formattedName.isNotEmpty()) {
-                putExtra(ContactsContract.Intents.Insert.NAME, formattedName)
-            }
-            barcode.contactInfo?.phones?.firstOrNull()?.number?.let {
-                putExtra(ContactsContract.Intents.Insert.PHONE, it)
-            }
-            barcode.contactInfo?.emails?.firstOrNull()?.address?.let {
-                putExtra(ContactsContract.Intents.Insert.EMAIL, it)
-            }
-            barcode.contactInfo?.organization?.takeIf { it.isNotEmpty() }?.let {
-                putExtra(ContactsContract.Intents.Insert.COMPANY, it)
-            }
-        }
-        context.startActivity(intent)
-    }) {
-        Text(text = stringResource(R.string.add_to_contacts))
     }
 
     SuggestedTagsSection(
@@ -133,24 +120,64 @@ fun ContactBarcodeDisplay(
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
     }
 
-    TextButton(onClick = {
-        coroutineScope.launch {
-            val barcodeModel = BarcodeModel(
-                date = Date(),
-                type = barcode.valueType,
-                barcode = barcode.displayValue!!,
-                format = barcode.format
-            )
-            val tags = if (selectedTagNames.isNotEmpty()) {
-                val tagColors = suggestedTags.associate { it.name to it.color }
-                getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
-            } else {
-                emptyList()
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = {
+            val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
+                type = ContactsContract.RawContacts.CONTENT_TYPE
+                if (formattedName.isNotEmpty()) {
+                    putExtra(ContactsContract.Intents.Insert.NAME, formattedName)
+                }
+                barcode.contactInfo?.phones?.firstOrNull()?.number?.let {
+                    putExtra(ContactsContract.Intents.Insert.PHONE, it)
+                }
+                barcode.contactInfo?.emails?.firstOrNull()?.address?.let {
+                    putExtra(ContactsContract.Intents.Insert.EMAIL, it)
+                }
+                barcode.contactInfo?.organization?.takeIf { it.isNotEmpty() }?.let {
+                    putExtra(ContactsContract.Intents.Insert.COMPANY, it)
+                }
             }
-            saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
+            context.startActivity(intent)
+        }) {
+            Icon(
+                imageVector = Icons.Filled.PersonAdd,
+                contentDescription = stringResource(R.string.add_to_contacts)
+            )
         }
-        saved.value = true
-    }, enabled = !saved.value) {
-        Text(text = if (!saved.value) stringResource(R.string.save) else stringResource(R.string.saved))
+        Spacer(modifier = Modifier.weight(1f))
+        IconButton(
+            onClick = {
+                coroutineScope.launch {
+                    try {
+                        val barcodeModel = BarcodeModel(
+                            date = Date(),
+                            type = barcode.valueType,
+                            barcode = barcode.displayValue!!,
+                            format = barcode.format
+                        )
+                        val tags = if (selectedTagNames.isNotEmpty()) {
+                            val tagColors = suggestedTags.associate { it.name to it.color }
+                            getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
+                        } else {
+                            emptyList()
+                        }
+                        saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
+                        saved.value = true
+                    } catch (_: Exception) {
+                        // Keep saved as false so the user can retry if saving fails
+                    }
+                }
+            },
+            enabled = !saved.value
+        ) {
+            Icon(
+                imageVector = if (saved.value) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+                contentDescription = if (saved.value) stringResource(R.string.saved) else stringResource(R.string.save),
+                tint = if (saved.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
