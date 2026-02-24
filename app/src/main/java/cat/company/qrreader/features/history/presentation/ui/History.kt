@@ -158,8 +158,10 @@ private fun HistoryContent(
     val lazyListState = rememberLazyListState()
     val items by viewModel.savedBarcodes.collectAsStateWithLifecycle(initialValue = emptyList())
     val query by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val showOnlyFavorites by viewModel.showOnlyFavorites.collectAsStateWithLifecycle()
     var searchActive by rememberSaveable { mutableStateOf(false) }
 
+    val isFiltered = query.isNotBlank() || selectedTagId != null || showOnlyFavorites
 
     Column(modifier = Modifier.fillMaxSize()) {
         val clipboard: Clipboard = LocalClipboard.current
@@ -178,7 +180,7 @@ private fun HistoryContent(
             searchActive = searchActive,
             displayData = BarcodeDisplayData(
                 visibleItems = items,
-                query = query,
+                isFiltered = isFiltered,
                 sdf = sdf
             ),
             interactionDeps = BarcodeInteractionDeps(
@@ -475,8 +477,10 @@ private fun SearchResultsList(
  * @property visibleItems The list of barcode items to display, already filtered based on
  *                        search query and tag selection. This list represents the current
  *                        view state after all filters have been applied.
- * @property query The current search query string entered by the user. Used to determine
- *                 the appropriate empty state message when no items are visible.
+ * @property isFiltered Whether any filter is currently active (search query, tag filter, or
+ *                      favorites filter). Used to determine the appropriate empty state message:
+ *                      "No results" when a filter is active, "No saved barcodes!" when there
+ *                      are no barcodes at all.
  * @property sdf SimpleDateFormat instance for formatting barcode timestamps consistently
  *               across all displayed cards. Format: "dd-MM-yyyy HH:mm:ss"
  *
@@ -485,7 +489,7 @@ private fun SearchResultsList(
  */
 private data class BarcodeDisplayData(
     val visibleItems: List<cat.company.qrreader.domain.model.BarcodeWithTagsModel>,
-    val query: String,
+    val isFiltered: Boolean,
     val sdf: SimpleDateFormat
 )
 
@@ -547,7 +551,7 @@ private fun HistoryResults(
 ) {
     if (!searchActive) {
         if (displayData.visibleItems.isEmpty()) {
-            EmptyResultsState(query = displayData.query)
+            EmptyResultsState(isFiltered = displayData.isFiltered)
         } else {
             BarcodeResultsList(
                 visibleItems = displayData.visibleItems,
@@ -565,17 +569,17 @@ private fun HistoryResults(
  * Empty state for main results area when no barcodes are visible.
  *
  * Displays a centered message indicating why no results are shown:
- * - If query is blank: "No saved barcodes!" - user hasn't saved any barcodes yet
- * - If query has text: "No results" - search/filter returned no matches
+ * - If no filter is active: "No saved barcodes!" - user hasn't saved any barcodes yet
+ * - If a filter is active: "No results" - tag/favorites/search filter returned no matches
  *
  * This helps users understand whether they need to scan barcodes or adjust their filters.
  *
- * @param query Current search query text to determine appropriate empty message
+ * @param isFiltered Whether any filter (search query, tag, or favorites) is currently active
  */
 @Composable
-private fun EmptyResultsState(query: String) {
+private fun EmptyResultsState(isFiltered: Boolean) {
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
-        val msg = if (query.isBlank()) stringResource(R.string.no_saved_barcodes) else stringResource(R.string.no_results)
+        val msg = if (!isFiltered) stringResource(R.string.no_saved_barcodes) else stringResource(R.string.no_results)
         Text(text = msg, modifier = Modifier.align(CenterHorizontally), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
