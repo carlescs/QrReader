@@ -78,25 +78,27 @@ fun QrCameraScreen(
     val noBarcodes = stringResource(R.string.no_barcodes_found)
     val imageProcessingFailed = stringResource(R.string.image_processing_failed)
 
+    suspend fun scanUriAndShowResult(uri: Uri) {
+        try {
+            val barcodes = scanImageUseCase(context, uri)
+            if (barcodes.isNotEmpty()) {
+                viewModel.saveBarcodes(barcodes)
+                openBottomSheet = true
+                bottomSheetState.show()
+            } else {
+                snackbarHostState.showSnackbar(noBarcodes)
+            }
+        } catch (e: Exception) {
+            Log.e("QrCameraScreen", "Failed to process image", e)
+            snackbarHostState.showSnackbar(imageProcessingFailed)
+        }
+    }
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
-            coroutineScope.launch {
-                try {
-                    val barcodes = scanImageUseCase(context, uri)
-                    if (barcodes.isNotEmpty()) {
-                        viewModel.saveBarcodes(barcodes)
-                        openBottomSheet = true
-                        bottomSheetState.show()
-                    } else {
-                        snackbarHostState.showSnackbar(noBarcodes)
-                    }
-                } catch (e: Exception) {
-                    Log.e("QrCameraScreen", "Failed to process picked image", e)
-                    snackbarHostState.showSnackbar(imageProcessingFailed)
-                }
-            }
+            coroutineScope.launch { scanUriAndShowResult(uri) }
         }
     }
 
@@ -107,19 +109,7 @@ fun QrCameraScreen(
     // Scan the shared image when a URI is provided
     LaunchedEffect(sharedImageUri) {
         if (sharedImageUri != null) {
-            try {
-                val barcodes = scanImageUseCase(context, sharedImageUri)
-                if (barcodes.isNotEmpty()) {
-                    viewModel.saveBarcodes(barcodes)
-                    openBottomSheet = true
-                    bottomSheetState.show()
-                } else {
-                    snackbarHostState.showSnackbar(noBarcodes)
-                }
-            } catch (e: Exception) {
-                Log.e("QrCameraScreen", "Failed to process shared image", e)
-                snackbarHostState.showSnackbar(imageProcessingFailed)
-            }
+            scanUriAndShowResult(sharedImageUri)
             onSharedImageConsumed()
         }
     }

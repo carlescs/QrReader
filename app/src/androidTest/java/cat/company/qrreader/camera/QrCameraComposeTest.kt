@@ -55,6 +55,10 @@ class QrCameraComposeTest {
         // Verify rationale string exists
         val rationale = context.getString(R.string.camera_permissions_rationale)
         assert(rationale.isNotEmpty())
+
+        // Verify upload image string exists
+        val uploadImage = context.getString(R.string.upload_image)
+        assert(uploadImage.isNotEmpty())
     }
 
     /**
