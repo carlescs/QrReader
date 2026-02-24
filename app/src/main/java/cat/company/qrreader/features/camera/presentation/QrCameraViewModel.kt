@@ -11,6 +11,7 @@ import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import cat.company.qrreader.utils.getBarcodeFormatName
 import cat.company.qrreader.utils.getBarcodeTypeName
 import com.google.mlkit.vision.barcode.common.Barcode
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,6 +37,16 @@ class QrCameraViewModel(
 
     private val _isAiSupportedOnDevice = MutableStateFlow(false)
 
+    /**
+     * Completes once the device AI support check has finished (with any result).
+     * Awaiting this deferred in [saveBarcodes] prevents skipping AI generation due
+     * to the race condition where the check hasn't finished before the first scan.
+     *
+     * This is a one-time event: the check runs once in [init] and the ViewModel
+     * survives configuration changes, so [_aiSupportCheckComplete] is completed exactly once.
+     */
+    private val _aiSupportCheckComplete = CompletableDeferred<Unit>()
+
     init {
         // Check device AI support and combine with user setting to compute visible AI state
         viewModelScope.launch {
@@ -48,6 +59,8 @@ class QrCameraViewModel(
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error during model download check", e)
+            } finally {
+                _aiSupportCheckComplete.complete(Unit)
             }
         }
         // Observe combined AI generation setting (user preference AND device support)
@@ -80,6 +93,11 @@ class QrCameraViewModel(
                 
                 // Generate tags and description in a single AI request
                 viewModelScope.launch {
+                    // Wait for the device AI support check to complete before checking the
+                    // enabled flag. Without this, the shared-image flow can call saveBarcodes()
+                    // before isAiSupportedOnDevice() has finished, causing aiGenerationEnabled
+                    // to still be false and AI generation to be skipped.
+                    _aiSupportCheckComplete.await()
                     if (!_uiState.value.aiGenerationEnabled) return@launch
 
                     // Mark this barcode as loading both tags and description
