@@ -58,10 +58,10 @@ fun OtherContent(
     val uriHandler = LocalUriHandler.current
     val saveBarcodeWithTagsUseCase: SaveBarcodeWithTagsUseCase = koinInject()
     val getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
-    val coroutineScope= rememberCoroutineScope()
-    val saved = remember{ mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val saved = remember { mutableStateOf(false) }
     val saveDescription = remember(description) { mutableStateOf(true) }
-    Title(title = if (barcode.format==Barcode.FORMAT_EAN_13) stringResource(R.string.ean13) else stringResource(R.string.other))
+    Title(title = if (barcode.format == Barcode.FORMAT_EAN_13) stringResource(R.string.ean13) else stringResource(R.string.other))
     val noValue = stringResource(R.string.no_barcode_value)
     when (barcode.format) {
         Barcode.FORMAT_EAN_13,
