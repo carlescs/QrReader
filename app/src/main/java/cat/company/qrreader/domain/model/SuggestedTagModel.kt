@@ -7,7 +7,7 @@ import kotlin.random.Random
  */
 data class SuggestedTagModel(
     val name: String,
-    val isSelected: Boolean = true,
+    val isSelected: Boolean = false,
     val color: String = generateRandomColor()
 ) {
     companion object {

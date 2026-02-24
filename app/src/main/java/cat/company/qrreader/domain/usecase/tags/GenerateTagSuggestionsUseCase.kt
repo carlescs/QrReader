@@ -186,7 +186,7 @@ open class GenerateTagSuggestionsUseCase {
                 .filter { it.isNotEmpty() && it.length <= 30 }
                 .distinct()
                 .take(3)
-                .map { SuggestedTagModel(name = it, isSelected = true) }
+                .map { SuggestedTagModel(name = it, isSelected = false) }
 
             if (suggestions.isEmpty()) {
                 return@withContext Result.failure(
