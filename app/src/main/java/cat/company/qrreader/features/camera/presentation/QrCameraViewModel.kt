@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import cat.company.qrreader.utils.getBarcodeFormatName
@@ -28,7 +29,8 @@ class QrCameraViewModel(
     private val generateBarcodeAiDataUseCase: GenerateBarcodeAiDataUseCase,
     private val getAllTagsUseCase: GetAllTagsUseCase,
     private val getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase,
-    private val getAiLanguageUseCase: GetAiLanguageUseCase
+    private val getAiLanguageUseCase: GetAiLanguageUseCase,
+    private val getAiHumorousDescriptionsUseCase: GetAiHumorousDescriptionsUseCase
 ) : ViewModel() {
     
     companion object {
@@ -112,13 +114,15 @@ class QrCameraViewModel(
                         val existingTags = getAllTagsUseCase().first()
                         val existingTagNames = existingTags.map { it.name }
                         val language = getAiLanguageUseCase().first()
+                        val humorous = getAiHumorousDescriptionsUseCase().first()
 
                         val result = generateBarcodeAiDataUseCase(
                             barcodeContent = content,
                             barcodeType = barcodeType,
                             barcodeFormat = barcodeFormat,
                             existingTags = existingTagNames,
-                            language = language
+                            language = language,
+                            humorous = humorous
                         )
 
                         result.onSuccess { aiData ->

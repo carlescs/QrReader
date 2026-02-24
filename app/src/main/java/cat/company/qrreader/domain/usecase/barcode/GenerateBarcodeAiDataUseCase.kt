@@ -45,7 +45,8 @@ open class GenerateBarcodeAiDataUseCase {
         barcodeType: String? = null,
         barcodeFormat: String? = null,
         existingTags: List<String>,
-        language: String = "en"
+        language: String = "en",
+        humorous: Boolean = false
     ): Result<BarcodeAiData> = withContext(Dispatchers.IO) {
         try {
             if (model == null) {
@@ -134,6 +135,16 @@ open class GenerateBarcodeAiDataUseCase {
                 ""
             }
 
+            val descriptionRules = buildString {
+                appendLine("- For URLs: name the website or service and what it offers")
+                appendLine("- For products: mention the product type or brand if recognizable")
+                append("- For contacts, Wi-Fi, events, or other types: describe what the barcode provides access to")
+                if (humorous) {
+                    appendLine()
+                    append("- Use a funny, witty, and light-hearted tone — make the user smile!")
+                }
+            }
+
             val promptText = """
                 Analyze this scanned barcode. Provide up to 3 short tags and a brief description.
                 Respond in ${languageNameForPrompt(language)}.
@@ -151,9 +162,7 @@ open class GenerateBarcodeAiDataUseCase {
                 
                 Description rules:
                 - 1-2 sentences, under $MAX_DESCRIPTION_LENGTH characters
-                - For URLs: name the website or service and what it offers
-                - For products: mention the product type or brand if recognizable
-                - For contacts, Wi-Fi, events, or other types: describe what the barcode provides access to
+                $descriptionRules
                 
                 Respond ONLY with valid JSON in this exact format, nothing else:
                 {"tags": ["Tag1", "Tag2", "Tag3"], "description": "Your description here."}

@@ -9,6 +9,7 @@ import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
 import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -65,7 +66,8 @@ class HistoryViewModelHideFlagTest {
             barcodeType: String?,
             barcodeFormat: String?,
             existingTags: List<String>,
-            language: String
+            language: String,
+            humorous: Boolean
         ) = Result.failure<cat.company.qrreader.domain.model.BarcodeAiData>(
             UnsupportedOperationException("AI not available in tests")
         )
@@ -96,6 +98,9 @@ class HistoryViewModelHideFlagTest {
             override val aiLanguage: kotlinx.coroutines.flow.Flow<String>
                 get() = kotlinx.coroutines.flow.flowOf("en")
             override suspend fun setAiLanguage(value: String) {}
+            override val aiHumorousDescriptions: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setAiHumorousDescriptions(value: Boolean) {}
         }
         val vm = HistoryViewModel(
             getBarcodesWithTagsUseCase,
@@ -104,6 +109,7 @@ class HistoryViewModelHideFlagTest {
             fakeSettingsRepo,
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepo),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
             ToggleFavoriteUseCase(fakeRepository)
         )
 

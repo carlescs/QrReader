@@ -102,6 +102,8 @@
     <string name="ai_language">AI language</string>
     <string name="ai_language_description">Language for AI-generated tags and descriptions</string>
     <string name="change_language">Change</string>
+    <string name="ai_humorous_descriptions">Humorous descriptions</string>
+    <string name="ai_humorous_descriptions_description">When enabled, AI will generate funny and witty barcode descriptions instead of factual ones.</string>
 
     <!-- AI language options -->
     <string name="language_english">English</string>
