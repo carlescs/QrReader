@@ -2,6 +2,7 @@ package cat.company.qrreader.features.camera.presentation.ui
 
 import android.Manifest
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.Arrangement
@@ -86,7 +87,8 @@ fun QrCameraScreen(
                 } else {
                     snackbarHostState.showSnackbar(noBarcodes)
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Log.e("QrCameraScreen", "Failed to process shared image", e)
                 snackbarHostState.showSnackbar(imageProcessingFailed)
             }
             onSharedImageConsumed()
