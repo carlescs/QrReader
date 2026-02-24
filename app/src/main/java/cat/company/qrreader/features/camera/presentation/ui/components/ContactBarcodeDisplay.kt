@@ -14,6 +14,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -176,5 +179,57 @@ fun ContactBarcodeDisplay(
                 tint = if (saved.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+
+    SuggestedTagsSection(
+        suggestedTags = suggestedTags,
+        isLoading = isLoadingTags,
+        error = tagError,
+        aiGenerationEnabled = aiGenerationEnabled,
+        onToggleTag = onToggleTag,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+    )
+
+    if (suggestedTags.isNotEmpty()) {
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+    }
+
+    BarcodeDescriptionSection(
+        description = description,
+        isLoading = isLoadingDescription,
+        error = descriptionError,
+        aiGenerationEnabled = aiGenerationEnabled,
+        saveDescription = saveDescription.value,
+        onToggleSaveDescription = { saveDescription.value = it },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+    )
+
+    if (description != null || isLoadingDescription) {
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+    }
+
+    TextButton(onClick = {
+        coroutineScope.launch {
+            val barcodeModel = BarcodeModel(
+                date = Date(),
+                type = barcode.valueType,
+                barcode = barcode.displayValue!!,
+                format = barcode.format
+            )
+            val tags = if (selectedTagNames.isNotEmpty()) {
+                val tagColors = suggestedTags.associate { it.name to it.color }
+                getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
+            } else {
+                emptyList()
+            }
+            saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
+        }
+        saved.value = true
+    }, enabled = !saved.value) {
+        Text(text = if (!saved.value) stringResource(R.string.save) else stringResource(R.string.saved))
     }
 }
