@@ -408,7 +408,7 @@ class QrCameraViewModelTest {
 
     @Test
     fun viewModel_canBeCreated_withValidDependencies() {
-        val vm = QrCameraViewModel(fakeGenerateBarcodeAiDataUseCase, getAllTagsUseCase, getAiGenerationEnabledUseCase, getAiLanguageUseCase)
+        val vm = QrCameraViewModel(fakeGenerateBarcodeAiDataUseCase, getAllTagsUseCase, getAiGenerationEnabledUseCase, getAiLanguageUseCase, getAiHumorousDescriptionsUseCase)
 
         assertNotNull(vm)
         assertNotNull(vm.uiState)
