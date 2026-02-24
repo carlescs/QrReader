@@ -1,6 +1,8 @@
 package cat.company.qrreader.features.camera.presentation.ui
 
 import android.Manifest
+import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.Arrangement
@@ -26,10 +28,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
 import cat.company.qrreader.core.camera.CameraPreview
+import cat.company.qrreader.domain.usecase.camera.ScanImageUseCase
 import cat.company.qrreader.features.camera.presentation.QrCameraViewModel
 import cat.company.qrreader.features.camera.presentation.ui.components.BottomSheetContent
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -38,6 +42,7 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -49,6 +54,8 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun QrCameraScreen(
     snackbarHostState: SnackbarHostState,
+    sharedImageUri: Uri? = null,
+    onSharedImageConsumed: () -> Unit = {},
     viewModel: QrCameraViewModel = koinViewModel()
 ) {
     var openBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -59,10 +66,35 @@ fun QrCameraScreen(
         skipPartiallyExpanded = skipPartiallyExpanded
     )
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val scanImageUseCase: ScanImageUseCase = koinInject()
+    val noBarcodes = stringResource(R.string.no_barcodes_found)
+    val imageProcessingFailed = stringResource(R.string.image_processing_failed)
 
     LaunchedEffect(Unit) {
         bottomSheetState.hide()
     }
+
+    // Scan the shared image when a URI is provided
+    LaunchedEffect(sharedImageUri) {
+        if (sharedImageUri != null) {
+            try {
+                val barcodes = scanImageUseCase(context, sharedImageUri)
+                if (barcodes.isNotEmpty()) {
+                    viewModel.saveBarcodes(barcodes)
+                    openBottomSheet = true
+                    bottomSheetState.show()
+                } else {
+                    snackbarHostState.showSnackbar(noBarcodes)
+                }
+            } catch (e: Exception) {
+                Log.e("QrCameraScreen", "Failed to process shared image", e)
+                snackbarHostState.showSnackbar(imageProcessingFailed)
+            }
+            onSharedImageConsumed()
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,

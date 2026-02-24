@@ -1,5 +1,6 @@
 package cat.company.qrreader
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.Box
@@ -27,6 +28,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -62,7 +64,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 @ExperimentalGetImage
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun MainScreen(firebaseAnalytics: FirebaseAnalytics) {
+fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null, onSharedImageConsumed: () -> Unit = {}) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -94,6 +96,16 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics) {
                 navController.previousBackStackEntry != null
             }
         }
+
+        // Navigate to camera screen when a shared image is received
+        LaunchedEffect(sharedImageUri) {
+            if (sharedImageUri != null) {
+                navController.navigate("camera") {
+                    launchSingleTop = true
+                }
+            }
+        }
+
         Scaffold(
             snackbarHost = { SnackbarHost(snackBarHostState) },
             topBar = {
@@ -140,7 +152,7 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics) {
                         route = "camera",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://camera" })
                     ) {
-                        QrCameraScreen(snackBarHostState)
+                        QrCameraScreen(snackBarHostState, sharedImageUri = sharedImageUri, onSharedImageConsumed = onSharedImageConsumed)
                     }
                     composable("history") {
                         History(
