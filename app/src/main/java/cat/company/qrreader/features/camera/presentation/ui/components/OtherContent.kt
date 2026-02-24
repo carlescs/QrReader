@@ -130,10 +130,11 @@ fun OtherContent(
             onClick = {
                 coroutineScope.launch {
                     try {
+                        val barcodeContent = barcode.rawValue ?: barcode.displayValue ?: return@launch
                         val barcodeModel = BarcodeModel(
                             date = Date(),
                             type = barcode.valueType,
-                            barcode = barcode.displayValue!!,
+                            barcode = barcodeContent,
                             format = barcode.format
                         )
 
