@@ -9,6 +9,7 @@ import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
 import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -92,7 +93,8 @@ class HistoryViewModelTest {
             barcodeType: String?,
             barcodeFormat: String?,
             existingTags: List<String>,
-            language: String
+            language: String,
+            humorous: Boolean
         ) = Result.failure<cat.company.qrreader.domain.model.BarcodeAiData>(
             UnsupportedOperationException("AI not available in tests")
         )
@@ -114,6 +116,9 @@ class HistoryViewModelTest {
         override val aiLanguage: Flow<String>
             get() = flowOf("en")
         override suspend fun setAiLanguage(value: String) {}
+        override val aiHumorousDescriptions: Flow<Boolean>
+            get() = flowOf(false)
+        override suspend fun setAiHumorousDescriptions(value: Boolean) {}
     }
 
     private fun makeViewModel(repository: FakeBarcodeRepository): HistoryViewModel {
@@ -125,6 +130,7 @@ class HistoryViewModelTest {
             fakeSettingsRepo,
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepo),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
             ToggleFavoriteUseCase(repository)
         )
     }
@@ -212,6 +218,9 @@ class HistoryViewModelTest {
             override val aiLanguage: Flow<String>
                 get() = flowOf("en")
             override suspend fun setAiLanguage(value: String) {}
+            override val aiHumorousDescriptions: Flow<Boolean>
+                get() = flowOf(false)
+            override suspend fun setAiHumorousDescriptions(value: Boolean) {}
         }
 
         val vm = HistoryViewModel(
@@ -221,6 +230,7 @@ class HistoryViewModelTest {
             fakeSettingsRepository,
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepository),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepository),
             ToggleFavoriteUseCase(fakeRepository)
         )
 
@@ -252,7 +262,8 @@ class HistoryViewModelTest {
                 barcodeType: String?,
                 barcodeFormat: String?,
                 existingTags: List<String>,
-                language: String
+                language: String,
+                humorous: Boolean
             ) = Result.success(
                 cat.company.qrreader.domain.model.BarcodeAiData(
                     tags = emptyList(),
@@ -271,6 +282,7 @@ class HistoryViewModelTest {
             fakeSettingsRepo,
             fakeAiUseCase,
             GetAiLanguageUseCase(fakeSettingsRepo),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
             ToggleFavoriteUseCase(FakeBarcodeRepository())
         )
 
@@ -293,7 +305,8 @@ class HistoryViewModelTest {
                 barcodeType: String?,
                 barcodeFormat: String?,
                 existingTags: List<String>,
-                language: String
+                language: String,
+                humorous: Boolean
             ) = Result.failure<cat.company.qrreader.domain.model.BarcodeAiData>(
                 UnsupportedOperationException(errorMessage)
             )
@@ -309,6 +322,7 @@ class HistoryViewModelTest {
             fakeSettingsRepo,
             fakeAiUseCase,
             GetAiLanguageUseCase(fakeSettingsRepo),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
             ToggleFavoriteUseCase(FakeBarcodeRepository())
         )
 
@@ -330,7 +344,8 @@ class HistoryViewModelTest {
                 barcodeType: String?,
                 barcodeFormat: String?,
                 existingTags: List<String>,
-                language: String
+                language: String,
+                humorous: Boolean
             ) = Result.failure<cat.company.qrreader.domain.model.BarcodeAiData>(
                 UnsupportedOperationException(errorMessage)
             )
@@ -346,6 +361,7 @@ class HistoryViewModelTest {
             fakeSettingsRepo,
             fakeAiUseCase,
             GetAiLanguageUseCase(fakeSettingsRepo),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
             ToggleFavoriteUseCase(FakeBarcodeRepository())
         )
 
@@ -395,6 +411,7 @@ class HistoryViewModelTest {
             fakeSettingsRepo,
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepo),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
             ToggleFavoriteUseCase(repo)
         )
 
@@ -462,6 +479,7 @@ class HistoryViewModelTest {
             fakeSettingsRepo,
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepo),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
             ToggleFavoriteUseCase(repo)
         )
 
@@ -525,6 +543,7 @@ class HistoryViewModelTest {
             fakeSettingsRepo,
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepo),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
             ToggleFavoriteUseCase(repo)
         )
 

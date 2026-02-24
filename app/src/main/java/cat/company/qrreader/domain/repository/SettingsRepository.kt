@@ -47,4 +47,16 @@ interface SettingsRepository {
      * Set the language for AI-generated texts and tags
      */
     suspend fun setAiLanguage(value: String)
+
+    /**
+     * Whether AI-generated barcode descriptions should use a humorous tone.
+     * When `true`, Gemini Nano is asked to write funny descriptions instead of factual ones.
+     * Defaults to `false`.
+     */
+    val aiHumorousDescriptions: Flow<Boolean>
+
+    /**
+     * Enable or disable humorous AI-generated barcode descriptions
+     */
+    suspend fun setAiHumorousDescriptions(value: Boolean)
 }

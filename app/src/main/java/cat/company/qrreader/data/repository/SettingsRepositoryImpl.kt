@@ -25,6 +25,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     private val SEARCH_ACROSS_ALL_TAGS_KEY = booleanPreferencesKey("search_across_all_tags_when_filtering")
     private val AI_GENERATION_KEY = booleanPreferencesKey("ai_generation_enabled")
     private val AI_LANGUAGE_KEY = stringPreferencesKey("ai_language")
+    private val AI_HUMOROUS_DESCRIPTIONS_KEY = booleanPreferencesKey("ai_humorous_descriptions")
 
     override val hideTaggedWhenNoTagSelected: Flow<Boolean> =
         context.dataStore.data.map { prefs -> prefs[HIDE_TAGGED_KEY] ?: false }
@@ -37,6 +38,9 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
 
     override val aiLanguage: Flow<String> =
         context.dataStore.data.map { prefs -> prefs[AI_LANGUAGE_KEY] ?: "en" }
+
+    override val aiHumorousDescriptions: Flow<Boolean> =
+        context.dataStore.data.map { prefs -> prefs[AI_HUMOROUS_DESCRIPTIONS_KEY] ?: false }
 
     override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {
         context.dataStore.edit { prefs ->
@@ -59,6 +63,12 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     override suspend fun setAiLanguage(value: String) {
         context.dataStore.edit { prefs ->
             prefs[AI_LANGUAGE_KEY] = value
+        }
+    }
+
+    override suspend fun setAiHumorousDescriptions(value: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[AI_HUMOROUS_DESCRIPTIONS_KEY] = value
         }
     }
 }

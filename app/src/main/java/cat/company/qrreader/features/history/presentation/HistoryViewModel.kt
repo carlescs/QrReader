@@ -11,6 +11,7 @@ import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
 import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.utils.getBarcodeFormatName
 import cat.company.qrreader.utils.getBarcodeTypeName
@@ -41,6 +42,7 @@ class HistoryViewModel(
     settingsRepository: SettingsRepository,
     private val generateBarcodeAiDataUseCase: GenerateBarcodeAiDataUseCase,
     private val getAiLanguageUseCase: GetAiLanguageUseCase,
+    private val getAiHumorousDescriptionsUseCase: GetAiHumorousDescriptionsUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase
 ) : ViewModel() {
 
@@ -149,12 +151,14 @@ class HistoryViewModel(
         viewModelScope.launch {
             _regenerateDescriptionState.value = RegenerateDescriptionState(isLoading = true)
             val language = getAiLanguageUseCase().first()
+            val humorous = getAiHumorousDescriptionsUseCase().first()
             val result = generateBarcodeAiDataUseCase(
                 barcodeContent = barcode.barcode,
                 barcodeType = getBarcodeTypeName(barcode.type),
                 barcodeFormat = getBarcodeFormatName(barcode.format),
                 existingTags = emptyList(),
-                language = language
+                language = language,
+                humorous = humorous
             )
             result.fold(
                 onSuccess = { aiData ->

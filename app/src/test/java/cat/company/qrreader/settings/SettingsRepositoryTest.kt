@@ -262,4 +262,39 @@ class SettingsRepositoryTest {
         repository.setAiLanguage("de")
         assertEquals("de", repository.aiLanguage.first())
     }
+
+    /**
+     * Test that AI humorous descriptions defaults to false
+     */
+    @Test
+    fun aiHumorousDescriptions_canBeSetToFalse() = runTest {
+        repository.setAiHumorousDescriptions(false)
+
+        val result = repository.aiHumorousDescriptions.first()
+        assertFalse(result)
+    }
+
+    /**
+     * Test setting AI humorous descriptions to true
+     */
+    @Test
+    fun setAiHumorousDescriptions_true_updatesValue() = runTest {
+        repository.setAiHumorousDescriptions(false)
+        assertFalse(repository.aiHumorousDescriptions.first())
+
+        repository.setAiHumorousDescriptions(true)
+        assertTrue(repository.aiHumorousDescriptions.first())
+    }
+
+    /**
+     * Test toggling AI humorous descriptions between values
+     */
+    @Test
+    fun setAiHumorousDescriptions_toggle_updatesCorrectly() = runTest {
+        repository.setAiHumorousDescriptions(true)
+        assertTrue(repository.aiHumorousDescriptions.first())
+
+        repository.setAiHumorousDescriptions(false)
+        assertFalse(repository.aiHumorousDescriptions.first())
+    }
 }

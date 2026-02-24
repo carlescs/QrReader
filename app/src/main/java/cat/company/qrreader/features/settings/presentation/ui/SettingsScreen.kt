@@ -118,6 +118,7 @@ fun HistorySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
 fun AiSettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val aiGenerationState by viewModel.aiGenerationEnabled.collectAsState(initial = true)
     val aiLanguageState by viewModel.aiLanguage.collectAsState(initial = "en")
+    val aiHumorousState by viewModel.aiHumorousDescriptions.collectAsState(initial = false)
     var showLanguageDialog by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
@@ -144,6 +145,17 @@ fun AiSettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
                 }
             },
             modifier = Modifier.fillMaxWidth(),
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.ai_humorous_descriptions)) },
+            supportingContent = { Text(text = stringResource(R.string.ai_humorous_descriptions_description)) },
+            trailingContent = {
+                Switch(checked = aiHumorousState, onCheckedChange = { newValue ->
+                    viewModel.setAiHumorousDescriptions(newValue)
+                })
+            },
             colors = androidx.compose.material3.ListItemDefaults.colors()
         )
     }

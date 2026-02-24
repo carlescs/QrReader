@@ -3,10 +3,12 @@ package cat.company.qrreader.features.settings.presentation
 import androidx.lifecycle.ViewModel
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.GetSearchAcrossAllTagsUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCase
@@ -30,6 +32,8 @@ class SettingsViewModel(
     private val setAiGenerationEnabledUseCase: SetAiGenerationEnabledUseCase,
     getAiLanguageUseCase: GetAiLanguageUseCase,
     private val setAiLanguageUseCase: SetAiLanguageUseCase,
+    getAiHumorousDescriptionsUseCase: GetAiHumorousDescriptionsUseCase,
+    private val setAiHumorousDescriptionsUseCase: SetAiHumorousDescriptionsUseCase,
     private val generateBarcodeAiDataUseCase: GenerateBarcodeAiDataUseCase
 ) : ViewModel() {
 
@@ -68,6 +72,11 @@ class SettingsViewModel(
     val aiLanguage: Flow<String> = getAiLanguageUseCase()
 
     /**
+     * Flow for the 'AI humorous descriptions' setting
+     */
+    val aiHumorousDescriptions: Flow<Boolean> = getAiHumorousDescriptionsUseCase()
+
+    /**
      * Update the hide tagged when no tag selected setting
      */
     fun setHideTaggedWhenNoTagSelected(value: Boolean) {
@@ -91,6 +100,12 @@ class SettingsViewModel(
     fun setAiLanguage(value: String) {
         viewModelScope.launch {
             setAiLanguageUseCase(value)
+        }
+    }
+
+    fun setAiHumorousDescriptions(value: Boolean) {
+        viewModelScope.launch {
+            setAiHumorousDescriptionsUseCase(value)
         }
     }
 }

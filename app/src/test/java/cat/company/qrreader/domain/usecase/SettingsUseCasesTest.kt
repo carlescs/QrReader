@@ -2,10 +2,12 @@ package cat.company.qrreader.domain.usecase
 
 import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.GetSearchAcrossAllTagsUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCase
@@ -30,6 +32,8 @@ class SettingsUseCasesTest {
             override suspend fun setAiGenerationEnabled(value: Boolean) { aiFlow.value = value }
             override val aiLanguage = MutableStateFlow("en")
             override suspend fun setAiLanguage(value: String) {}
+            override val aiHumorousDescriptions = MutableStateFlow(false)
+            override suspend fun setAiHumorousDescriptions(value: Boolean) {}
         }
 
         val getHide = GetHideTaggedSettingUseCase(settingsRepo)
@@ -59,6 +63,8 @@ class SettingsUseCasesTest {
             override suspend fun setAiGenerationEnabled(value: Boolean) { aiFlow.value = value }
             override val aiLanguage = MutableStateFlow("en")
             override suspend fun setAiLanguage(value: String) {}
+            override val aiHumorousDescriptions = MutableStateFlow(false)
+            override suspend fun setAiHumorousDescriptions(value: Boolean) {}
         }
 
         val getAi = GetAiGenerationEnabledUseCase(settingsRepo)
@@ -85,6 +91,8 @@ class SettingsUseCasesTest {
             override suspend fun setAiGenerationEnabled(value: Boolean) {}
             override val aiLanguage = languageFlow
             override suspend fun setAiLanguage(value: String) { languageFlow.value = value }
+            override val aiHumorousDescriptions = MutableStateFlow(false)
+            override suspend fun setAiHumorousDescriptions(value: Boolean) {}
         }
 
         val getLanguage = GetAiLanguageUseCase(settingsRepo)
@@ -97,6 +105,34 @@ class SettingsUseCasesTest {
 
         setLanguage("fr")
         assertEquals("fr", getLanguage().first())
+    }
+
+    @Test
+    fun `get and set AI humorous descriptions flag`() = runTest {
+        val humorousFlow = MutableStateFlow(false)
+        val settingsRepo = object : SettingsRepository {
+            override val hideTaggedWhenNoTagSelected = MutableStateFlow(false)
+            override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
+            override val searchAcrossAllTagsWhenFiltering = MutableStateFlow(false)
+            override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
+            override val aiGenerationEnabled = MutableStateFlow(true)
+            override suspend fun setAiGenerationEnabled(value: Boolean) {}
+            override val aiLanguage = MutableStateFlow("en")
+            override suspend fun setAiLanguage(value: String) {}
+            override val aiHumorousDescriptions = humorousFlow
+            override suspend fun setAiHumorousDescriptions(value: Boolean) { humorousFlow.value = value }
+        }
+
+        val getHumorous = GetAiHumorousDescriptionsUseCase(settingsRepo)
+        val setHumorous = SetAiHumorousDescriptionsUseCase(settingsRepo)
+
+        assertEquals(false, getHumorous().first())
+
+        setHumorous(true)
+        assertEquals(true, getHumorous().first())
+
+        setHumorous(false)
+        assertEquals(false, getHumorous().first())
     }
 }
 

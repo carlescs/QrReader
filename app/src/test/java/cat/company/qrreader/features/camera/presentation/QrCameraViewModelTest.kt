@@ -7,6 +7,7 @@ import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.repository.TagRepository
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -43,6 +44,7 @@ class QrCameraViewModelTest {
     private lateinit var getAllTagsUseCase: GetAllTagsUseCase
     private lateinit var getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase
     private lateinit var getAiLanguageUseCase: GetAiLanguageUseCase
+    private lateinit var getAiHumorousDescriptionsUseCase: GetAiHumorousDescriptionsUseCase
     private lateinit var viewModel: QrCameraViewModel
     private val testDispatcher = StandardTestDispatcher()
 
@@ -57,7 +59,8 @@ class QrCameraViewModelTest {
             barcodeType: String?,
             barcodeFormat: String?,
             existingTags: List<String>,
-            language: String
+            language: String,
+            humorous: Boolean
         ): Result<BarcodeAiData> {
             return if (shouldSucceed) {
                 Result.success(BarcodeAiData(tags = suggestionsToReturn, description = descriptionToReturn))
@@ -108,6 +111,10 @@ class QrCameraViewModelTest {
         override val aiLanguage = MutableStateFlow("en")
         override suspend fun setAiLanguage(value: String) {
             this.aiLanguage.value = value
+        }
+        override val aiHumorousDescriptions = MutableStateFlow(false)
+        override suspend fun setAiHumorousDescriptions(value: Boolean) {
+            this.aiHumorousDescriptions.value = value
         }
     }
     
@@ -170,11 +177,13 @@ class QrCameraViewModelTest {
         val fakeSettingsRepository = FakeSettingsRepository()
         getAiGenerationEnabledUseCase = GetAiGenerationEnabledUseCase(fakeSettingsRepository)
         getAiLanguageUseCase = GetAiLanguageUseCase(fakeSettingsRepository)
+        getAiHumorousDescriptionsUseCase = GetAiHumorousDescriptionsUseCase(fakeSettingsRepository)
         viewModel = QrCameraViewModel(
             fakeGenerateBarcodeAiDataUseCase,
             getAllTagsUseCase,
             getAiGenerationEnabledUseCase,
-            getAiLanguageUseCase
+            getAiLanguageUseCase,
+            getAiHumorousDescriptionsUseCase
         )
     }
 

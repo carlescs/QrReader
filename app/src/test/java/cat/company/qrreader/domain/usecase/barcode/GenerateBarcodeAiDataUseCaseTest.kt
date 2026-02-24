@@ -149,7 +149,8 @@ class GenerateBarcodeAiDataUseCaseTest {
             barcodeType: String?,
             barcodeFormat: String?,
             existingTags: List<String>,
-            language: String
+            language: String,
+            humorous: Boolean
         ): Result<BarcodeAiData> = resultToReturn
 
         override suspend fun isAiSupportedOnDevice(): Boolean = true

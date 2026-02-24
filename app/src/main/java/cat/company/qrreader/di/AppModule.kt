@@ -21,10 +21,12 @@ import cat.company.qrreader.domain.usecase.history.SwitchBarcodeTagUseCase
 import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.GetSearchAcrossAllTagsUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCase
@@ -89,16 +91,18 @@ val useCaseModule = module {
     factory { SetAiGenerationEnabledUseCase(get()) }
     factory { GetAiLanguageUseCase(get()) }
     factory { SetAiLanguageUseCase(get()) }
+    factory { GetAiHumorousDescriptionsUseCase(get()) }
+    factory { SetAiHumorousDescriptionsUseCase(get()) }
     factory { GenerateQrCodeUseCase() }
     factory { SaveBitmapToMediaStoreUseCase() }
 }
 
 val viewModelModule = module {
-    viewModel { HistoryViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { HistoryViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { TagsViewModel(get(), get()) }
-    viewModel { QrCameraViewModel(get<GenerateBarcodeAiDataUseCase>(), get<GetAllTagsUseCase>(), get<GetAiGenerationEnabledUseCase>(), get<GetAiLanguageUseCase>()) }
+    viewModel { QrCameraViewModel(get<GenerateBarcodeAiDataUseCase>(), get<GetAllTagsUseCase>(), get<GetAiGenerationEnabledUseCase>(), get<GetAiLanguageUseCase>(), get<GetAiHumorousDescriptionsUseCase>()) }
     viewModel { CodeCreatorViewModel(get<GenerateQrCodeUseCase>()) }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get<GenerateBarcodeAiDataUseCase>()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<GenerateBarcodeAiDataUseCase>()) }
 }
 
 // Combine all modules
