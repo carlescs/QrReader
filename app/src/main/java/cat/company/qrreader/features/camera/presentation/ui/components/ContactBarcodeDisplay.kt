@@ -2,24 +2,59 @@ package cat.company.qrreader.features.camera.presentation.ui.components
 
 import android.content.Intent
 import android.provider.ContactsContract
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
+import cat.company.qrreader.domain.model.BarcodeModel
+import cat.company.qrreader.domain.model.SuggestedTagModel
+import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
+import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+import java.util.Date
 
 /**
- * Display the contact information from a barcode and offer an action to add it to the device contacts.
+ * Display the contact information from a barcode and offer an action to add it to the device contacts
+ * or save it to history.
  */
 @Composable
-fun ContactBarcodeDisplay(barcode: Barcode) {
+fun ContactBarcodeDisplay(
+    barcode: Barcode,
+    selectedTagNames: List<String> = emptyList(),
+    aiGeneratedDescription: String? = null,
+    aiGenerationEnabled: Boolean = true,
+    suggestedTags: List<SuggestedTagModel> = emptyList(),
+    isLoadingTags: Boolean = false,
+    tagError: String? = null,
+    description: String? = null,
+    isLoadingDescription: Boolean = false,
+    descriptionError: String? = null,
+    onToggleTag: (String) -> Unit = {}
+) {
     val context = LocalContext.current
+    val saveBarcodeWithTagsUseCase: SaveBarcodeWithTagsUseCase = koinInject()
+    val getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
+    val coroutineScope = CoroutineScope(Dispatchers.IO)
+    val saved = remember { mutableStateOf(false) }
+    val saveDescription = remember(description) { mutableStateOf(true) }
+
     Title(title = stringResource(R.string.contact))
 
     val name = barcode.contactInfo?.name
@@ -65,5 +100,57 @@ fun ContactBarcodeDisplay(barcode: Barcode) {
         context.startActivity(intent)
     }) {
         Text(text = stringResource(R.string.add_to_contacts))
+    }
+
+    SuggestedTagsSection(
+        suggestedTags = suggestedTags,
+        isLoading = isLoadingTags,
+        error = tagError,
+        aiGenerationEnabled = aiGenerationEnabled,
+        onToggleTag = onToggleTag,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+    )
+
+    if (suggestedTags.isNotEmpty()) {
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+    }
+
+    BarcodeDescriptionSection(
+        description = description,
+        isLoading = isLoadingDescription,
+        error = descriptionError,
+        aiGenerationEnabled = aiGenerationEnabled,
+        saveDescription = saveDescription.value,
+        onToggleSaveDescription = { saveDescription.value = it },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+    )
+
+    if (description != null || isLoadingDescription) {
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+    }
+
+    TextButton(onClick = {
+        coroutineScope.launch {
+            val barcodeModel = BarcodeModel(
+                date = Date(),
+                type = barcode.valueType,
+                barcode = barcode.displayValue!!,
+                format = barcode.format
+            )
+            val tags = if (selectedTagNames.isNotEmpty()) {
+                val tagColors = suggestedTags.associate { it.name to it.color }
+                getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
+            } else {
+                emptyList()
+            }
+            saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
+        }
+        saved.value = true
+    }, enabled = !saved.value) {
+        Text(text = if (!saved.value) stringResource(R.string.save) else stringResource(R.string.saved))
     }
 }
