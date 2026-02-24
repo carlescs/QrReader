@@ -2,7 +2,9 @@ package cat.company.qrreader.features.history.presentation.ui.components
 
 import android.content.ClipData
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -19,8 +20,8 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,7 +48,6 @@ import cat.company.qrreader.features.history.presentation.ui.content.UrlHistoryC
 import cat.company.qrreader.features.history.presentation.ui.content.WifiHistoryContent
 import cat.company.qrreader.features.tags.presentation.TagsViewModel
 import org.koin.androidx.compose.koinViewModel
-import cat.company.qrreader.ui.components.common.Tag
 import cat.company.qrreader.ui.components.common.DeleteConfirmDialog
 import cat.company.qrreader.domain.usecase.history.SwitchBarcodeTagUseCase
 import org.koin.compose.koinInject
@@ -76,6 +76,7 @@ fun BarcodeCard(
     val ioCoroutineScope = CoroutineScope(Dispatchers.IO)
     val copiedMsg = stringResource(R.string.copied)
     val aiGenerationEnabled by historyViewModel.aiGenerationEnabled.collectAsState()
+    val allTags by tagsViewModel.tags.collectAsState(initial = emptyList())
 
     // Load tags
     tagsViewModel.loadTags()
@@ -115,46 +116,44 @@ fun BarcodeCard(
             }
         }
 
-        Row(modifier = Modifier.padding(5.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            val menuOpen = remember { mutableStateOf(false) }
-            IconButton(onClick = { menuOpen.value = true }) {
-                Icon(Icons.AutoMirrored.Filled.Label, contentDescription = stringResource(R.string.manage_tags))
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            barcode.tags.forEach {
-                Tag(it)
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = { historyViewModel.toggleFavorite(barcode.barcode.id, !barcode.barcode.isFavorite) }) {
-                Icon(
-                    imageVector = if (barcode.barcode.isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                    contentDescription = stringResource(
-                        if (barcode.barcode.isFavorite) R.string.remove_from_favorites else R.string.add_to_favorites
-                    ),
-                    tint = if (barcode.barcode.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            DropdownMenu(
-                expanded = menuOpen.value,
-                onDismissRequest = { menuOpen.value = false }) {
-                val tags = tagsViewModel.tags.collectAsState(initial = emptyList())
-                tags.value.forEach { tag ->
-                    DropdownMenuItem(text = { Text(text = tag.name) },
-                        leadingIcon = {
-                            if(barcode.tags.contains(tag))
-                                Icon(imageVector = Icons.Filled.Check, contentDescription = stringResource(R.string.check))
-                        },
+        if (allTags.isNotEmpty()) {
+            FlowRow(
+                modifier = Modifier
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                allTags.forEach { tag ->
+                    val isSelected = barcode.tags.contains(tag)
+                    FilterChip(
+                        selected = isSelected,
                         onClick = {
                             ioCoroutineScope.launch {
-                                // Use injected use case to switch tag
                                 switchBarcodeTagUseCase.invoke(barcode, tag)
-                                menuOpen.value = false
                             }
-                        })
-                 }
-             }
-         }
-        Row {
+                        },
+                        label = { Text(tag.name) },
+                        leadingIcon = if (isSelected) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                )
+                            }
+                        } else null
+                    )
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 5.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             IconButton(onClick = { confirmDeleteOpen.value = true }) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
@@ -165,6 +164,16 @@ fun BarcodeCard(
                 Icon(
                     imageVector = Icons.Filled.Edit,
                     contentDescription = stringResource(R.string.edit_barcode)
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            IconButton(onClick = { historyViewModel.toggleFavorite(barcode.barcode.id, !barcode.barcode.isFavorite) }) {
+                Icon(
+                    imageVector = if (barcode.barcode.isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                    contentDescription = stringResource(
+                        if (barcode.barcode.isFavorite) R.string.remove_from_favorites else R.string.add_to_favorites
+                    ),
+                    tint = if (barcode.barcode.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
