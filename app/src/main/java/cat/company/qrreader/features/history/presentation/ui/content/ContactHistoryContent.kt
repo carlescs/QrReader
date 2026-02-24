@@ -17,7 +17,6 @@ import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.features.camera.presentation.ui.components.Title
 import cat.company.qrreader.features.history.presentation.ui.components.getTitle
-import cat.company.qrreader.ui.components.common.ExpandableText
 import cat.company.qrreader.utils.parseContactVCard
 import java.text.SimpleDateFormat
 
@@ -26,7 +25,7 @@ import java.text.SimpleDateFormat
  * Shows the contact name, phone, and email, and offers an action to add it to the device contacts.
  */
 @Composable
-fun ContactHistoryContent(sdf: SimpleDateFormat, barcode: BarcodeModel, aiGenerationEnabled: Boolean = true) {
+fun ContactHistoryContent(sdf: SimpleDateFormat, barcode: BarcodeModel) {
     val context = LocalContext.current
     val contactInfo = remember(barcode.barcode) { parseContactVCard(barcode.barcode) }
     val hasContactFields = remember(contactInfo) {
@@ -66,10 +65,5 @@ fun ContactHistoryContent(sdf: SimpleDateFormat, barcode: BarcodeModel, aiGenera
         Spacer(modifier = Modifier.height(5.dp))
         HorizontalDivider()
         Text(text = barcode.description)
-    }
-    if (barcode.aiGeneratedDescription != null && barcode.aiGeneratedDescription.isNotBlank() && aiGenerationEnabled) {
-        Spacer(modifier = Modifier.height(5.dp))
-        HorizontalDivider()
-        ExpandableText(text = stringResource(R.string.ai_description_formatted, barcode.aiGeneratedDescription.orEmpty()))
     }
 }

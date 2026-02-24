@@ -24,7 +24,6 @@ import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.features.camera.presentation.ui.components.Title
 import cat.company.qrreader.features.history.presentation.ui.components.WifiQrCodeDialog
 import cat.company.qrreader.features.history.presentation.ui.components.getTitle
-import cat.company.qrreader.ui.components.common.ExpandableText
 import cat.company.qrreader.utils.parseWifiContent
 import java.text.SimpleDateFormat
 
@@ -33,7 +32,7 @@ import java.text.SimpleDateFormat
  * Shows the SSID and security type and offers a direct connect action.
  */
 @Composable
-fun WifiHistoryContent(sdf: SimpleDateFormat, barcode: BarcodeModel, aiGenerationEnabled: Boolean = true) {
+fun WifiHistoryContent(sdf: SimpleDateFormat, barcode: BarcodeModel) {
     val context = LocalContext.current
     val connectivityManager = remember { context.getSystemService(ConnectivityManager::class.java) }
     var networkCallback by remember { mutableStateOf<ConnectivityManager.NetworkCallback?>(null) }
@@ -98,10 +97,5 @@ fun WifiHistoryContent(sdf: SimpleDateFormat, barcode: BarcodeModel, aiGeneratio
         Spacer(modifier = Modifier.height(5.dp))
         HorizontalDivider()
         Text(text = barcode.description)
-    }
-    if (barcode.aiGeneratedDescription != null && barcode.aiGeneratedDescription.trim() != "" && aiGenerationEnabled) {
-        Spacer(modifier = Modifier.height(5.dp))
-        HorizontalDivider()
-        ExpandableText(text = stringResource(R.string.ai_description_formatted, barcode.aiGeneratedDescription.orEmpty()))
     }
 }

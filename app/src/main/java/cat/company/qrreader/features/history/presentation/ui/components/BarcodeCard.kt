@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -75,6 +76,7 @@ fun BarcodeCard(
     val editOpen = remember { mutableStateOf(false) }
     val confirmDeleteOpen = remember { mutableStateOf(false) }
     val tagEditOpen = remember { mutableStateOf(false) }
+    val aiDescriptionOpen = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val ioCoroutineScope = CoroutineScope(Dispatchers.IO)
     val copiedMsg = stringResource(R.string.copied)
@@ -108,13 +110,13 @@ fun BarcodeCard(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     if (barcode.barcode.type == Barcode.TYPE_URL)
-                        UrlHistoryContent(sdf = sdf, barcode = barcode.barcode, aiGenerationEnabled = aiGenerationEnabled)
+                        UrlHistoryContent(sdf = sdf, barcode = barcode.barcode)
                     else if (barcode.barcode.type == Barcode.TYPE_WIFI)
-                        WifiHistoryContent(sdf = sdf, barcode = barcode.barcode, aiGenerationEnabled = aiGenerationEnabled)
+                        WifiHistoryContent(sdf = sdf, barcode = barcode.barcode)
                     else if (barcode.barcode.type == Barcode.TYPE_CONTACT_INFO)
-                        ContactHistoryContent(sdf = sdf, barcode = barcode.barcode, aiGenerationEnabled = aiGenerationEnabled)
+                        ContactHistoryContent(sdf = sdf, barcode = barcode.barcode)
                     else
-                        OtherHistoryContent(sdf = sdf, barcode = barcode.barcode, aiGenerationEnabled = aiGenerationEnabled)
+                        OtherHistoryContent(sdf = sdf, barcode = barcode.barcode)
                 }
             }
         }
@@ -192,6 +194,15 @@ fun BarcodeCard(
                     )
                 }
             }
+            if (aiGenerationEnabled && !barcode.barcode.aiGeneratedDescription.isNullOrBlank()) {
+                IconButton(onClick = { aiDescriptionOpen.value = true }) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = stringResource(R.string.ai_description),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
             Spacer(modifier = Modifier.weight(1f))
             IconButton(onClick = { historyViewModel.toggleFavorite(barcode.barcode.id, !barcode.barcode.isFavorite) }) {
                 Icon(
@@ -219,6 +230,13 @@ fun BarcodeCard(
                     historyViewModel.deleteBarcode(it)
                 }
             }
+        }
+        val description = barcode.barcode.aiGeneratedDescription
+        if (aiDescriptionOpen.value && description != null) {
+            AiDescriptionDialog(
+                description = description,
+                onDismiss = { aiDescriptionOpen.value = false }
+            )
         }
     }
 }
