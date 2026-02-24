@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -157,7 +157,7 @@ fun OtherContent(
             enabled = !saved.value
         ) {
             Icon(
-                imageVector = if (saved.value) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+                imageVector = if (saved.value) Icons.Filled.Save else Icons.Outlined.Save,
                 contentDescription = if (saved.value) stringResource(R.string.saved) else stringResource(R.string.save),
                 tint = if (saved.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
