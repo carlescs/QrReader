@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -49,6 +50,7 @@ import cat.company.qrreader.features.history.presentation.ui.content.WifiHistory
 import cat.company.qrreader.features.tags.presentation.TagsViewModel
 import org.koin.androidx.compose.koinViewModel
 import cat.company.qrreader.ui.components.common.DeleteConfirmDialog
+import cat.company.qrreader.ui.components.common.Tag
 import cat.company.qrreader.domain.usecase.history.SwitchBarcodeTagUseCase
 import org.koin.compose.koinInject
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -72,6 +74,7 @@ fun BarcodeCard(
 ) {
     val editOpen = remember { mutableStateOf(false) }
     val confirmDeleteOpen = remember { mutableStateOf(false) }
+    val tagEditOpen = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val ioCoroutineScope = CoroutineScope(Dispatchers.IO)
     val copiedMsg = stringResource(R.string.copied)
@@ -116,7 +119,8 @@ fun BarcodeCard(
             }
         }
 
-        if (allTags.isNotEmpty()) {
+        // Tag section: collapsed shows only assigned tags; expanded shows all tags as FilterChips
+        if (tagEditOpen.value && allTags.isNotEmpty()) {
             FlowRow(
                 modifier = Modifier
                     .padding(horizontal = 10.dp, vertical = 4.dp)
@@ -146,6 +150,16 @@ fun BarcodeCard(
                     )
                 }
             }
+        } else if (barcode.tags.isNotEmpty()) {
+            FlowRow(
+                modifier = Modifier
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                barcode.tags.forEach { Tag(it) }
+            }
         }
 
         Row(
@@ -165,6 +179,18 @@ fun BarcodeCard(
                     imageVector = Icons.Filled.Edit,
                     contentDescription = stringResource(R.string.edit_barcode)
                 )
+            }
+            if (allTags.isNotEmpty()) {
+                IconButton(onClick = { tagEditOpen.value = !tagEditOpen.value }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Label,
+                        contentDescription = stringResource(R.string.manage_tags),
+                        tint = if (barcode.tags.isNotEmpty() || tagEditOpen.value)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             Spacer(modifier = Modifier.weight(1f))
             IconButton(onClick = { historyViewModel.toggleFavorite(barcode.barcode.id, !barcode.barcode.isFavorite) }) {
