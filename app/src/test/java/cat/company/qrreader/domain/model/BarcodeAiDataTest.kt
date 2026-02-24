@@ -109,14 +109,14 @@ class BarcodeAiDataTest {
     }
 
     @Test
-    fun `BarcodeAiData tags are selected by default`() {
+    fun `BarcodeAiData tags are not selected by default`() {
         val tags = listOf(
             SuggestedTagModel("Tag1"),
             SuggestedTagModel("Tag2")
         )
         val data = BarcodeAiData(tags = tags, description = "Default selection test.")
 
-        assertTrue(data.tags.all { it.isSelected })
+        assertTrue(data.tags.all { !it.isSelected })
     }
 
     @Test
