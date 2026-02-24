@@ -46,8 +46,7 @@ fun Tag(it: TagModel) {
         colors = CardDefaults.cardColors(
             containerColor = color.copy(alpha = 0.15f)
         ),
-        border = BorderStroke(1.dp, accentColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        border = BorderStroke(1.dp, accentColor)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
