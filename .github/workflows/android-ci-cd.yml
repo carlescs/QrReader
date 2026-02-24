@@ -418,7 +418,8 @@ jobs:
                   'Silently ignore any commits related to: CI/CD pipelines, deployment, '
                   'build system, GitHub Actions workflows, Google Play publishing, '
                   'Gradle configuration, infrastructure, devops, version bumps, '
-                  'documentation, or code maintenance. '
+                  'documentation, or code maintenance. Also try to remove planning, '
+                  'and any AI related commit notes that could have creeped.'
                   'If there are no user-facing changes, reply with "Bug fixes and improvements." '
                   'Keep under 400 characters. Plain text only, no markdown.\n\nCommits:\n'
                   + commits_raw
