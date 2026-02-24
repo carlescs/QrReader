@@ -1,16 +1,23 @@
 package cat.company.qrreader.features.camera.presentation.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
@@ -104,29 +111,42 @@ fun UrlBarcodeDisplay(
     if (description != null || isLoadingDescription) {
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
     }
-    
-    TextButton(onClick = {
-        coroutineScope.launch {
-            val barcodeModel = BarcodeModel(
-                date = Date(),
-                type = barcode.valueType,
-                barcode = barcode.displayValue!!,
-                format = barcode.format
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Spacer(modifier = Modifier.weight(1f))
+        IconButton(
+            onClick = {
+                coroutineScope.launch {
+                    val barcodeModel = BarcodeModel(
+                        date = Date(),
+                        type = barcode.valueType,
+                        barcode = barcode.displayValue!!,
+                        format = barcode.format
+                    )
+
+                    // Get or create tags
+                    val tags = if (selectedTagNames.isNotEmpty()) {
+                        val tagColors = suggestedTags.associate { it.name to it.color }
+                        getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
+                    } else {
+                        emptyList()
+                    }
+
+                    // Save barcode with tags
+                    saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
+                }
+                saved.value = true
+            },
+            enabled = !saved.value
+        ) {
+            Icon(
+                imageVector = if (saved.value) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                contentDescription = if (saved.value) stringResource(R.string.saved) else stringResource(R.string.save),
+                tint = if (saved.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
-            // Get or create tags
-            val tags = if (selectedTagNames.isNotEmpty()) {
-                val tagColors = suggestedTags.associate { it.name to it.color }
-                getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
-            } else {
-                emptyList()
-            }
-            
-            // Save barcode with tags
-            saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
         }
-        saved.value = true
-    }, enabled = !saved.value) {
-        Text(text = if (!saved.value) stringResource(R.string.save) else stringResource(R.string.saved))
     }
 }

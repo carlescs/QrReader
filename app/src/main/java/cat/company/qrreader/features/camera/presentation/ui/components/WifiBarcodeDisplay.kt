@@ -4,19 +4,27 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.wifi.WifiNetworkSpecifier
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -90,30 +98,6 @@ fun WifiBarcodeDisplay(
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    if (ssid != null && encryptionType != Barcode.WiFi.TYPE_WEP) {
-        TextButton(onClick = {
-            networkCallback?.let {
-                try { connectivityManager.unregisterNetworkCallback(it) } catch (_: Exception) {}
-            }
-            val specifierBuilder = WifiNetworkSpecifier.Builder().setSsid(ssid)
-            if (!password.isNullOrEmpty()) {
-                specifierBuilder.setWpa2Passphrase(password)
-            }
-            val request = NetworkRequest.Builder()
-                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .setNetworkSpecifier(specifierBuilder.build())
-                .build()
-            val callback = object : ConnectivityManager.NetworkCallback() {}
-            networkCallback = callback
-            connectivityManager.requestNetwork(request, callback)
-        }) {
-            Text(text = stringResource(R.string.wifi_connect))
-        }
-    }
-
-    Spacer(modifier = Modifier.height(12.dp))
-
     SuggestedTagsSection(
         suggestedTags = suggestedTags,
         isLoading = isLoadingTags,
@@ -145,24 +129,61 @@ fun WifiBarcodeDisplay(
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
     }
 
-    TextButton(onClick = {
-        coroutineScope.launch {
-            val barcodeModel = BarcodeModel(
-                date = Date(),
-                type = barcode.valueType,
-                barcode = barcode.displayValue!!,
-                format = barcode.format
-            )
-            val tags = if (selectedTagNames.isNotEmpty()) {
-                val tagColors = suggestedTags.associate { it.name to it.color }
-                getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
-            } else {
-                emptyList()
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (ssid != null && encryptionType != Barcode.WiFi.TYPE_WEP) {
+            IconButton(onClick = {
+                networkCallback?.let {
+                    try { connectivityManager.unregisterNetworkCallback(it) } catch (_: Exception) {}
+                }
+                val specifierBuilder = WifiNetworkSpecifier.Builder().setSsid(ssid)
+                if (!password.isNullOrEmpty()) {
+                    specifierBuilder.setWpa2Passphrase(password)
+                }
+                val request = NetworkRequest.Builder()
+                    .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                    .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    .setNetworkSpecifier(specifierBuilder.build())
+                    .build()
+                val callback = object : ConnectivityManager.NetworkCallback() {}
+                networkCallback = callback
+                connectivityManager.requestNetwork(request, callback)
+            }) {
+                Icon(
+                    imageVector = Icons.Filled.Wifi,
+                    contentDescription = stringResource(R.string.wifi_connect)
+                )
             }
-            saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
         }
-        saved.value = true
-    }, enabled = !saved.value) {
-        Text(text = if (!saved.value) stringResource(R.string.save) else stringResource(R.string.saved))
+        Spacer(modifier = Modifier.weight(1f))
+        IconButton(
+            onClick = {
+                coroutineScope.launch {
+                    val barcodeModel = BarcodeModel(
+                        date = Date(),
+                        type = barcode.valueType,
+                        barcode = barcode.displayValue!!,
+                        format = barcode.format
+                    )
+                    val tags = if (selectedTagNames.isNotEmpty()) {
+                        val tagColors = suggestedTags.associate { it.name to it.color }
+                        getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
+                    } else {
+                        emptyList()
+                    }
+                    saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
+                }
+                saved.value = true
+            },
+            enabled = !saved.value
+        ) {
+            Icon(
+                imageVector = if (saved.value) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                contentDescription = if (saved.value) stringResource(R.string.saved) else stringResource(R.string.save),
+                tint = if (saved.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
