@@ -15,10 +15,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -34,8 +34,6 @@ import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.util.Date
@@ -61,7 +59,7 @@ fun ContactBarcodeDisplay(
     val context = LocalContext.current
     val saveBarcodeWithTagsUseCase: SaveBarcodeWithTagsUseCase = koinInject()
     val getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
-    val coroutineScope = CoroutineScope(Dispatchers.IO)
+    val coroutineScope = rememberCoroutineScope()
     val saved = remember { mutableStateOf(false) }
     val saveDescription = remember(description) { mutableStateOf(true) }
 
@@ -153,21 +151,25 @@ fun ContactBarcodeDisplay(
         IconButton(
             onClick = {
                 coroutineScope.launch {
-                    val barcodeModel = BarcodeModel(
-                        date = Date(),
-                        type = barcode.valueType,
-                        barcode = barcode.displayValue!!,
-                        format = barcode.format
-                    )
-                    val tags = if (selectedTagNames.isNotEmpty()) {
-                        val tagColors = suggestedTags.associate { it.name to it.color }
-                        getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
-                    } else {
-                        emptyList()
+                    try {
+                        val barcodeModel = BarcodeModel(
+                            date = Date(),
+                            type = barcode.valueType,
+                            barcode = barcode.displayValue!!,
+                            format = barcode.format
+                        )
+                        val tags = if (selectedTagNames.isNotEmpty()) {
+                            val tagColors = suggestedTags.associate { it.name to it.color }
+                            getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
+                        } else {
+                            emptyList()
+                        }
+                        saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
+                        saved.value = true
+                    } catch (_: Exception) {
+                        // Keep saved as false so the user can retry if saving fails
                     }
-                    saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
                 }
-                saved.value = true
             },
             enabled = !saved.value
         ) {
@@ -177,57 +179,5 @@ fun ContactBarcodeDisplay(
                 tint = if (saved.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-    }
-
-    SuggestedTagsSection(
-        suggestedTags = suggestedTags,
-        isLoading = isLoadingTags,
-        error = tagError,
-        aiGenerationEnabled = aiGenerationEnabled,
-        onToggleTag = onToggleTag,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 8.dp)
-    )
-
-    if (suggestedTags.isNotEmpty()) {
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-    }
-
-    BarcodeDescriptionSection(
-        description = description,
-        isLoading = isLoadingDescription,
-        error = descriptionError,
-        aiGenerationEnabled = aiGenerationEnabled,
-        saveDescription = saveDescription.value,
-        onToggleSaveDescription = { saveDescription.value = it },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 8.dp)
-    )
-
-    if (description != null || isLoadingDescription) {
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-    }
-
-    TextButton(onClick = {
-        coroutineScope.launch {
-            val barcodeModel = BarcodeModel(
-                date = Date(),
-                type = barcode.valueType,
-                barcode = barcode.displayValue!!,
-                format = barcode.format
-            )
-            val tags = if (selectedTagNames.isNotEmpty()) {
-                val tagColors = suggestedTags.associate { it.name to it.color }
-                getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
-            } else {
-                emptyList()
-            }
-            saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
-        }
-        saved.value = true
-    }, enabled = !saved.value) {
-        Text(text = if (!saved.value) stringResource(R.string.save) else stringResource(R.string.saved))
     }
 }

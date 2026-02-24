@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,8 +33,6 @@ import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.util.Date
@@ -58,7 +57,7 @@ fun UrlBarcodeDisplay(
     val uriHandler = LocalUriHandler.current
     val saveBarcodeWithTagsUseCase: SaveBarcodeWithTagsUseCase = koinInject()
     val getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
-    val coroutineScope = CoroutineScope(Dispatchers.IO)
+    val coroutineScope = rememberCoroutineScope()
     val saved = remember { mutableStateOf(false) }
     val saveDescription = remember(description) { mutableStateOf(true) }
 
@@ -120,25 +119,30 @@ fun UrlBarcodeDisplay(
         IconButton(
             onClick = {
                 coroutineScope.launch {
-                    val barcodeModel = BarcodeModel(
-                        date = Date(),
-                        type = barcode.valueType,
-                        barcode = barcode.displayValue!!,
-                        format = barcode.format
-                    )
+                    try {
+                        val barcodeModel = BarcodeModel(
+                            date = Date(),
+                            type = barcode.valueType,
+                            barcode = barcode.displayValue!!,
+                            format = barcode.format
+                        )
 
-                    // Get or create tags
-                    val tags = if (selectedTagNames.isNotEmpty()) {
-                        val tagColors = suggestedTags.associate { it.name to it.color }
-                        getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
-                    } else {
-                        emptyList()
+                        // Get or create tags
+                        val tags = if (selectedTagNames.isNotEmpty()) {
+                            val tagColors = suggestedTags.associate { it.name to it.color }
+                            getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
+                        } else {
+                            emptyList()
+                        }
+
+                        // Save barcode with tags
+                        saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
+
+                        saved.value = true
+                    } catch (_: Exception) {
+                        // Keep saved as false so the user can retry if saving fails
                     }
-
-                    // Save barcode with tags
-                    saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
                 }
-                saved.value = true
             },
             enabled = !saved.value
         ) {

@@ -23,6 +23,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,8 +36,6 @@ import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.util.Date
@@ -64,7 +63,7 @@ fun WifiBarcodeDisplay(
 
     val saveBarcodeWithTagsUseCase: SaveBarcodeWithTagsUseCase = koinInject()
     val getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
-    val coroutineScope = CoroutineScope(Dispatchers.IO)
+    val coroutineScope = rememberCoroutineScope()
     val saved = remember { mutableStateOf(false) }
     val saveDescription = remember(description) { mutableStateOf(true) }
 
@@ -161,21 +160,25 @@ fun WifiBarcodeDisplay(
         IconButton(
             onClick = {
                 coroutineScope.launch {
-                    val barcodeModel = BarcodeModel(
-                        date = Date(),
-                        type = barcode.valueType,
-                        barcode = barcode.displayValue!!,
-                        format = barcode.format
-                    )
-                    val tags = if (selectedTagNames.isNotEmpty()) {
-                        val tagColors = suggestedTags.associate { it.name to it.color }
-                        getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
-                    } else {
-                        emptyList()
+                    try {
+                        val barcodeModel = BarcodeModel(
+                            date = Date(),
+                            type = barcode.valueType,
+                            barcode = barcode.displayValue!!,
+                            format = barcode.format
+                        )
+                        val tags = if (selectedTagNames.isNotEmpty()) {
+                            val tagColors = suggestedTags.associate { it.name to it.color }
+                            getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
+                        } else {
+                            emptyList()
+                        }
+                        saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
+                        saved.value = true
+                    } catch (_: Exception) {
+                        // Keep saved as false so the user can retry if saving fails
                     }
-                    saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
                 }
-                saved.value = true
             },
             enabled = !saved.value
         ) {
