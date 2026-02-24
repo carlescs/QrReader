@@ -1,20 +1,16 @@
 package cat.company.qrreader.features.camera.presentation.ui.components
 
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.SuggestedTagModel
-import androidx.core.graphics.toColorInt
+import cat.company.qrreader.ui.components.common.SelectableTag
 
 /**
  * Display suggested tags that can be toggled.
@@ -95,8 +91,9 @@ fun SuggestedTagsSection(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     suggestedTags.forEach { tag ->
-                        SuggestedTagChip(
-                            tag = tag,
+                        SelectableTag(
+                            name = tag.name,
+                            isSelected = tag.isSelected,
                             onClick = { onToggleTag(tag.name) }
                         )
                     }
@@ -112,54 +109,3 @@ fun SuggestedTagsSection(
     }
 }
 
-@Composable
-private fun SuggestedTagChip(
-    tag: SuggestedTagModel,
-    onClick: () -> Unit
-) {
-    // Parse the tag's hex color
-    val tagColor = try {
-        Color(tag.color.toColorInt())
-    } catch (_: Exception) {
-        MaterialTheme.colorScheme.primaryContainer
-    }
-
-    val backgroundColor = if (tag.isSelected) {
-        tagColor
-    } else {
-        tagColor.copy(alpha = 0.3f)
-    }
-    
-    // Calculate luminance to determine if we need dark or light text
-    val luminance = (0.299f * tagColor.red + 0.587f * tagColor.green + 0.114f * tagColor.blue)
-    val contentColor = if (tag.isSelected) {
-        if (luminance > 0.5f) Color.Black else Color.White
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    
-    val borderColor = if (tag.isSelected) {
-        tagColor.copy(alpha = 0.8f)
-    } else {
-        MaterialTheme.colorScheme.outline
-    }
-    
-    Surface(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .border(
-                width = 1.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(16.dp)
-            ),
-        shape = RoundedCornerShape(16.dp),
-        color = backgroundColor
-    ) {
-        Text(
-            text = tag.name,
-            style = MaterialTheme.typography.bodyMedium,
-            color = contentColor,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-        )
-    }
-}

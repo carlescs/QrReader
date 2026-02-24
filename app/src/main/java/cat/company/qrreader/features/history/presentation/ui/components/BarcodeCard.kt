@@ -15,15 +15,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +48,7 @@ import cat.company.qrreader.features.history.presentation.ui.content.WifiHistory
 import cat.company.qrreader.features.tags.presentation.TagsViewModel
 import org.koin.androidx.compose.koinViewModel
 import cat.company.qrreader.ui.components.common.DeleteConfirmDialog
+import cat.company.qrreader.ui.components.common.SelectableTag
 import cat.company.qrreader.ui.components.common.Tag
 import cat.company.qrreader.domain.usecase.history.SwitchBarcodeTagUseCase
 import org.koin.compose.koinInject
@@ -132,23 +130,14 @@ fun BarcodeCard(
             ) {
                 allTags.forEach { tag ->
                     val isSelected = barcode.tags.contains(tag)
-                    FilterChip(
-                        selected = isSelected,
+                    SelectableTag(
+                        name = tag.name,
+                        isSelected = isSelected,
                         onClick = {
                             ioCoroutineScope.launch {
                                 switchBarcodeTagUseCase.invoke(barcode, tag)
                             }
-                        },
-                        label = { Text(tag.name) },
-                        leadingIcon = if (isSelected) {
-                            {
-                                Icon(
-                                    imageVector = Icons.Filled.Check,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                )
-                            }
-                        } else null
+                        }
                     )
                 }
             }
