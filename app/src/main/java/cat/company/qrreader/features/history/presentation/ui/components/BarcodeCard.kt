@@ -13,6 +13,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Card
@@ -24,7 +26,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -154,15 +155,17 @@ fun BarcodeCard(
              }
          }
         Row {
-            TextButton(onClick = {
-                confirmDeleteOpen.value = true
-            }) {
-                Text(text = stringResource(R.string.delete))
+            IconButton(onClick = { confirmDeleteOpen.value = true }) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = stringResource(R.string.delete_barcode)
+                )
             }
-            TextButton(onClick = {
-                editOpen.value = true
-            }) {
-                Text(text = stringResource(R.string.edit))
+            IconButton(onClick = { editOpen.value = true }) {
+                Icon(
+                    imageVector = Icons.Filled.Edit,
+                    contentDescription = stringResource(R.string.edit_barcode)
+                )
             }
         }
         if (editOpen.value) {
