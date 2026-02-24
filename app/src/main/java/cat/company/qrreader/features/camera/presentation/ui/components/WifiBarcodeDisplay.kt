@@ -10,9 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -161,10 +161,11 @@ fun WifiBarcodeDisplay(
             onClick = {
                 coroutineScope.launch {
                     try {
+                        val barcodeContent = barcode.rawValue ?: barcode.displayValue ?: return@launch
                         val barcodeModel = BarcodeModel(
                             date = Date(),
                             type = barcode.valueType,
-                            barcode = barcode.displayValue!!,
+                            barcode = barcodeContent,
                             format = barcode.format
                         )
                         val tags = if (selectedTagNames.isNotEmpty()) {
@@ -183,7 +184,7 @@ fun WifiBarcodeDisplay(
             enabled = !saved.value
         ) {
             Icon(
-                imageVector = if (saved.value) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+                imageVector = if (saved.value) Icons.Filled.Save else Icons.Outlined.Save,
                 contentDescription = if (saved.value) stringResource(R.string.saved) else stringResource(R.string.save),
                 tint = if (saved.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
