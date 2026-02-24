@@ -264,14 +264,15 @@ class SettingsRepositoryTest {
     }
 
     /**
-     * Test that AI humorous descriptions defaults to false
+     * Test that AI humorous descriptions can be set to false
      */
     @Test
     fun aiHumorousDescriptions_canBeSetToFalse() = runTest {
-        repository.setAiHumorousDescriptions(false)
+        repository.setAiHumorousDescriptions(true)
+        assertTrue(repository.aiHumorousDescriptions.first())
 
-        val result = repository.aiHumorousDescriptions.first()
-        assertFalse(result)
+        repository.setAiHumorousDescriptions(false)
+        assertFalse(repository.aiHumorousDescriptions.first())
     }
 
     /**

@@ -156,6 +156,7 @@ fun AiSettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
                     viewModel.setAiHumorousDescriptions(newValue)
                 })
             },
+            modifier = Modifier.fillMaxWidth(),
             colors = androidx.compose.material3.ListItemDefaults.colors()
         )
     }
