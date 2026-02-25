@@ -291,10 +291,10 @@ fun BarcodeCard(
                 }
             }
         }
-        val description = barcode.barcode.aiGeneratedDescription
-        if (aiDescriptionOpen.value && description != null) {
+        if (aiDescriptionOpen.value && !barcode.barcode.aiGeneratedDescription.isNullOrBlank()) {
             AiDescriptionDialog(
-                description = description,
+                savedBarcode = barcode.barcode,
+                viewModel = historyViewModel,
                 onDismiss = { aiDescriptionOpen.value = false }
             )
         }
