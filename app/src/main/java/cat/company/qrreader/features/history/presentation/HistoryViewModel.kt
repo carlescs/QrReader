@@ -204,8 +204,8 @@ class HistoryViewModel(
      */
     fun suggestTags(barcode: BarcodeWithTagsModel, existingTagNames: List<String>) {
         val barcodeId = barcode.barcode.id
+        _tagSuggestionStates.update { it + (barcodeId to TagSuggestionState(isLoading = true)) }
         viewModelScope.launch {
-            _tagSuggestionStates.update { it + (barcodeId to TagSuggestionState(isLoading = true)) }
             val language = getAiLanguageUseCase().first()
             val humorous = getAiHumorousDescriptionsUseCase().first()
             val result = generateBarcodeAiDataUseCase(
