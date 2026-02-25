@@ -47,14 +47,18 @@ fun AiDescriptionDialog(
 ) {
     var description by remember { mutableStateOf(savedBarcode.aiGeneratedDescription ?: "") }
     var hasContent by remember { mutableStateOf(savedBarcode.aiGeneratedDescription != null) }
+    // Track the latest saved barcode so regeneration always uses up-to-date data
+    var currentBarcode by remember { mutableStateOf(savedBarcode) }
     val regenerateState by viewModel.regenerateDescriptionState.collectAsState()
 
     // When regeneration completes, save the new description to the database
     LaunchedEffect(regenerateState.description) {
         regenerateState.description?.let { newDescription ->
+            val updatedBarcode = currentBarcode.copy(aiGeneratedDescription = newDescription)
             description = newDescription
             hasContent = true
-            viewModel.updateBarcode(savedBarcode.copy(aiGeneratedDescription = newDescription))
+            currentBarcode = updatedBarcode
+            viewModel.updateBarcode(updatedBarcode)
             viewModel.resetRegenerateDescriptionState()
         }
     }
@@ -105,7 +109,7 @@ fun AiDescriptionDialog(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    IconButton(onClick = { viewModel.regenerateAiDescription(savedBarcode) }) {
+                    IconButton(onClick = { viewModel.regenerateAiDescription(currentBarcode) }) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = stringResource(R.string.regenerate_ai_description)
@@ -113,7 +117,8 @@ fun AiDescriptionDialog(
                     }
                     if (hasContent) {
                         IconButton(onClick = {
-                            viewModel.updateBarcode(savedBarcode.copy(aiGeneratedDescription = null))
+                            viewModel.updateBarcode(currentBarcode.copy(aiGeneratedDescription = null))
+                            hasContent = false
                             onDismiss()
                         }) {
                             Icon(
