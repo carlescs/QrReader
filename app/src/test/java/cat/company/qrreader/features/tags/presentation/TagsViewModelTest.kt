@@ -43,11 +43,11 @@ class TagsViewModelTest {
 
         override fun getAllTags(): Flow<List<TagModel>> = tagsFlow
 
-        override fun insertTags(vararg tags: TagModel) {
+        override suspend fun insertTags(vararg tags: TagModel) {
             insertedTags.addAll(tags)
         }
 
-        override fun updateTag(tag: TagModel) {
+        override suspend fun updateTag(tag: TagModel) {
             updatedTags.add(tag)
         }
 

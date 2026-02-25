@@ -21,11 +21,11 @@ class TagRepositoryImpl(database: BarcodesDb) : TagRepository {
         }
     }
 
-    override fun insertTags(vararg tags: TagModel) {
+    override suspend fun insertTags(vararg tags: TagModel) {
         tagDao.insertAll(*tags.map { it.toEntity() }.toTypedArray())
     }
 
-    override fun updateTag(tag: TagModel) {
+    override suspend fun updateTag(tag: TagModel) {
         tagDao.updateItem(tag.toEntity())
     }
 

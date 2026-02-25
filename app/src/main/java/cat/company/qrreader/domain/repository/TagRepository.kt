@@ -16,12 +16,12 @@ interface TagRepository {
     /**
      * Insert tags
      */
-    fun insertTags(vararg tags: TagModel)
+    suspend fun insertTags(vararg tags: TagModel)
 
     /**
      * Update a tag
      */
-    fun updateTag(tag: TagModel)
+    suspend fun updateTag(tag: TagModel)
 
     /**
      * Delete a tag
