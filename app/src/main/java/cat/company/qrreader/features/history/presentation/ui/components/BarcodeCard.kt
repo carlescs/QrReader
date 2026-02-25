@@ -181,7 +181,7 @@ fun BarcodeCard(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { moreMenuExpanded.value = true }) {
+            IconButton(onClick = { moreMenuExpanded.value = !moreMenuExpanded.value }) {
                 Icon(
                     imageVector = Icons.Filled.MoreVert,
                     contentDescription = stringResource(R.string.more)
@@ -243,15 +243,6 @@ fun BarcodeCard(
                             MaterialTheme.colorScheme.primary
                         else
                             MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            if (aiGenerationEnabled && !barcode.barcode.aiGeneratedDescription.isNullOrBlank()) {
-                IconButton(onClick = { aiDescriptionOpen.value = true }) {
-                    Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = stringResource(R.string.ai_description),
-                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
