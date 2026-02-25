@@ -16,7 +16,6 @@ import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.features.camera.presentation.ui.components.Title
 import cat.company.qrreader.features.history.presentation.ui.components.getTitle
-import cat.company.qrreader.features.history.presentation.ui.components.shareBarcode
 import cat.company.qrreader.utils.ContactInfo
 import java.text.SimpleDateFormat
 
@@ -58,9 +57,6 @@ fun ContactHistoryContent(sdf: SimpleDateFormat, barcode: BarcodeModel, contactI
             context.startActivity(intent)
         }) {
             Text(text = stringResource(R.string.add_to_contacts))
-        }
-        TextButton(onClick = { shareBarcode(context, barcode) }) {
-            Text(text = stringResource(R.string.share))
         }
     }
 
