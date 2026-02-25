@@ -130,7 +130,7 @@ fun BarcodeCard(
                     else if (barcode.barcode.type == Barcode.TYPE_WIFI)
                         WifiHistoryContent(sdf = sdf, barcode = barcode.barcode)
                     else if (barcode.barcode.type == Barcode.TYPE_CONTACT_INFO)
-                        ContactHistoryContent(sdf = sdf, barcode = barcode.barcode)
+                        ContactHistoryContent(sdf = sdf, barcode = barcode.barcode, contactInfo = contactInfo)
                     else
                         OtherHistoryContent(sdf = sdf, barcode = barcode.barcode)
                 }
@@ -214,10 +214,10 @@ fun BarcodeCard(
                 IconButton(onClick = {
                     val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
                         type = ContactsContract.RawContacts.CONTENT_TYPE
-                        contactInfo!!.name?.let { putExtra(ContactsContract.Intents.Insert.NAME, it) }
-                        contactInfo.phone?.let { putExtra(ContactsContract.Intents.Insert.PHONE, it) }
-                        contactInfo.email?.let { putExtra(ContactsContract.Intents.Insert.EMAIL, it) }
-                        contactInfo.organization?.let { putExtra(ContactsContract.Intents.Insert.COMPANY, it) }
+                        contactInfo?.name?.let { putExtra(ContactsContract.Intents.Insert.NAME, it) }
+                        contactInfo?.phone?.let { putExtra(ContactsContract.Intents.Insert.PHONE, it) }
+                        contactInfo?.email?.let { putExtra(ContactsContract.Intents.Insert.EMAIL, it) }
+                        contactInfo?.organization?.let { putExtra(ContactsContract.Intents.Insert.COMPANY, it) }
                     }
                     context.startActivity(intent)
                 }) {
