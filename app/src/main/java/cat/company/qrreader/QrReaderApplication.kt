@@ -8,6 +8,11 @@ import org.koin.core.logger.Level
 class QrReaderApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+        Thread.getDefaultUncaughtExceptionHandler()?.let { defaultHandler ->
+            Thread.setDefaultUncaughtExceptionHandler(
+                GlobalExceptionHandler(this, defaultHandler)
+            )
+        }
         startKoin {
             androidLogger(Level.ERROR)
             androidContext(this@QrReaderApplication)
