@@ -1,6 +1,8 @@
 package cat.company.qrreader.features.history.presentation.ui.components
 
 import android.content.ClipData
+import android.content.Intent
+import android.provider.ContactsContract
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,7 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Card
@@ -48,16 +51,17 @@ import cat.company.qrreader.features.history.presentation.ui.content.OtherHistor
 import cat.company.qrreader.features.history.presentation.ui.content.UrlHistoryContent
 import cat.company.qrreader.features.history.presentation.ui.content.WifiHistoryContent
 import cat.company.qrreader.features.tags.presentation.TagsViewModel
-import org.koin.androidx.compose.koinViewModel
 import cat.company.qrreader.ui.components.common.DeleteConfirmDialog
 import cat.company.qrreader.ui.components.common.SelectableTag
 import cat.company.qrreader.ui.components.common.Tag
 import cat.company.qrreader.domain.usecase.history.SwitchBarcodeTagUseCase
-import org.koin.compose.koinInject
+import cat.company.qrreader.utils.parseContactVCard
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 import java.text.SimpleDateFormat
 
 /**
@@ -83,6 +87,19 @@ fun BarcodeCard(
     val copiedMsg = stringResource(R.string.copied)
     val aiGenerationEnabled by historyViewModel.aiGenerationEnabled.collectAsState()
     val allTags by tagsViewModel.tags.collectAsState(initial = emptyList())
+    val context = LocalContext.current
+    val contactInfo = remember(barcode.barcode.barcode) {
+        if (barcode.barcode.type == Barcode.TYPE_CONTACT_INFO) parseContactVCard(barcode.barcode.barcode)
+        else null
+    }
+    val hasContactFields = remember(contactInfo) {
+        contactInfo != null && (
+            contactInfo.name != null ||
+                contactInfo.phone != null ||
+                contactInfo.email != null ||
+                contactInfo.organization != null
+            )
+    }
 
     // Load tags
     tagsViewModel.loadTags()
@@ -115,7 +132,7 @@ fun BarcodeCard(
                     else if (barcode.barcode.type == Barcode.TYPE_WIFI)
                         WifiHistoryContent(sdf = sdf, barcode = barcode.barcode)
                     else if (barcode.barcode.type == Barcode.TYPE_CONTACT_INFO)
-                        ContactHistoryContent(sdf = sdf, barcode = barcode.barcode)
+                        ContactHistoryContent(sdf = sdf, barcode = barcode.barcode, contactInfo = contactInfo)
                     else
                         OtherHistoryContent(sdf = sdf, barcode = barcode.barcode)
                 }
@@ -200,6 +217,22 @@ fun BarcodeCard(
                     imageVector = Icons.Filled.Share,
                     contentDescription = stringResource(R.string.share)
                 )
+            if (hasContactFields) {
+                IconButton(onClick = {
+                    val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
+                        type = ContactsContract.RawContacts.CONTENT_TYPE
+                        contactInfo?.name?.let { putExtra(ContactsContract.Intents.Insert.NAME, it) }
+                        contactInfo?.phone?.let { putExtra(ContactsContract.Intents.Insert.PHONE, it) }
+                        contactInfo?.email?.let { putExtra(ContactsContract.Intents.Insert.EMAIL, it) }
+                        contactInfo?.organization?.let { putExtra(ContactsContract.Intents.Insert.COMPANY, it) }
+                    }
+                    context.startActivity(intent)
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.PersonAdd,
+                        contentDescription = stringResource(R.string.add_to_contacts)
+                    )
+                }
             }
             Spacer(modifier = Modifier.weight(1f))
             IconButton(onClick = { historyViewModel.toggleFavorite(barcode.barcode.id, !barcode.barcode.isFavorite) }) {
