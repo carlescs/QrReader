@@ -18,7 +18,7 @@ class DeleteTagUseCaseTest {
             override fun getAllTags(): Flow<List<TagModel>> = flowOf(emptyList())
             override fun insertTags(vararg tags: TagModel) {}
             override fun updateTag(tag: TagModel) {}
-            override fun deleteTag(tag: TagModel) { deleted = tag }
+            override suspend fun deleteTag(tag: TagModel) { deleted = tag }
         }
 
         val uc = DeleteTagUseCase(repo)

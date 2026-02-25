@@ -46,7 +46,7 @@ class GetOrCreateTagsByNameUseCaseTest {
             }
         }
 
-        override fun deleteTag(tag: TagModel) {
+        override suspend fun deleteTag(tag: TagModel) {
             tags.removeAll { it.id == tag.id }
             tagsFlow.value = tags.toList()
         }

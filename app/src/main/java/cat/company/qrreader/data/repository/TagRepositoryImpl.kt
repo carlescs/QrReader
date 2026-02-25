@@ -29,7 +29,7 @@ class TagRepositoryImpl(database: BarcodesDb) : TagRepository {
         tagDao.updateItem(tag.toEntity())
     }
 
-    override fun deleteTag(tag: TagModel) {
+    override suspend fun deleteTag(tag: TagModel) {
         tagDao.delete(tag.toEntity())
     }
 }

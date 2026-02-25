@@ -8,7 +8,7 @@ import cat.company.qrreader.domain.repository.TagRepository
  */
 class DeleteTagUseCase(private val tagRepository: TagRepository) {
 
-    operator fun invoke(tag: TagModel) {
+    suspend operator fun invoke(tag: TagModel) {
         tagRepository.deleteTag(tag)
     }
 }

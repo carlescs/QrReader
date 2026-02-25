@@ -4,11 +4,17 @@ import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.domain.repository.TagRepository
 import cat.company.qrreader.domain.usecase.tags.DeleteTagUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -20,6 +26,8 @@ import org.junit.Test
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class TagsViewModelTest {
+
+    private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var fakeTagRepository: FakeTagRepository
     private lateinit var getAllTagsUseCase: GetAllTagsUseCase
@@ -43,7 +51,7 @@ class TagsViewModelTest {
             updatedTags.add(tag)
         }
 
-        override fun deleteTag(tag: TagModel) {
+        override suspend fun deleteTag(tag: TagModel) {
             deletedTags.add(tag)
         }
 
@@ -54,10 +62,16 @@ class TagsViewModelTest {
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
         fakeTagRepository = FakeTagRepository()
         getAllTagsUseCase = GetAllTagsUseCase(fakeTagRepository)
         deleteTagUseCase = DeleteTagUseCase(fakeTagRepository)
         viewModel = TagsViewModel(getAllTagsUseCase, deleteTagUseCase)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     /**
@@ -104,10 +118,11 @@ class TagsViewModelTest {
      * Test deleteTag calls use case
      */
     @Test
-    fun deleteTag_callsUseCase() {
+    fun deleteTag_callsUseCase() = runTest {
         val tag = TagModel(id = 1, name = "ToDelete", color = "#000000")
 
         viewModel.deleteTag(tag)
+        advanceUntilIdle()
 
         assertEquals(1, fakeTagRepository.deletedTags.size)
         assertEquals(tag, fakeTagRepository.deletedTags[0])
@@ -128,6 +143,7 @@ class TagsViewModelTest {
 
         // Delete tag2
         viewModel.deleteTag(tag2)
+        advanceUntilIdle()
 
         // Note: In real implementation, the flow would update from the database
         // Here we just verify the delete was called
@@ -138,11 +154,12 @@ class TagsViewModelTest {
      * Test deleteTag with non-existent tag doesn't crash
      */
     @Test
-    fun deleteTag_nonExistentTag_doesNotCrash() {
+    fun deleteTag_nonExistentTag_doesNotCrash() = runTest {
         val tag = TagModel(id = 999, name = "NonExistent", color = "#000000")
 
         // Should not throw
         viewModel.deleteTag(tag)
+        advanceUntilIdle()
 
         assertEquals(1, fakeTagRepository.deletedTags.size)
     }
@@ -151,7 +168,7 @@ class TagsViewModelTest {
      * Test multiple deletes work correctly
      */
     @Test
-    fun deleteTag_multipleDeletes_allRecorded() {
+    fun deleteTag_multipleDeletes_allRecorded() = runTest {
         val tag1 = TagModel(id = 1, name = "Tag1", color = "#000000")
         val tag2 = TagModel(id = 2, name = "Tag2", color = "#111111")
         val tag3 = TagModel(id = 3, name = "Tag3", color = "#222222")
@@ -159,6 +176,7 @@ class TagsViewModelTest {
         viewModel.deleteTag(tag1)
         viewModel.deleteTag(tag2)
         viewModel.deleteTag(tag3)
+        advanceUntilIdle()
 
         assertEquals(3, fakeTagRepository.deletedTags.size)
     }

@@ -24,5 +24,5 @@ interface TagDao {
     fun updateItem(tag:Tag)
 
     @Delete
-    fun delete(tag:Tag)
+    suspend fun delete(tag:Tag)
 }
