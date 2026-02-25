@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Card
@@ -86,10 +87,10 @@ fun BarcodeCard(
     val moreMenuExpanded = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val ioCoroutineScope = CoroutineScope(Dispatchers.IO)
+    val context = LocalContext.current
     val copiedMsg = stringResource(R.string.copied)
     val aiGenerationEnabled by historyViewModel.aiGenerationEnabled.collectAsState()
     val allTags by tagsViewModel.tags.collectAsState(initial = emptyList())
-    val context = LocalContext.current
     val contactInfo = remember(barcode.barcode.barcode) {
         if (barcode.barcode.type == Barcode.TYPE_CONTACT_INFO) parseContactVCard(barcode.barcode.barcode)
         else null
@@ -245,6 +246,12 @@ fun BarcodeCard(
                             MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+            IconButton(onClick = { shareBarcode(context, barcode.barcode) }) {
+                Icon(
+                    imageVector = Icons.Filled.Share,
+                    contentDescription = stringResource(R.string.share)
+                )
             }
             if (hasContactFields) {
                 IconButton(onClick = {

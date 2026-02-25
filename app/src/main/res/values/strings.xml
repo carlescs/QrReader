@@ -42,6 +42,7 @@
     <string name="wifi">Wi-Fi</string>
     <string name="wifi_ssid">Network: %s</string>
     <string name="wifi_security">Security: %s</string>
+    <string name="wifi_password">Password: %s</string>
     <string name="wifi_connect">Connect to Wi-Fi</string>
     <string name="wifi_show_qr_code">Show QR code</string>
     <string name="email_label">eMail: </string>

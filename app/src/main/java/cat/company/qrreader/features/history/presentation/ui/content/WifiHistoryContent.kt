@@ -24,6 +24,7 @@ import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.features.camera.presentation.ui.components.Title
 import cat.company.qrreader.features.history.presentation.ui.components.WifiQrCodeDialog
 import cat.company.qrreader.features.history.presentation.ui.components.getTitle
+import cat.company.qrreader.features.history.presentation.ui.components.shareBarcode
 import cat.company.qrreader.utils.parseWifiContent
 import java.text.SimpleDateFormat
 
@@ -83,6 +84,10 @@ fun WifiHistoryContent(sdf: SimpleDateFormat, barcode: BarcodeModel) {
 
     TextButton(onClick = { showQrCodeDialog = true }) {
         Text(text = stringResource(R.string.wifi_show_qr_code))
+    }
+
+    TextButton(onClick = { shareBarcode(context, barcode) }) {
+        Text(text = stringResource(R.string.share))
     }
 
     if (showQrCodeDialog) {
