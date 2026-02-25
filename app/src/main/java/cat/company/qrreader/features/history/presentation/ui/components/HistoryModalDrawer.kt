@@ -10,7 +10,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Switch
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -81,13 +80,7 @@ fun HistoryModalDrawerContent(
                 },
                 label = { Text(stringResource(R.string.favorites)) },
                 selected = showOnlyFavorites,
-                onClick = onToggleFavorites,
-                badge = {
-                    Switch(
-                        checked = showOnlyFavorites,
-                        onCheckedChange = { onToggleFavorites() }
-                    )
-                }
+                onClick = onToggleFavorites
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             Box(modifier = Modifier.weight(1f)) {
