@@ -311,22 +311,15 @@ fun BarcodeCard(
                             confirmDeleteOpen.value = true
                         }
                     )
-                    if (aiGenerationEnabled && !barcode.barcode.aiGeneratedDescription.isNullOrBlank()) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.ai_description)) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.AutoAwesome,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            onClick = {
-                                moreMenuExpanded.value = false
-                                aiDescriptionOpen.value = true
-                            }
-                        )
-                    }
+                }
+            }
+            if (aiGenerationEnabled && !barcode.barcode.aiGeneratedDescription.isNullOrBlank()) {
+                IconButton(onClick = { aiDescriptionOpen.value = true }) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = stringResource(R.string.ai_description),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
             if (allTags.isNotEmpty()) {
