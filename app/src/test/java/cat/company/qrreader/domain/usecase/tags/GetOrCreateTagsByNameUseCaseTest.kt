@@ -29,7 +29,7 @@ class GetOrCreateTagsByNameUseCaseTest {
 
         override fun getAllTags(): Flow<List<TagModel>> = tagsFlow
 
-        override fun insertTags(vararg tags: TagModel) {
+        override suspend fun insertTags(vararg tags: TagModel) {
             tags.forEach { tag ->
                 val newTag = tag.copy(id = nextId++)
                 this@FakeTagRepository.tags.add(newTag)
@@ -38,7 +38,7 @@ class GetOrCreateTagsByNameUseCaseTest {
             tagsFlow.value = this@FakeTagRepository.tags.toList()
         }
 
-        override fun updateTag(tag: TagModel) {
+        override suspend fun updateTag(tag: TagModel) {
             val index = tags.indexOfFirst { it.id == tag.id }
             if (index >= 0) {
                 tags[index] = tag
