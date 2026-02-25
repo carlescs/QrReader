@@ -135,7 +135,6 @@
     <string name="tap_to_remove_unwanted_tags">Tap to remove unwanted tags</string>
     <string name="suggest_tags">Suggest Tags</string>
     <string name="tap_to_add_suggested_tags">Tap to add suggested tags</string>
-    <string name="tap_to_remove_unwanted_tags">Tap to select tags to save with this barcode</string>
     <string name="save_ai_description">Save AI description</string>
 
     <!-- Expandable text -->
