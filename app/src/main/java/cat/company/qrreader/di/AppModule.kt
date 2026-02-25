@@ -10,7 +10,6 @@ import cat.company.qrreader.domain.repository.BarcodeRepository
 import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.repository.TagRepository
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
-import cat.company.qrreader.domain.usecase.camera.AddTagToBarcodeUseCase
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeUseCase
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
 import cat.company.qrreader.domain.usecase.camera.ScanImageUseCase
@@ -73,7 +72,6 @@ val repositoryModule = module {
 
 val useCaseModule = module {
     factory { GetBarcodesWithTagsUseCase(get()) }
-    factory { AddTagToBarcodeUseCase(get()) }
     factory { SaveBarcodeUseCase(get()) }
     factory { SaveBarcodeWithTagsUseCase(get()) }
     factory { ScanImageUseCase() }

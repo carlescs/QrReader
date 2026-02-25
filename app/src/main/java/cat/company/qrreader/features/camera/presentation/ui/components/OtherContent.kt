@@ -30,7 +30,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.BarcodeModel
-import cat.company.qrreader.domain.usecase.camera.AddTagToBarcodeUseCase
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -59,10 +58,8 @@ fun OtherContent(
     val uriHandler = LocalUriHandler.current
     val saveBarcodeWithTagsUseCase: SaveBarcodeWithTagsUseCase = koinInject()
     val getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
-    val addTagToBarcodeUseCase: AddTagToBarcodeUseCase = koinInject()
     val coroutineScope = rememberCoroutineScope()
     val saved = remember { mutableStateOf(false) }
-    val savedBarcodeId = remember { mutableStateOf<Long?>(null) }
     val saveDescription = remember(description) { mutableStateOf(true) }
     Title(title = if (barcode.format == Barcode.FORMAT_EAN_13) stringResource(R.string.ean13) else stringResource(R.string.other))
     val noValue = stringResource(R.string.no_barcode_value)
@@ -97,42 +94,7 @@ fun OtherContent(
         isLoading = isLoadingTags,
         error = tagError,
         aiGenerationEnabled = aiGenerationEnabled,
-        onToggleTag = { tagName ->
-            val isCurrentlySelected = suggestedTags.find { it.name == tagName }?.isSelected ?: false
-            val willBeSelected = !isCurrentlySelected
-            onToggleTag(tagName)
-            if (willBeSelected) {
-                coroutineScope.launch {
-                    try {
-                        val barcodeContent = barcode.rawValue ?: barcode.displayValue ?: return@launch
-                        val tagColors = suggestedTags.associate { it.name to it.color }
-                        val existingSavedId = savedBarcodeId.value
-                        if (existingSavedId == null) {
-                            val newSelectedNames = suggestedTags
-                                .filter { if (it.name == tagName) true else it.isSelected }
-                                .map { it.name }
-                            val barcodeModel = BarcodeModel(
-                                date = Date(),
-                                type = barcode.valueType,
-                                barcode = barcodeContent,
-                                format = barcode.format
-                            )
-                            val tags = getOrCreateTagsByNameUseCase(newSelectedNames, tagColors)
-                            val id = saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
-                            savedBarcodeId.value = id
-                            saved.value = true
-                        } else {
-                            val tags = getOrCreateTagsByNameUseCase(listOf(tagName), tagColors)
-                            tags.firstOrNull()?.let { tag ->
-                                addTagToBarcodeUseCase(existingSavedId.toInt(), tag.id)
-                            }
-                        }
-                    } catch (_: Exception) {
-                        // Fail silently; the user can still use the Save button
-                    }
-                }
-            }
-        },
+        onToggleTag = onToggleTag,
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp)
@@ -185,8 +147,8 @@ fun OtherContent(
                         }
 
                         // Save barcode with tags
-                        val id = saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
-                        savedBarcodeId.value = id
+                        saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
+
                         saved.value = true
                     } catch (_: Exception) {
                         // Keep saved as false so the user can retry if saving fails
