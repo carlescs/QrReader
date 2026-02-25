@@ -11,6 +11,7 @@ import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -594,12 +595,30 @@ class HistoryViewModelTest {
     @Test
     fun suggestTags_setsLoadingWhileInProgress() = runTest {
         val fakeSettingsRepo = makeFakeSettingsRepo()
+
+        // Use a CompletableDeferred so the fake blocks until we complete it,
+        // giving us a chance to observe the isLoading = true state.
+        val completable = CompletableDeferred<Result<cat.company.qrreader.domain.model.BarcodeAiData>>()
+        val blockingAiUseCase = object : GenerateBarcodeAiDataUseCase() {
+            override suspend fun invoke(
+                barcodeContent: String,
+                barcodeType: String?,
+                barcodeFormat: String?,
+                existingTags: List<String>,
+                language: String,
+                humorous: Boolean
+            ) = completable.await()
+            override suspend fun isAiSupportedOnDevice(): Boolean = true
+            override suspend fun downloadModelIfNeeded() {}
+            override fun cleanup() {}
+        }
+
         val vm = HistoryViewModel(
             GetBarcodesWithTagsUseCase(FakeBarcodeRepository()),
             UpdateBarcodeUseCase(FakeBarcodeRepository()),
             DeleteBarcodeUseCase(FakeBarcodeRepository()),
             fakeSettingsRepo,
-            FakeGenerateBarcodeAiDataUseCase(),
+            blockingAiUseCase,
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
             ToggleFavoriteUseCase(FakeBarcodeRepository())
@@ -613,11 +632,12 @@ class HistoryViewModelTest {
 
         vm.suggestTags(barcodeWithTags, emptyList())
 
-        // After calling but before advancing, entry should be loading
+        // Advance until the coroutine suspends on completable.await() — isLoading should be true
         runCurrent()
         assertEquals(true, vm.tagSuggestionStates.value[7]?.isLoading)
 
-        // After completing, loading should be false
+        // Complete the deferred so the coroutine can finish
+        completable.complete(Result.failure(UnsupportedOperationException("done")))
         advanceUntilIdle()
         assertEquals(false, vm.tagSuggestionStates.value[7]?.isLoading)
     }
