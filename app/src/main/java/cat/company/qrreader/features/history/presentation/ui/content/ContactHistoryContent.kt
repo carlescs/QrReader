@@ -13,11 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.features.camera.presentation.ui.components.Title
 import cat.company.qrreader.features.history.presentation.ui.components.getTitle
 import cat.company.qrreader.utils.parseContactVCard
+import java.io.File
 import java.text.SimpleDateFormat
 
 /**
@@ -58,6 +60,34 @@ fun ContactHistoryContent(sdf: SimpleDateFormat, barcode: BarcodeModel) {
             context.startActivity(intent)
         }) {
             Text(text = stringResource(R.string.add_to_contacts))
+        }
+        TextButton(onClick = {
+            val vCardContent = if (barcode.barcode.trimStart().startsWith("BEGIN:VCARD", ignoreCase = true)) {
+                barcode.barcode
+            } else {
+                buildString {
+                    appendLine("BEGIN:VCARD")
+                    appendLine("VERSION:3.0")
+                    contactInfo.name?.let { appendLine("FN:$it") }
+                    contactInfo.phone?.let { appendLine("TEL:$it") }
+                    contactInfo.email?.let { appendLine("EMAIL:$it") }
+                    contactInfo.organization?.let { appendLine("ORG:$it") }
+                    append("END:VCARD")
+                }
+            }
+            val contactsDir = File(context.cacheDir, "contacts")
+            contactsDir.mkdirs()
+            val vcfFile = File(contactsDir, "contact.vcf")
+            vcfFile.writeText(vCardContent)
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", vcfFile)
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/x-vcard"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(intent, null))
+        }) {
+            Text(text = stringResource(R.string.share))
         }
     }
 
