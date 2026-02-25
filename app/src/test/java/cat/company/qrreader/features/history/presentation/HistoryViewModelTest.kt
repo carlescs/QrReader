@@ -508,6 +508,49 @@ class HistoryViewModelTest {
         job.cancel()
     }
 
+    @Test
+    fun toggleFavoritesFilter_clearSelectedTag() {
+        val vm = makeViewModel(FakeBarcodeRepository())
+        vm.onTagSelected(3)
+        assertEquals(3, vm.selectedTagId.value)
+
+        vm.toggleFavoritesFilter()
+        assertEquals(true, vm.showOnlyFavorites.value)
+        assertEquals(null, vm.selectedTagId.value)
+    }
+
+    @Test
+    fun toggleFavoritesFilter_off_doesNotRestoreTag() {
+        val vm = makeViewModel(FakeBarcodeRepository())
+        vm.onTagSelected(3)
+        vm.toggleFavoritesFilter() // ON — clears tag
+        vm.toggleFavoritesFilter() // OFF — tag stays null
+        assertEquals(false, vm.showOnlyFavorites.value)
+        assertEquals(null, vm.selectedTagId.value)
+    }
+
+    @Test
+    fun onTagSelected_clearsFavoritesFilter() {
+        val vm = makeViewModel(FakeBarcodeRepository())
+        vm.toggleFavoritesFilter()
+        assertEquals(true, vm.showOnlyFavorites.value)
+
+        vm.onTagSelected(7)
+        assertEquals(7, vm.selectedTagId.value)
+        assertEquals(false, vm.showOnlyFavorites.value)
+    }
+
+    @Test
+    fun onTagSelected_null_doesNotClearFavoritesFilter() {
+        val vm = makeViewModel(FakeBarcodeRepository())
+        vm.toggleFavoritesFilter()
+        assertEquals(true, vm.showOnlyFavorites.value)
+
+        vm.onTagSelected(null)
+        assertEquals(null, vm.selectedTagId.value)
+        assertEquals(true, vm.showOnlyFavorites.value)
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun toggleFavorite_callsUseCaseWithCorrectArguments() = runTest {

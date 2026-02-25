@@ -101,6 +101,9 @@ class HistoryViewModel(
 
     fun onTagSelected(tagId: Int?) {
         _selectedTagId.value = tagId
+        if (tagId != null) {
+            _showOnlyFavorites.value = false
+        }
     }
 
     fun onQueryChange(query: String) {
@@ -108,7 +111,11 @@ class HistoryViewModel(
     }
 
     fun toggleFavoritesFilter() {
-        _showOnlyFavorites.value = !_showOnlyFavorites.value
+        val turningOn = !_showOnlyFavorites.value
+        _showOnlyFavorites.value = turningOn
+        if (turningOn) {
+            _selectedTagId.value = null
+        }
     }
 
     fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {
