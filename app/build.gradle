@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.sonarqube)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
     id 'jacoco'
 }
 
@@ -82,6 +83,8 @@ dependencies {
 
     // Firebase Analytics
     implementation libs.firebase.analytics
+    // Firebase Crashlytics — reports unhandled exceptions to Firebase / Google Play Console
+    implementation libs.firebase.crashlytics
 
     // To use Kotlin Symbol Processing (KSP)
     ksp libs.androidx.room.compiler

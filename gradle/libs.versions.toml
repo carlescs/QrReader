@@ -43,6 +43,8 @@ genaiPrompt = "1.0.0-beta1"
 
 # Firebase
 firebaseAnalytics = "22.5.0"
+firebaseCrashlytics = "19.4.3"
+firebaseCrashlyticsPlugin = "3.0.3"
 
 # Testing
 junit = "4.13.2"
@@ -105,6 +107,7 @@ accompanist-permissions = { group = "com.google.accompanist", name = "accompanis
 
 # Firebase
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx", version.ref = "firebaseAnalytics" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx", version.ref = "firebaseCrashlytics" }
 
 # DataStore
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastorePreferences" }
@@ -129,6 +132,7 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
 google-services = { id = "com.google.gms.google-services", version = "4.4.4" }
+firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
 
 [bundles]
 compose = [
