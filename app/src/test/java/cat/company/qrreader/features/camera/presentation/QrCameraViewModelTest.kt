@@ -88,7 +88,7 @@ class QrCameraViewModelTest {
 
         override fun insertTags(vararg tags: TagModel) {}
         override fun updateTag(tag: TagModel) {}
-        override fun deleteTag(tag: TagModel) {}
+        override suspend fun deleteTag(tag: TagModel) {}
 
         @Suppress("unused")
         fun emitTags(tags: List<TagModel>) {

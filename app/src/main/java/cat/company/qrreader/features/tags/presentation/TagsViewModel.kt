@@ -1,10 +1,12 @@
 ﻿package cat.company.qrreader.features.tags.presentation
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.domain.usecase.tags.DeleteTagUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import cat.company.qrreader.domain.repository.TagRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import org.koin.java.KoinJavaComponent.inject
 /**
  * ViewModel for the tags
@@ -19,7 +21,9 @@ class TagsViewModel(
         tags = getAllTagsUseCase()
     }
     fun deleteTag(tag: TagModel) {
-        deleteTagUseCase(tag)
+        viewModelScope.launch {
+            deleteTagUseCase(tag)
+        }
     }
     fun insertTags(vararg tags: TagModel) {
         tagRepository.insertTags(*tags)

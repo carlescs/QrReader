@@ -18,7 +18,7 @@ class GetAllTagsUseCaseTest {
             override fun getAllTags(): Flow<List<TagModel>> = flowOf(tags)
             override fun insertTags(vararg tags: TagModel) {}
             override fun updateTag(tag: TagModel) {}
-            override fun deleteTag(tag: TagModel) {}
+            override suspend fun deleteTag(tag: TagModel) {}
         }
 
         val uc = GetAllTagsUseCase(repo)

@@ -26,6 +26,6 @@ interface TagRepository {
     /**
      * Delete a tag
      */
-    fun deleteTag(tag: TagModel)
+    suspend fun deleteTag(tag: TagModel)
 }
 
