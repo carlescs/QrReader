@@ -19,12 +19,9 @@ import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-<<<<<<< copilot/add-share-option-to-cards
-import androidx.compose.material.icons.filled.Share
-=======
 import androidx.compose.material.icons.filled.MoreVert
->>>>>>> master
 import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Card
@@ -94,7 +91,6 @@ fun BarcodeCard(
     val copiedMsg = stringResource(R.string.copied)
     val aiGenerationEnabled by historyViewModel.aiGenerationEnabled.collectAsState()
     val allTags by tagsViewModel.tags.collectAsState(initial = emptyList())
-    val context = LocalContext.current
     val contactInfo = remember(barcode.barcode.barcode) {
         if (barcode.barcode.type == Barcode.TYPE_CONTACT_INFO) parseContactVCard(barcode.barcode.barcode)
         else null
@@ -251,23 +247,12 @@ fun BarcodeCard(
                     )
                 }
             }
-<<<<<<< copilot/add-share-option-to-cards
-            if (aiGenerationEnabled && !barcode.barcode.aiGeneratedDescription.isNullOrBlank()) {
-                IconButton(onClick = { aiDescriptionOpen.value = true }) {
-                    Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = stringResource(R.string.ai_description),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
             IconButton(onClick = { shareBarcode(context, barcode.barcode) }) {
                 Icon(
                     imageVector = Icons.Filled.Share,
                     contentDescription = stringResource(R.string.share)
                 )
-=======
->>>>>>> master
+            }
             if (hasContactFields) {
                 IconButton(onClick = {
                     val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
