@@ -1,19 +1,24 @@
 package cat.company.qrreader.features.history.presentation.ui.content
 
+import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.R
 import cat.company.qrreader.features.camera.presentation.ui.components.Title
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.features.history.presentation.ui.components.getTitle
@@ -25,6 +30,7 @@ import java.text.SimpleDateFormat
 @Composable
 fun UrlHistoryContent(sdf:SimpleDateFormat, barcode:BarcodeModel) {
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
     Title(title = getTitle(barcode))
     Text(text = sdf.format(barcode.date))
     Text(text = buildAnnotatedString {
@@ -39,6 +45,15 @@ fun UrlHistoryContent(sdf:SimpleDateFormat, barcode:BarcodeModel) {
     }, modifier = Modifier.clickable {
         uriHandler.openUri(barcode.barcode)
     })
+    TextButton(onClick = {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, barcode.barcode)
+        }
+        context.startActivity(Intent.createChooser(intent, null))
+    }) {
+        Text(text = stringResource(R.string.share))
+    }
     if(barcode.description!=null&& barcode.description.trim()!="") {
         Spacer(modifier = Modifier.height(5.dp))
         HorizontalDivider()

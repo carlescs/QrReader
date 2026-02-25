@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Card
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
@@ -77,6 +79,7 @@ fun BarcodeCard(
     val aiDescriptionOpen = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val ioCoroutineScope = CoroutineScope(Dispatchers.IO)
+    val context = LocalContext.current
     val copiedMsg = stringResource(R.string.copied)
     val aiGenerationEnabled by historyViewModel.aiGenerationEnabled.collectAsState()
     val allTags by tagsViewModel.tags.collectAsState(initial = emptyList())
@@ -191,6 +194,12 @@ fun BarcodeCard(
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
+            }
+            IconButton(onClick = { shareBarcode(context, barcode.barcode) }) {
+                Icon(
+                    imageVector = Icons.Filled.Share,
+                    contentDescription = stringResource(R.string.share)
+                )
             }
             Spacer(modifier = Modifier.weight(1f))
             IconButton(onClick = { historyViewModel.toggleFavorite(barcode.barcode.id, !barcode.barcode.isFavorite) }) {
