@@ -19,12 +19,18 @@ import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+<<<<<<< copilot/add-share-option-to-cards
 import androidx.compose.material.icons.filled.Share
+=======
+import androidx.compose.material.icons.filled.MoreVert
+>>>>>>> master
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -81,6 +87,7 @@ fun BarcodeCard(
     val confirmDeleteOpen = remember { mutableStateOf(false) }
     val tagEditOpen = remember { mutableStateOf(false) }
     val aiDescriptionOpen = remember { mutableStateOf(false) }
+    val moreMenuExpanded = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val ioCoroutineScope = CoroutineScope(Dispatchers.IO)
     val context = LocalContext.current
@@ -179,17 +186,58 @@ fun BarcodeCard(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { confirmDeleteOpen.value = true }) {
+            IconButton(onClick = { moreMenuExpanded.value = !moreMenuExpanded.value }) {
                 Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = stringResource(R.string.delete_barcode)
+                    imageVector = Icons.Filled.MoreVert,
+                    contentDescription = stringResource(R.string.more)
                 )
-            }
-            IconButton(onClick = { editOpen.value = true }) {
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = stringResource(R.string.edit_barcode)
-                )
+                DropdownMenu(
+                    expanded = moreMenuExpanded.value,
+                    onDismissRequest = { moreMenuExpanded.value = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.edit_barcode)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = null
+                            )
+                        },
+                        onClick = {
+                            moreMenuExpanded.value = false
+                            editOpen.value = true
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.delete_barcode)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = null
+                            )
+                        },
+                        onClick = {
+                            moreMenuExpanded.value = false
+                            confirmDeleteOpen.value = true
+                        }
+                    )
+                    if (aiGenerationEnabled && !barcode.barcode.aiGeneratedDescription.isNullOrBlank()) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.ai_description)) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            },
+                            onClick = {
+                                moreMenuExpanded.value = false
+                                aiDescriptionOpen.value = true
+                            }
+                        )
+                    }
+                }
             }
             if (allTags.isNotEmpty()) {
                 IconButton(onClick = { tagEditOpen.value = !tagEditOpen.value }) {
@@ -203,6 +251,7 @@ fun BarcodeCard(
                     )
                 }
             }
+<<<<<<< copilot/add-share-option-to-cards
             if (aiGenerationEnabled && !barcode.barcode.aiGeneratedDescription.isNullOrBlank()) {
                 IconButton(onClick = { aiDescriptionOpen.value = true }) {
                     Icon(
@@ -217,6 +266,8 @@ fun BarcodeCard(
                     imageVector = Icons.Filled.Share,
                     contentDescription = stringResource(R.string.share)
                 )
+=======
+>>>>>>> master
             if (hasContactFields) {
                 IconButton(onClick = {
                     val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
