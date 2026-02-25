@@ -233,6 +233,18 @@ class HistoryViewModel(
         }
     }
 
+    /**
+     * Clear AI tag suggestion state for a specific barcode.
+     *
+     * Called when tag editing is closed so that the next time the user opens tag editing
+     * for this barcode, fresh suggestions can be generated if needed.
+     */
+    fun resetTagSuggestionState(barcodeId: Int) {
+        _tagSuggestionStates.update { current ->
+            if (current.isEmpty()) current else current - barcodeId
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         generateBarcodeAiDataUseCase.cleanup()

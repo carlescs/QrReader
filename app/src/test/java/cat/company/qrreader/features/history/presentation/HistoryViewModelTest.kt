@@ -676,4 +676,34 @@ class HistoryViewModelTest {
         assertEquals("Online", state?.suggestedTags?.get(1)?.name)
         assertEquals(false, state?.suggestedTags?.get(1)?.isSelected)
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun resetTagSuggestionState_clearsStateForBarcode() = runTest {
+        val fakeSettingsRepo = makeFakeSettingsRepo()
+        val vm = HistoryViewModel(
+            GetBarcodesWithTagsUseCase(FakeBarcodeRepository()),
+            UpdateBarcodeUseCase(FakeBarcodeRepository()),
+            DeleteBarcodeUseCase(FakeBarcodeRepository()),
+            fakeSettingsRepo,
+            FakeGenerateBarcodeAiDataUseCase(),
+            GetAiLanguageUseCase(fakeSettingsRepo),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
+            ToggleFavoriteUseCase(FakeBarcodeRepository())
+        )
+
+        val barcode = BarcodeModel(id = 11, type = 1, format = 1, barcode = "test", date = Date())
+        val barcodeWithTags = BarcodeWithTagsModel(barcode, emptyList())
+
+        // Generate suggestions (will fail, which is fine — we just want state present)
+        vm.suggestTags(barcodeWithTags, emptyList())
+        advanceUntilIdle()
+
+        // State entry should exist
+        assertEquals(true, vm.tagSuggestionStates.value.containsKey(11))
+
+        // Reset should remove the entry
+        vm.resetTagSuggestionState(11)
+        assertEquals(false, vm.tagSuggestionStates.value.containsKey(11))
+    }
 }

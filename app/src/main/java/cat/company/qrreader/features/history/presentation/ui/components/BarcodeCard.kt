@@ -192,12 +192,25 @@ fun BarcodeCard(
                         Text(stringResource(R.string.suggest_tags))
                     }
                     if (tagSuggestionState?.isLoading == true) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
                     }
                 }
-                if (tagSuggestionState?.error != null) {
+                val tagSuggestionError = tagSuggestionState?.error
+                if (tagSuggestionError != null) {
+                    val errorMessage = when {
+                        tagSuggestionError.contains("not available on this device", ignoreCase = true) ||
+                        tagSuggestionError.contains("UnsupportedOperation", ignoreCase = true) ->
+                            stringResource(R.string.ai_suggestions_not_supported)
+                        tagSuggestionError.contains("downloading", ignoreCase = true) ||
+                        tagSuggestionError.contains("download", ignoreCase = true) ->
+                            stringResource(R.string.ai_model_downloading_retry)
+                        else -> stringResource(R.string.tag_suggestions_unavailable)
+                    }
                     Text(
-                        text = tagSuggestionState.error!!,
+                        text = errorMessage,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
@@ -317,7 +330,12 @@ fun BarcodeCard(
                 }
             }
             if (allTags.isNotEmpty()) {
-                IconButton(onClick = { tagEditOpen.value = !tagEditOpen.value }) {
+                IconButton(onClick = {
+                    if (tagEditOpen.value) {
+                        historyViewModel.resetTagSuggestionState(barcode.barcode.id)
+                    }
+                    tagEditOpen.value = !tagEditOpen.value
+                }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Label,
                         contentDescription = stringResource(R.string.manage_tags),
