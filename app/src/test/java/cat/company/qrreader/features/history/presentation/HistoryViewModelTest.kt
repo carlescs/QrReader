@@ -561,4 +561,119 @@ class HistoryViewModelTest {
         assertEquals(7, lastBarcodeId)
         assertEquals(false, lastIsFavorite)
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun suggestTags_onAiFailure_setsError() = runTest {
+        val errorMessage = "AI not available in tests"
+        val fakeSettingsRepo = makeFakeSettingsRepo()
+        val vm = HistoryViewModel(
+            GetBarcodesWithTagsUseCase(FakeBarcodeRepository()),
+            UpdateBarcodeUseCase(FakeBarcodeRepository()),
+            DeleteBarcodeUseCase(FakeBarcodeRepository()),
+            fakeSettingsRepo,
+            FakeGenerateBarcodeAiDataUseCase(),
+            GetAiLanguageUseCase(fakeSettingsRepo),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
+            ToggleFavoriteUseCase(FakeBarcodeRepository())
+        )
+
+        val barcode = BarcodeModel(id = 5, type = 1, format = 1, barcode = "https://example.com", date = Date())
+        val barcodeWithTags = BarcodeWithTagsModel(barcode, emptyList())
+
+        vm.suggestTags(barcodeWithTags, emptyList())
+        advanceUntilIdle()
+
+        val state = vm.tagSuggestionStates.value[5]
+        assertEquals(false, state?.isLoading)
+        assertEquals(errorMessage, state?.error)
+        assertEquals(true, state?.suggestedTags?.isEmpty())
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun suggestTags_setsLoadingWhileInProgress() = runTest {
+        val fakeSettingsRepo = makeFakeSettingsRepo()
+        val vm = HistoryViewModel(
+            GetBarcodesWithTagsUseCase(FakeBarcodeRepository()),
+            UpdateBarcodeUseCase(FakeBarcodeRepository()),
+            DeleteBarcodeUseCase(FakeBarcodeRepository()),
+            fakeSettingsRepo,
+            FakeGenerateBarcodeAiDataUseCase(),
+            GetAiLanguageUseCase(fakeSettingsRepo),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
+            ToggleFavoriteUseCase(FakeBarcodeRepository())
+        )
+
+        val barcode = BarcodeModel(id = 7, type = 1, format = 1, barcode = "test", date = Date())
+        val barcodeWithTags = BarcodeWithTagsModel(barcode, emptyList())
+
+        // Before calling, state should be absent (no entry for this barcode)
+        assertEquals(null, vm.tagSuggestionStates.value[7])
+
+        vm.suggestTags(barcodeWithTags, emptyList())
+
+        // After calling but before advancing, entry should be loading
+        runCurrent()
+        assertEquals(true, vm.tagSuggestionStates.value[7]?.isLoading)
+
+        // After completing, loading should be false
+        advanceUntilIdle()
+        assertEquals(false, vm.tagSuggestionStates.value[7]?.isLoading)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun suggestTags_onSuccess_returnsSuggestedTags() = runTest {
+        val fakeSettingsRepo = makeFakeSettingsRepo()
+
+        val successAiUseCase = object : GenerateBarcodeAiDataUseCase() {
+            override suspend fun invoke(
+                barcodeContent: String,
+                barcodeType: String?,
+                barcodeFormat: String?,
+                existingTags: List<String>,
+                language: String,
+                humorous: Boolean
+            ) = Result.success(
+                cat.company.qrreader.domain.model.BarcodeAiData(
+                    tags = listOf(
+                        cat.company.qrreader.domain.model.SuggestedTagModel(name = "Shopping", isSelected = true),
+                        cat.company.qrreader.domain.model.SuggestedTagModel(name = "Online", isSelected = true)
+                    ),
+                    description = "A test description"
+                )
+            )
+            override suspend fun isAiSupportedOnDevice(): Boolean = true
+            override suspend fun downloadModelIfNeeded() {}
+            override fun cleanup() {}
+        }
+
+        val vm = HistoryViewModel(
+            GetBarcodesWithTagsUseCase(FakeBarcodeRepository()),
+            UpdateBarcodeUseCase(FakeBarcodeRepository()),
+            DeleteBarcodeUseCase(FakeBarcodeRepository()),
+            fakeSettingsRepo,
+            successAiUseCase,
+            GetAiLanguageUseCase(fakeSettingsRepo),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
+            ToggleFavoriteUseCase(FakeBarcodeRepository())
+        )
+
+        val barcode = BarcodeModel(id = 9, type = 1, format = 1, barcode = "https://shop.example.com", date = Date())
+        val barcodeWithTags = BarcodeWithTagsModel(barcode, emptyList())
+
+        vm.suggestTags(barcodeWithTags, listOf("Shopping", "Work"))
+        advanceUntilIdle()
+
+        val state = vm.tagSuggestionStates.value[9]
+        assertEquals(false, state?.isLoading)
+        assertEquals(null, state?.error)
+        // Tags should be returned with isSelected = false (unselected by default in history)
+        assertEquals(2, state?.suggestedTags?.size)
+        assertEquals("Shopping", state?.suggestedTags?.get(0)?.name)
+        assertEquals(false, state?.suggestedTags?.get(0)?.isSelected)
+        assertEquals("Online", state?.suggestedTags?.get(1)?.name)
+        assertEquals(false, state?.suggestedTags?.get(1)?.isSelected)
+    }
 }

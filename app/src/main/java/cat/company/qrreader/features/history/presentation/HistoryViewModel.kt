@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.domain.model.BarcodeWithTagsModel
+import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
@@ -176,6 +178,59 @@ class HistoryViewModel(
      */
     fun resetRegenerateDescriptionState() {
         _regenerateDescriptionState.value = RegenerateDescriptionState()
+    }
+
+    /**
+     * State for AI tag suggestions on a specific history barcode.
+     *
+     * @property isLoading Whether the AI generation is in progress
+     * @property suggestedTags List of AI-suggested tags (not yet added to the barcode)
+     * @property error The error message, if generation failed
+     */
+    data class TagSuggestionState(
+        val isLoading: Boolean = false,
+        val suggestedTags: List<SuggestedTagModel> = emptyList(),
+        val error: String? = null
+    )
+
+    private val _tagSuggestionStates = MutableStateFlow<Map<Int, TagSuggestionState>>(emptyMap())
+    val tagSuggestionStates = _tagSuggestionStates.asStateFlow()
+
+    /**
+     * Generate AI tag suggestions for a history barcode and update [tagSuggestionStates].
+     *
+     * @param barcode The barcode to suggest tags for
+     * @param existingTagNames Names of all tags already in the user's library
+     */
+    fun suggestTags(barcode: BarcodeWithTagsModel, existingTagNames: List<String>) {
+        val barcodeId = barcode.barcode.id
+        viewModelScope.launch {
+            _tagSuggestionStates.update { it + (barcodeId to TagSuggestionState(isLoading = true)) }
+            val language = getAiLanguageUseCase().first()
+            val humorous = getAiHumorousDescriptionsUseCase().first()
+            val result = generateBarcodeAiDataUseCase(
+                barcodeContent = barcode.barcode.barcode,
+                barcodeType = getBarcodeTypeName(barcode.barcode.type),
+                barcodeFormat = getBarcodeFormatName(barcode.barcode.format),
+                existingTags = existingTagNames,
+                language = language,
+                humorous = humorous
+            )
+            result.fold(
+                onSuccess = { aiData ->
+                    _tagSuggestionStates.update {
+                        it + (barcodeId to TagSuggestionState(
+                            suggestedTags = aiData.tags.map { tag -> tag.copy(isSelected = false) }
+                        ))
+                    }
+                },
+                onFailure = { e ->
+                    _tagSuggestionStates.update {
+                        it + (barcodeId to TagSuggestionState(error = e.message ?: "Unknown error"))
+                    }
+                }
+            )
+        }
     }
 
     override fun onCleared() {

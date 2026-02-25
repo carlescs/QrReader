@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -33,6 +34,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -58,6 +60,7 @@ import cat.company.qrreader.ui.components.common.DeleteConfirmDialog
 import cat.company.qrreader.ui.components.common.SelectableTag
 import cat.company.qrreader.ui.components.common.Tag
 import cat.company.qrreader.domain.usecase.history.SwitchBarcodeTagUseCase
+import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import cat.company.qrreader.utils.parseContactVCard
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.CoroutineScope
@@ -78,7 +81,8 @@ fun BarcodeCard(
     sdf: SimpleDateFormat,
     historyViewModel: HistoryViewModel,
     tagsViewModel: TagsViewModel = koinViewModel(),
-    switchBarcodeTagUseCase: SwitchBarcodeTagUseCase = koinInject()
+    switchBarcodeTagUseCase: SwitchBarcodeTagUseCase = koinInject(),
+    getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
 ) {
     val editOpen = remember { mutableStateOf(false) }
     val confirmDeleteOpen = remember { mutableStateOf(false) }
@@ -91,6 +95,8 @@ fun BarcodeCard(
     val copiedMsg = stringResource(R.string.copied)
     val aiGenerationEnabled by historyViewModel.aiGenerationEnabled.collectAsState()
     val allTags by tagsViewModel.tags.collectAsState(initial = emptyList())
+    val tagSuggestionStates by historyViewModel.tagSuggestionStates.collectAsState()
+    val tagSuggestionState = tagSuggestionStates[barcode.barcode.id]
     val contactInfo = remember(barcode.barcode.barcode) {
         if (barcode.barcode.type == Barcode.TYPE_CONTACT_INFO) parseContactVCard(barcode.barcode.barcode)
         else null
@@ -161,6 +167,81 @@ fun BarcodeCard(
                                 switchBarcodeTagUseCase.invoke(barcode, tag)
                             }
                         }
+                    )
+                }
+            }
+            if (aiGenerationEnabled) {
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 10.dp)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = {
+                            historyViewModel.suggestTags(barcode, allTags.map { it.name })
+                        },
+                        enabled = tagSuggestionState?.isLoading != true
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.AutoAwesome,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.suggest_tags))
+                    }
+                    if (tagSuggestionState?.isLoading == true) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                    }
+                }
+                if (tagSuggestionState?.error != null) {
+                    Text(
+                        text = tagSuggestionState.error!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
+                    )
+                }
+                val suggestedTags = tagSuggestionState?.suggestedTags
+                if (!suggestedTags.isNullOrEmpty()) {
+                    FlowRow(
+                        modifier = Modifier
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        suggestedTags.forEach { suggested ->
+                            SelectableTag(
+                                name = suggested.name,
+                                isSelected = suggested.isSelected,
+                                onClick = {
+                                    ioCoroutineScope.launch {
+                                        val existingTag = allTags.find {
+                                            it.name.equals(suggested.name, ignoreCase = true)
+                                        }
+                                        if (existingTag != null) {
+                                            switchBarcodeTagUseCase.invoke(barcode, existingTag)
+                                        } else {
+                                            val created = getOrCreateTagsByNameUseCase(
+                                                listOf(suggested.name),
+                                                mapOf(suggested.name to suggested.color)
+                                            )
+                                            created.firstOrNull()?.let {
+                                                switchBarcodeTagUseCase.invoke(barcode, it)
+                                            }
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    Text(
+                        text = stringResource(R.string.tap_to_add_suggested_tags),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
                     )
                 }
             }
