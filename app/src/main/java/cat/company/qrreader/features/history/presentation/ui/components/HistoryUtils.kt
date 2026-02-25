@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.content.FileProvider
+import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.utils.parseContactVCard
 import cat.company.qrreader.utils.parseWifiContent
@@ -69,9 +70,9 @@ fun shareBarcode(context: Context, barcode: BarcodeModel) {
         Barcode.TYPE_WIFI -> {
             val wifiInfo = parseWifiContent(barcode.barcode)
             val shareText = buildString {
-                wifiInfo.ssid?.let { appendLine("SSID: $it") }
-                wifiInfo.password?.let { appendLine("Password: $it") }
-                wifiInfo.securityType?.let { append("Security: $it") }
+                wifiInfo.ssid?.let { appendLine(context.getString(R.string.wifi_ssid, it)) }
+                wifiInfo.password?.let { appendLine(context.getString(R.string.wifi_password, it)) }
+                wifiInfo.securityType?.let { append(context.getString(R.string.wifi_security, it)) }
             }.ifEmpty { barcode.barcode }
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"

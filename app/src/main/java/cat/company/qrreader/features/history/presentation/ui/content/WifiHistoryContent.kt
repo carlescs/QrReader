@@ -1,6 +1,5 @@
 package cat.company.qrreader.features.history.presentation.ui.content
 
-import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
@@ -25,6 +24,7 @@ import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.features.camera.presentation.ui.components.Title
 import cat.company.qrreader.features.history.presentation.ui.components.WifiQrCodeDialog
 import cat.company.qrreader.features.history.presentation.ui.components.getTitle
+import cat.company.qrreader.features.history.presentation.ui.components.shareBarcode
 import cat.company.qrreader.utils.parseWifiContent
 import java.text.SimpleDateFormat
 
@@ -86,24 +86,8 @@ fun WifiHistoryContent(sdf: SimpleDateFormat, barcode: BarcodeModel) {
         Text(text = stringResource(R.string.wifi_show_qr_code))
     }
 
-    if (wifiInfo.ssid != null) {
-        val ssidLabel = stringResource(R.string.wifi_ssid, wifiInfo.ssid)
-        val passwordLabel = wifiInfo.password?.let { stringResource(R.string.wifi_password, it) }
-        val securityLabel = wifiInfo.securityType?.let { stringResource(R.string.wifi_security, it) }
-        TextButton(onClick = {
-            val shareText = buildString {
-                append(ssidLabel)
-                passwordLabel?.let { append("\n$it") }
-                securityLabel?.let { append("\n$it") }
-            }
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, shareText)
-            }
-            context.startActivity(Intent.createChooser(intent, null))
-        }) {
-            Text(text = stringResource(R.string.share))
-        }
+    TextButton(onClick = { shareBarcode(context, barcode) }) {
+        Text(text = stringResource(R.string.share))
     }
 
     if (showQrCodeDialog) {

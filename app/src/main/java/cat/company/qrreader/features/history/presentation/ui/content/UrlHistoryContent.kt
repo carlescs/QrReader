@@ -1,6 +1,5 @@
 package cat.company.qrreader.features.history.presentation.ui.content
 
-import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -22,6 +21,7 @@ import cat.company.qrreader.R
 import cat.company.qrreader.features.camera.presentation.ui.components.Title
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.features.history.presentation.ui.components.getTitle
+import cat.company.qrreader.features.history.presentation.ui.components.shareBarcode
 import java.text.SimpleDateFormat
 
 /**
@@ -45,13 +45,7 @@ fun UrlHistoryContent(sdf:SimpleDateFormat, barcode:BarcodeModel) {
     }, modifier = Modifier.clickable {
         uriHandler.openUri(barcode.barcode)
     })
-    TextButton(onClick = {
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, barcode.barcode)
-        }
-        context.startActivity(Intent.createChooser(intent, null))
-    }) {
+    TextButton(onClick = { shareBarcode(context, barcode) }) {
         Text(text = stringResource(R.string.share))
     }
     if(barcode.description!=null&& barcode.description.trim()!="") {
