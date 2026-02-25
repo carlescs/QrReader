@@ -18,10 +18,10 @@ interface TagDao {
     fun getAll(): Flow<List<Tag>>
 
     @Insert
-    fun insertAll(vararg tags: Tag)
+    suspend fun insertAll(vararg tags: Tag)
 
     @Update
-    fun updateItem(tag:Tag)
+    suspend fun updateItem(tag:Tag)
 
     @Delete
     suspend fun delete(tag:Tag)

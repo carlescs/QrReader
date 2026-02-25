@@ -26,9 +26,13 @@ class TagsViewModel(
         }
     }
     fun insertTags(vararg tags: TagModel) {
-        tagRepository.insertTags(*tags)
+        viewModelScope.launch {
+            tagRepository.insertTags(*tags)
+        }
     }
     fun updateTag(tag: TagModel) {
-        tagRepository.updateTag(tag)
+        viewModelScope.launch {
+            tagRepository.updateTag(tag)
+        }
     }
 }
