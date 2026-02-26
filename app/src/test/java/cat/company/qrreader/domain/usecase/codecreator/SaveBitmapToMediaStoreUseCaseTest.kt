@@ -223,8 +223,8 @@ class SaveBitmapToMediaStoreUseCaseTest {
 
         val outputStream = ByteArrayOutputStream()
         val bitmapWithWhiteBackground = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
+        bitmapWithWhiteBackground.eraseColor(Color.WHITE)
         Canvas(bitmapWithWhiteBackground).apply {
-            drawColor(Color.WHITE)
             drawBitmap(bitmap, 0f, 0f, null)
         }
         val success = bitmapWithWhiteBackground.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
