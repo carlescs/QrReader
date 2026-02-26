@@ -118,6 +118,7 @@ fun BarcodeCard(
     }
     val isWifiWep = wifiInfo?.securityType?.uppercase() == "WEP"
     val showWifiQrCodeDialog = remember { mutableStateOf(false) }
+    val showContactQrCodeDialog = remember { mutableStateOf(false) }
 
     // Load tags
     tagsViewModel.loadTags()
@@ -370,6 +371,14 @@ fun BarcodeCard(
                     )
                 }
             }
+            if (barcode.barcode.type == Barcode.TYPE_CONTACT_INFO) {
+                IconButton(onClick = { showContactQrCodeDialog.value = true }) {
+                    Icon(
+                        imageVector = Icons.Filled.QrCode,
+                        contentDescription = stringResource(R.string.wifi_show_qr_code)
+                    )
+                }
+            }
             if (hasContactFields) {
                 IconButton(onClick = {
                     val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
@@ -427,6 +436,13 @@ fun BarcodeCard(
                 wifiContent = barcode.barcode.barcode,
                 ssid = wifiInfo?.ssid,
                 onDismiss = { showWifiQrCodeDialog.value = false }
+            )
+        }
+        if (showContactQrCodeDialog.value) {
+            ContactQrCodeDialog(
+                contactContent = barcode.barcode.barcode,
+                contactName = contactInfo?.name,
+                onDismiss = { showContactQrCodeDialog.value = false }
             )
         }
     }
