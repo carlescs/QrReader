@@ -1,6 +1,5 @@
 package cat.company.qrreader.features.codeCreator.presentation.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,7 +7,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,6 +60,7 @@ fun WifiAssistantDialog(
     var ssid by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var securityType by remember { mutableStateOf(WifiSecurityType.WPA) }
+    var securityDropdownExpanded by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = RoundedCornerShape(16.dp)) {
@@ -77,22 +80,40 @@ fun WifiAssistantDialog(
                         singleLine = true,
                         label = { Text(stringResource(R.string.wifi_ssid_label)) }
                     )
-                    Text(
-                        text = stringResource(R.string.wifi_security_label),
-                        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
-                    )
-                    Row(
+                    ExposedDropdownMenuBox(
+                        expanded = securityDropdownExpanded,
+                        onExpandedChange = { securityDropdownExpanded = it },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(vertical = 5.dp)
                     ) {
-                        WifiSecurityType.entries.forEach { type ->
-                            FilterChip(
-                                selected = securityType == type,
-                                onClick = { securityType = type },
-                                label = { Text(stringResource(type.labelRes)) }
-                            )
+                        TextField(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                            readOnly = true,
+                            value = stringResource(securityType.labelRes),
+                            onValueChange = {},
+                            label = { Text(stringResource(R.string.wifi_security_label)) },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = securityDropdownExpanded)
+                            },
+                            colors = ExposedDropdownMenuDefaults.textFieldColors()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = securityDropdownExpanded,
+                            onDismissRequest = { securityDropdownExpanded = false }
+                        ) {
+                            WifiSecurityType.entries.forEach { type ->
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(type.labelRes)) },
+                                    onClick = {
+                                        securityType = type
+                                        securityDropdownExpanded = false
+                                    },
+                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                                )
+                            }
                         }
                     }
                     if (securityType != WifiSecurityType.OPEN) {
