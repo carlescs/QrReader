@@ -1,9 +1,5 @@
 package cat.company.qrreader.features.camera.presentation.ui.components
 
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
-import android.net.wifi.WifiNetworkSpecifier
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,7 +7,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -20,15 +15,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
@@ -36,11 +27,11 @@ import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
+import cat.company.qrreader.ui.components.common.WifiConnectButton
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.util.Date
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Display the content of a WiFi barcode with a direct connect action.
@@ -60,12 +51,6 @@ fun WifiBarcodeDisplay(
     descriptionError: String? = null,
     onToggleTag: (String) -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val connectivityManager = remember { context.getSystemService(ConnectivityManager::class.java) }
-    var networkCallback by remember { mutableStateOf<ConnectivityManager.NetworkCallback?>(null) }
-    var networkCallbackWpa3 by remember { mutableStateOf<ConnectivityManager.NetworkCallback?>(null) }
-    val pendingConnectCount = remember { AtomicInteger(0) }
-
     val saveBarcodeWithTagsUseCase: SaveBarcodeWithTagsUseCase = koinInject()
     val getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
     val coroutineScope = rememberCoroutineScope()
@@ -76,17 +61,6 @@ fun WifiBarcodeDisplay(
     val ssid = wifi?.ssid
     val password = wifi?.password
     val encryptionType = wifi?.encryptionType
-
-    DisposableEffect(Unit) {
-        onDispose {
-            networkCallback?.let {
-                try { connectivityManager.unregisterNetworkCallback(it) } catch (_: Exception) {}
-            }
-            networkCallbackWpa3?.let {
-                try { connectivityManager.unregisterNetworkCallback(it) } catch (_: Exception) {}
-            }
-        }
-    }
 
     Title(title = stringResource(R.string.wifi))
 
@@ -141,77 +115,11 @@ fun WifiBarcodeDisplay(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (ssid != null && encryptionType != Barcode.WiFi.TYPE_WEP) {
-            val networkNotFound = stringResource(R.string.wifi_network_not_found)
-            IconButton(onClick = {
-                networkCallback?.let {
-                    try { connectivityManager.unregisterNetworkCallback(it) } catch (_: Exception) {}
-                }
-                networkCallback = null
-                networkCallbackWpa3?.let {
-                    try { connectivityManager.unregisterNetworkCallback(it) } catch (_: Exception) {}
-                }
-                networkCallbackWpa3 = null
-                // Track pending requests to show error only when all fail
-                val hasPassword = !password.isNullOrEmpty()
-                pendingConnectCount.set(if (hasPassword) 2 else 1)
-                try {
-                    val specifierBuilder = WifiNetworkSpecifier.Builder().setSsid(ssid)
-                    if (hasPassword) {
-                        specifierBuilder.setWpa2Passphrase(password!!)
-                    }
-                    val request = NetworkRequest.Builder()
-                        .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                        .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                        .setNetworkSpecifier(specifierBuilder.build())
-                        .build()
-                    val wpa2Callback = object : ConnectivityManager.NetworkCallback() {
-                        override fun onUnavailable() {
-                            if (pendingConnectCount.decrementAndGet() <= 0) {
-                                coroutineScope.launch { snackbarHostState.showSnackbar(networkNotFound) }
-                            }
-                        }
-                    }
-                    connectivityManager.requestNetwork(request, wpa2Callback)
-                    // Store after successful registration so dispose won't try to unregister
-                    // a callback that was never actually registered
-                    networkCallback = wpa2Callback
-                } catch (_: Exception) {
-                    if (pendingConnectCount.decrementAndGet() <= 0) {
-                        coroutineScope.launch { snackbarHostState.showSnackbar(networkNotFound) }
-                    }
-                }
-                if (hasPassword) {
-                    try {
-                        val wpa3Specifier = WifiNetworkSpecifier.Builder()
-                            .setSsid(ssid)
-                            .setWpa3Passphrase(password!!)
-                            .build()
-                        val wpa3Request = NetworkRequest.Builder()
-                            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                            .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                            .setNetworkSpecifier(wpa3Specifier)
-                            .build()
-                        val wpa3Callback = object : ConnectivityManager.NetworkCallback() {
-                            override fun onUnavailable() {
-                                if (pendingConnectCount.decrementAndGet() <= 0) {
-                                    coroutineScope.launch { snackbarHostState.showSnackbar(networkNotFound) }
-                                }
-                            }
-                        }
-                        connectivityManager.requestNetwork(wpa3Request, wpa3Callback)
-                        networkCallbackWpa3 = wpa3Callback
-                    } catch (_: Exception) {
-                        if (pendingConnectCount.decrementAndGet() <= 0) {
-                            coroutineScope.launch { snackbarHostState.showSnackbar(networkNotFound) }
-                        }
-                    }
-                }
-            }) {
-                Icon(
-                    imageVector = Icons.Filled.Wifi,
-                    contentDescription = stringResource(R.string.wifi_connect)
-                )
-            }
+            WifiConnectButton(
+                ssid = ssid,
+                password = password,
+                snackbarHostState = snackbarHostState
+            )
         }
         Spacer(modifier = Modifier.weight(1f))
         IconButton(
