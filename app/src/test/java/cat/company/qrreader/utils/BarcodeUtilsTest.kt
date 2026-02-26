@@ -68,6 +68,37 @@ class BarcodeUtilsFormatWifiTest {
         assertEquals(password, parsed.password)
         assertEquals(securityType, parsed.securityType)
     }
+
+    @Test
+    fun formatWifiQrText_roundTrip_ssidWithSemicolon() {
+        val ssid = "Net;work"
+        val password = "pass"
+        val qrText = formatWifiQrText(ssid, password, "WPA")
+        val parsed = parseWifiContent(qrText)
+        assertEquals(ssid, parsed.ssid)
+        assertEquals(password, parsed.password)
+    }
+
+    @Test
+    fun formatWifiQrText_roundTrip_passwordWithSpecialChars() {
+        val ssid = "MyNet"
+        val password = "p@ss;word\\key:val\"end"
+        val qrText = formatWifiQrText(ssid, password, "WPA")
+        val parsed = parseWifiContent(qrText)
+        assertEquals(ssid, parsed.ssid)
+        assertEquals(password, parsed.password)
+    }
+
+    @Test
+    fun formatWifiQrText_roundTrip_ssidAndPasswordBothEscaped() {
+        val ssid = "Net;name:x"
+        val password = "p\\ss;w"
+        val qrText = formatWifiQrText(ssid, password, "WEP")
+        val parsed = parseWifiContent(qrText)
+        assertEquals(ssid, parsed.ssid)
+        assertEquals(password, parsed.password)
+        assertEquals("WEP", parsed.securityType)
+    }
 }
 
 /**
