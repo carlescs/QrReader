@@ -51,6 +51,7 @@
 
     <!-- Code Creator -->
     <string name="enter_text_to_encode">Enter text to encode</string>
+    <string name="qr_code_assistants">QR Code Assistants</string>
     <string name="wifi_qr_assistant">WiFi QR Code</string>
     <string name="wifi_ssid_label">Network name (SSID)</string>
     <string name="wifi_security_label">Security</string>
@@ -59,6 +60,12 @@
     <string name="wifi_security_open">Open</string>
     <string name="wifi_network_password">Password</string>
     <string name="wifi_generate">Generate</string>
+    <string name="contact_qr_assistant">Contact QR Code</string>
+    <string name="contact_full_name">Full name</string>
+    <string name="contact_phone">Phone number</string>
+    <string name="contact_email">Email address</string>
+    <string name="contact_organization">Organization</string>
+    <string name="contact_generate">Generate</string>
 
     <!-- History screen -->
     <string name="search_placeholder">Search barcodes, titles, descriptions</string>
