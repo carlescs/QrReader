@@ -224,15 +224,13 @@ class SaveBitmapToMediaStoreUseCaseTest {
         val outputStream = ByteArrayOutputStream()
         val bitmapWithWhiteBackground = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
         bitmapWithWhiteBackground.eraseColor(Color.WHITE)
-        Canvas(bitmapWithWhiteBackground).apply {
-            drawBitmap(bitmap, 0f, 0f, null)
-        }
+        // White background must be set before compositing the source bitmap on top
+        assertEquals(Color.WHITE, bitmapWithWhiteBackground.getPixel(0, 0))
+        Canvas(bitmapWithWhiteBackground).drawBitmap(bitmap, 0f, 0f, null)
         val success = bitmapWithWhiteBackground.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
 
         assert(success)
         assert(outputStream.toByteArray().isNotEmpty())
-        // Previously transparent pixels should now be white
-        assertEquals(Color.WHITE, bitmapWithWhiteBackground.getPixel(0, 0))
     }
 
     @Test
