@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -19,7 +20,9 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -50,6 +53,7 @@ fun CodeCreatorScreen(viewModel: CodeCreatorViewModel = koinViewModel()) {
     val context = LocalContext.current
     val focusRequester = remember { FocusRequester() }
     val saveBitmapUseCase: SaveBitmapToMediaStoreUseCase = koinInject()
+    var showWifiDialog by remember { mutableStateOf(false) }
 
     // Update shared events based on text state
     LaunchedEffect(text) {
@@ -85,6 +89,14 @@ fun CodeCreatorScreen(viewModel: CodeCreatorViewModel = koinViewModel()) {
                 .padding(vertical = 8.dp)
                 .focusRequester(focusRequester),
             singleLine = true,
+            leadingIcon = {
+                IconButton(onClick = { showWifiDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Filled.Wifi,
+                        contentDescription = stringResource(R.string.wifi_qr_assistant)
+                    )
+                }
+            },
             trailingIcon = {
                 if (text.isNotEmpty()) {
                     IconButton(onClick = {
@@ -117,6 +129,16 @@ fun CodeCreatorScreen(viewModel: CodeCreatorViewModel = koinViewModel()) {
                 )
             }
         }
+    }
+
+    if (showWifiDialog) {
+        WifiAssistantDialog(
+            onDismiss = { showWifiDialog = false },
+            onGenerate = { wifiText ->
+                viewModel.onTextChanged(wifiText)
+                showWifiDialog = false
+            }
+        )
     }
 }
 

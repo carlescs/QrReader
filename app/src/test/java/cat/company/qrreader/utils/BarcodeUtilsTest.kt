@@ -5,6 +5,72 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
+ * Unit tests for formatWifiQrText utility function
+ */
+class BarcodeUtilsFormatWifiTest {
+
+    @Test
+    fun formatWifiQrText_wpaWithPassword_producesCorrectFormat() {
+        val result = formatWifiQrText("MyNetwork", "secret123", "WPA")
+        assertEquals("WIFI:T:WPA;S:MyNetwork;P:secret123;;", result)
+    }
+
+    @Test
+    fun formatWifiQrText_wepWithPassword_producesCorrectFormat() {
+        val result = formatWifiQrText("OldNet", "wepkey", "WEP")
+        assertEquals("WIFI:T:WEP;S:OldNet;P:wepkey;;", result)
+    }
+
+    @Test
+    fun formatWifiQrText_openNetwork_omitsPassword() {
+        val result = formatWifiQrText("OpenWifi", null, "nopass")
+        assertEquals("WIFI:T:nopass;S:OpenWifi;;", result)
+    }
+
+    @Test
+    fun formatWifiQrText_openNetworkWithPassword_ignoresPassword() {
+        val result = formatWifiQrText("OpenWifi", "ignored", "nopass")
+        assertEquals("WIFI:T:nopass;S:OpenWifi;;", result)
+    }
+
+    @Test
+    fun formatWifiQrText_emptyPassword_omitsPasswordField() {
+        val result = formatWifiQrText("Network", "", "WPA")
+        assertEquals("WIFI:T:WPA;S:Network;;", result)
+    }
+
+    @Test
+    fun formatWifiQrText_ssidWithSpaces_preservesSpaces() {
+        val result = formatWifiQrText("My Home Network", "pass", "WPA")
+        assertEquals("WIFI:T:WPA;S:My Home Network;P:pass;;", result)
+    }
+
+    @Test
+    fun formatWifiQrText_ssidWithSemicolon_escapesCharacter() {
+        val result = formatWifiQrText("Net;work", "pass", "WPA")
+        assertEquals("WIFI:T:WPA;S:Net\\;work;P:pass;;", result)
+    }
+
+    @Test
+    fun formatWifiQrText_passwordWithSpecialChars_escapesCharacters() {
+        val result = formatWifiQrText("Network", "p@ss;word\\key", "WPA")
+        assertEquals("WIFI:T:WPA;S:Network;P:p@ss\\;word\\\\key;;", result)
+    }
+
+    @Test
+    fun formatWifiQrText_outputIsRoundTrippable() {
+        val ssid = "TestNet"
+        val password = "testpass"
+        val securityType = "WPA"
+        val qrText = formatWifiQrText(ssid, password, securityType)
+        val parsed = parseWifiContent(qrText)
+        assertEquals(ssid, parsed.ssid)
+        assertEquals(password, parsed.password)
+        assertEquals(securityType, parsed.securityType)
+    }
+}
+
+/**
  * Unit tests for parseWifiContent utility function
  */
 class BarcodeUtilsTest {

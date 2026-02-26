@@ -124,6 +124,42 @@ private fun parseMecardContact(content: String): ContactInfo {
 
 
 /**
+ * Escapes special characters in a WiFi QR code field value.
+ *
+ * According to the WiFi QR code format specification, the characters
+ * `\`, `;`, `,`, `"`, and `:` must be escaped with a preceding backslash
+ * when they appear in SSID or password values.
+ */
+private fun escapeWifiValue(value: String): String =
+    value.replace("\\", "\\\\")
+        .replace(";", "\\;")
+        .replace(",", "\\,")
+        .replace("\"", "\\\"")
+        .replace(":", "\\:")
+
+/**
+ * Formats WiFi credentials into a QR-code-compatible string.
+ *
+ * Produces a string in the standard `WIFI:T:<type>;S:<ssid>;P:<password>;;` format
+ * used by most QR code scanners and Android's built-in WiFi QR feature.
+ * Special characters in the SSID and password are escaped per the specification.
+ *
+ * @param ssid The network name (SSID).
+ * @param password The network password. Ignored when [securityType] is `"nopass"`.
+ * @param securityType The security protocol: `"WPA"`, `"WEP"`, or `"nopass"` for open networks.
+ * @return The formatted WiFi QR code text.
+ */
+fun formatWifiQrText(ssid: String, password: String?, securityType: String): String {
+    return buildString {
+        append("WIFI:T:$securityType;S:${escapeWifiValue(ssid)};")
+        if (securityType != "nopass" && !password.isNullOrEmpty()) {
+            append("P:${escapeWifiValue(password)};")
+        }
+        append(";")
+    }
+}
+
+/**
  * Parses a raw WiFi QR code string in the format `WIFI:T:<type>;S:<ssid>;P:<password>;;`
  * and returns the extracted [WifiInfo].
  */
