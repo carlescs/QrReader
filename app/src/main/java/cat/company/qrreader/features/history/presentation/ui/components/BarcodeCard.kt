@@ -2,6 +2,10 @@ package cat.company.qrreader.features.history.presentation.ui.components
 
 import android.content.ClipData
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.net.wifi.WifiNetworkSpecifier
 import android.provider.ContactsContract
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,8 +25,10 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -36,6 +42,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +69,7 @@ import cat.company.qrreader.ui.components.common.Tag
 import cat.company.qrreader.domain.usecase.history.SwitchBarcodeTagUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import cat.company.qrreader.utils.parseContactVCard
+import cat.company.qrreader.utils.parseWifiContent
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -108,6 +116,22 @@ fun BarcodeCard(
                 contactInfo.email != null ||
                 contactInfo.organization != null
             )
+    }
+    val wifiInfo = remember(barcode.barcode.barcode) {
+        if (barcode.barcode.type == Barcode.TYPE_WIFI) parseWifiContent(barcode.barcode.barcode)
+        else null
+    }
+    val isWifiWep = wifiInfo?.securityType?.uppercase() == "WEP"
+    val connectivityManager = remember { context.getSystemService(ConnectivityManager::class.java) }
+    val wifiNetworkCallback = remember { mutableStateOf<ConnectivityManager.NetworkCallback?>(null) }
+    val showWifiQrCodeDialog = remember { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            wifiNetworkCallback.value?.let {
+                try { connectivityManager.unregisterNetworkCallback(it) } catch (_: Exception) {}
+            }
+        }
     }
 
     // Load tags
@@ -345,6 +369,38 @@ fun BarcodeCard(
                     contentDescription = stringResource(R.string.share)
                 )
             }
+            if (barcode.barcode.type == Barcode.TYPE_WIFI && wifiInfo?.ssid != null && !isWifiWep) {
+                IconButton(onClick = {
+                    wifiNetworkCallback.value?.let {
+                        try { connectivityManager.unregisterNetworkCallback(it) } catch (_: Exception) {}
+                    }
+                    val specifierBuilder = WifiNetworkSpecifier.Builder().setSsid(wifiInfo.ssid)
+                    if (!wifiInfo.password.isNullOrEmpty()) {
+                        specifierBuilder.setWpa2Passphrase(wifiInfo.password)
+                    }
+                    val request = NetworkRequest.Builder()
+                        .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                        .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                        .setNetworkSpecifier(specifierBuilder.build())
+                        .build()
+                    val callback = object : ConnectivityManager.NetworkCallback() {}
+                    wifiNetworkCallback.value = callback
+                    connectivityManager.requestNetwork(request, callback)
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Wifi,
+                        contentDescription = stringResource(R.string.wifi_connect)
+                    )
+                }
+            }
+            if (barcode.barcode.type == Barcode.TYPE_WIFI) {
+                IconButton(onClick = { showWifiQrCodeDialog.value = true }) {
+                    Icon(
+                        imageVector = Icons.Filled.QrCode,
+                        contentDescription = stringResource(R.string.wifi_show_qr_code)
+                    )
+                }
+            }
             if (hasContactFields) {
                 IconButton(onClick = {
                     val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
@@ -395,6 +451,13 @@ fun BarcodeCard(
                 savedBarcode = barcode.barcode,
                 viewModel = historyViewModel,
                 onDismiss = { aiDescriptionOpen.value = false }
+            )
+        }
+        if (showWifiQrCodeDialog.value) {
+            WifiQrCodeDialog(
+                wifiContent = barcode.barcode.barcode,
+                ssid = wifiInfo?.ssid,
+                onDismiss = { showWifiQrCodeDialog.value = false }
             )
         }
     }
