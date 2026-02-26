@@ -375,6 +375,9 @@ fun BarcodeCard(
                 IconButton(onClick = { showContactQrCodeDialog.value = true }) {
                     Icon(
                         imageVector = Icons.Filled.QrCode,
+                        // Intentionally reusing wifi_show_qr_code here because its current text is generic
+                        // ("Show QR code"). If wifi_show_qr_code is ever changed to be WiFi-specific,
+                        // introduce a new generic string resource (e.g., show_qr_code) and use it here instead.
                         contentDescription = stringResource(R.string.wifi_show_qr_code)
                     )
                 }
