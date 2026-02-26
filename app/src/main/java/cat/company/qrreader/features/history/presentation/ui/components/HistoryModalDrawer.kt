@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.FilterListOff
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -68,7 +68,7 @@ fun HistoryModalDrawerContent(
                         Icon(imageVector = Icons.Filled.Add, contentDescription = stringResource(R.string.add_tag))
                     }
                     IconButton(onClick = { selectTag(null) }) {
-                        Icon(imageVector = Icons.Filled.Clear, contentDescription = stringResource(R.string.clear_filter))
+                        Icon(imageVector = Icons.Filled.FilterListOff, contentDescription = stringResource(R.string.clear_filter))
                     }
                 })
             NavigationDrawerItem(
