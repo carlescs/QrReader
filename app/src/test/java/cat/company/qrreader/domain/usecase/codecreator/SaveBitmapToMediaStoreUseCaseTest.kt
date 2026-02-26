@@ -4,6 +4,8 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import android.net.Uri
 import android.provider.MediaStore
 import org.junit.Assert.assertEquals
@@ -215,15 +217,22 @@ class SaveBitmapToMediaStoreUseCaseTest {
         // Set some pixels to transparent
         for (x in 0 until 50) {
             for (y in 0 until 50) {
-                bitmap.setPixel(x, y, android.graphics.Color.TRANSPARENT)
+                bitmap.setPixel(x, y, Color.TRANSPARENT)
             }
         }
-        
+
         val outputStream = ByteArrayOutputStream()
-        val success = bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-        
+        val bitmapWithWhiteBackground = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
+        Canvas(bitmapWithWhiteBackground).apply {
+            drawColor(Color.WHITE)
+            drawBitmap(bitmap, 0f, 0f, null)
+        }
+        val success = bitmapWithWhiteBackground.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+
         assert(success)
         assert(outputStream.toByteArray().isNotEmpty())
+        // Previously transparent pixels should now be white
+        assertEquals(Color.WHITE, bitmapWithWhiteBackground.getPixel(0, 0))
     }
 
     @Test
