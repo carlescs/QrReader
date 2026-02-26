@@ -98,7 +98,7 @@ fun CodeCreatorScreen(viewModel: CodeCreatorViewModel = koinViewModel()) {
             singleLine = true,
             leadingIcon = {
                 Box {
-                    IconButton(onClick = { showAssistantMenu = true }) {
+                    IconButton(onClick = { showAssistantMenu = !showAssistantMenu }) {
                         Icon(
                             imageVector = Icons.Filled.AutoAwesome,
                             contentDescription = stringResource(R.string.qr_code_assistants)

@@ -290,3 +290,125 @@ class ParseContactVCardTest {
         assertEquals("111", result.phone)
     }
 }
+
+/**
+ * Unit tests for formatContactQrText utility function, escaping and round-tripping.
+ */
+class BarcodeUtilsFormatContactTest {
+
+    @Test
+    fun formatContactQrText_allFields_producesCorrectVCard() {
+        val result = formatContactQrText("John Doe", "+34600000000", "john@example.com", "ACME")
+        assert(result.contains("BEGIN:VCARD"))
+        assert(result.contains("VERSION:3.0"))
+        assert(result.contains("FN:John Doe"))
+        assert(result.contains("N:Doe;John;;;"))
+        assert(result.contains("TEL:+34600000000"))
+        assert(result.contains("EMAIL:john@example.com"))
+        assert(result.contains("ORG:ACME"))
+        assert(result.contains("END:VCARD"))
+    }
+
+    @Test
+    fun formatContactQrText_onlyName_omitsOptionalFields() {
+        val result = formatContactQrText("Alice", null, null, null)
+        assert(result.contains("FN:Alice"))
+        assert(result.contains("N:Alice;;;;"))
+        assert(!result.contains("TEL:"))
+        assert(!result.contains("EMAIL:"))
+        assert(!result.contains("ORG:"))
+    }
+
+    @Test
+    fun formatContactQrText_nameWithSemicolon_escapesSemicolon() {
+        val result = formatContactQrText("O;Brien", null, null, null)
+        assert(result.contains("FN:O\\;Brien"))
+    }
+
+    @Test
+    fun formatContactQrText_nameWithBackslash_escapesBackslash() {
+        val result = formatContactQrText("Back\\slash", null, null, null)
+        assert(result.contains("FN:Back\\\\slash"))
+    }
+
+    @Test
+    fun formatContactQrText_nameWithNewline_escapesNewline() {
+        val result = formatContactQrText("Line\nBreak", null, null, null)
+        assert(result.contains("FN:Line\\nBreak"))
+    }
+
+    @Test
+    fun formatContactQrText_nameWithCrLf_normalizesAndEscapes() {
+        val result = formatContactQrText("Line\r\nBreak", null, null, null)
+        assert(result.contains("FN:Line\\nBreak"))
+    }
+
+    @Test
+    fun formatContactQrText_nameWithCr_normalizesAndEscapes() {
+        val result = formatContactQrText("Line\rBreak", null, null, null)
+        assert(result.contains("FN:Line\\nBreak"))
+    }
+
+    @Test
+    fun formatContactQrText_nFieldSingleWordName_producesCorrectN() {
+        val result = formatContactQrText("Madonna", null, null, null)
+        assert(result.contains("N:Madonna;;;;"))
+    }
+
+    @Test
+    fun formatContactQrText_nFieldMultiWordName_splitsLastNameFirst() {
+        val result = formatContactQrText("John Michael Doe", null, null, null)
+        assert(result.contains("N:Doe;John Michael;;;"))
+    }
+
+    @Test
+    fun formatContactQrText_roundTrip_allFields() {
+        val name = "John Doe"
+        val phone = "+34600000000"
+        val email = "john@example.com"
+        val org = "ACME"
+        val qrText = formatContactQrText(name, phone, email, org)
+        val parsed = parseContactVCard(qrText)
+        assertEquals(name, parsed.name)
+        assertEquals(phone, parsed.phone)
+        assertEquals(email, parsed.email)
+        assertEquals(org, parsed.organization)
+    }
+
+    @Test
+    fun formatContactQrText_roundTrip_nameWithSpecialChars() {
+        val name = "O'Brien; Smith"
+        val qrText = formatContactQrText(name, null, null, null)
+        val parsed = parseContactVCard(qrText)
+        assertEquals(name, parsed.name)
+    }
+
+    @Test
+    fun formatContactQrText_roundTrip_orgWithSpecialChars() {
+        val org = "ACME\\Corp, Inc."
+        val qrText = formatContactQrText("Test", null, null, org)
+        val parsed = parseContactVCard(qrText)
+        assertEquals(org, parsed.organization)
+    }
+
+    @Test
+    fun parseContactVCard_escapedValues_unescapesName() {
+        val content = "BEGIN:VCARD\nVERSION:3.0\nFN:O\\;Brien\nEND:VCARD"
+        val result = parseContactVCard(content)
+        assertEquals("O;Brien", result.name)
+    }
+
+    @Test
+    fun parseContactVCard_escapedValues_unescapesBackslash() {
+        val content = "BEGIN:VCARD\nVERSION:3.0\nFN:Back\\\\slash\nEND:VCARD"
+        val result = parseContactVCard(content)
+        assertEquals("Back\\slash", result.name)
+    }
+
+    @Test
+    fun parseContactVCard_escapedNewlineInOrg_unescapesNewline() {
+        val content = "BEGIN:VCARD\nVERSION:3.0\nFN:Test\nORG:Line\\nTwo\nEND:VCARD"
+        val result = parseContactVCard(content)
+        assertEquals("Line\nTwo", result.organization)
+    }
+}

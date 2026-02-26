@@ -63,19 +63,19 @@ fun parseContactVCard(content: String): ContactInfo {
         val value = line.substringAfter(':').trim()
 
         when (key) {
-            "FN" -> if (value.isNotEmpty()) name = value
+            "FN" -> if (value.isNotEmpty()) name = unescapeVCardValue(value)
             "N" -> if (name == null && value.isNotEmpty()) {
                 val parts = value.split(";")
-                val last = parts.getOrNull(0)?.trim()
-                val first = parts.getOrNull(1)?.trim()
+                val last = parts.getOrNull(0)?.trim()?.let { unescapeVCardValue(it) }
+                val first = parts.getOrNull(1)?.trim()?.let { unescapeVCardValue(it) }
                 name = listOfNotNull(
                     first?.takeIf { it.isNotEmpty() },
                     last?.takeIf { it.isNotEmpty() }
                 ).joinToString(" ").takeIf { it.isNotEmpty() }
             }
-            "TEL" -> if (phone == null && value.isNotEmpty()) phone = value
-            "EMAIL" -> if (email == null && value.isNotEmpty()) email = value
-            "ORG" -> if (value.isNotEmpty()) organization = value
+            "TEL" -> if (phone == null && value.isNotEmpty()) phone = unescapeVCardValue(value)
+            "EMAIL" -> if (email == null && value.isNotEmpty()) email = unescapeVCardValue(value)
+            "ORG" -> if (value.isNotEmpty()) organization = unescapeVCardValue(value)
         }
     }
 
@@ -127,12 +127,36 @@ private fun parseMecardContact(content: String): ContactInfo {
  * Escapes special characters in a vCard property value per RFC 2426.
  *
  * The characters `\`, `;`, `,`, and newlines must be escaped with a preceding backslash.
+ * Any CRLF (`\r\n`) or CR (`\r`) sequences are first normalized to LF (`\n`).
  */
 private fun escapeVCardValue(value: String): String =
-    value.replace("\\", "\\\\")
+    value.replace("\r\n", "\n")
+        .replace("\r", "\n")
+        .replace("\\", "\\\\")
         .replace(";", "\\;")
         .replace(",", "\\,")
         .replace("\n", "\\n")
+
+/**
+ * Unescapes special characters in a vCard property value per RFC 2426.
+ *
+ * Reverses the escaping applied by [escapeVCardValue]: `\\` → `\`, `\;` → `;`,
+ * `\,` → `,`, `\n` / `\N` → newline.
+ */
+private fun unescapeVCardValue(value: String): String = buildString {
+    var i = 0
+    while (i < value.length) {
+        if (value[i] == '\\' && i + 1 < value.length) {
+            when (value[i + 1]) {
+                'n', 'N' -> { append('\n'); i += 2 }
+                else -> { append(value[i + 1]); i += 2 }
+            }
+        } else {
+            append(value[i])
+            i++
+        }
+    }
+}
 
 /**
  * Formats contact information into a vCard 3.0 QR-code-compatible string.
@@ -153,9 +177,13 @@ fun formatContactQrText(
     email: String?,
     organization: String?
 ): String = buildString {
+    val nameParts = name.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }
+    val lastName = escapeVCardValue(nameParts.lastOrNull() ?: "")
+    val firstName = escapeVCardValue(nameParts.dropLast(1).joinToString(" "))
     appendLine("BEGIN:VCARD")
     appendLine("VERSION:3.0")
     appendLine("FN:${escapeVCardValue(name)}")
+    appendLine("N:$lastName;$firstName;;;")
     if (!phone.isNullOrEmpty()) appendLine("TEL:${escapeVCardValue(phone)}")
     if (!email.isNullOrEmpty()) appendLine("EMAIL:${escapeVCardValue(email)}")
     if (!organization.isNullOrEmpty()) appendLine("ORG:${escapeVCardValue(organization)}")
