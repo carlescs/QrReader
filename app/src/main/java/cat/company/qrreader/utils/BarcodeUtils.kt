@@ -124,6 +124,45 @@ private fun parseMecardContact(content: String): ContactInfo {
 
 
 /**
+ * Escapes special characters in a vCard property value per RFC 2426.
+ *
+ * The characters `\`, `;`, `,`, and newlines must be escaped with a preceding backslash.
+ */
+private fun escapeVCardValue(value: String): String =
+    value.replace("\\", "\\\\")
+        .replace(";", "\\;")
+        .replace(",", "\\,")
+        .replace("\n", "\\n")
+
+/**
+ * Formats contact information into a vCard 3.0 QR-code-compatible string.
+ *
+ * Produces a string in the standard `BEGIN:VCARD / END:VCARD` format (version 3.0)
+ * recognised by most QR code scanners and Android's built-in Contacts app.
+ * Special characters in field values are escaped per RFC 2426.
+ *
+ * @param name The full display name (FN field). Must not be empty.
+ * @param phone Optional phone number (TEL field).
+ * @param email Optional email address (EMAIL field).
+ * @param organization Optional organisation / company name (ORG field).
+ * @return The formatted vCard 3.0 text suitable for encoding in a QR code.
+ */
+fun formatContactQrText(
+    name: String,
+    phone: String?,
+    email: String?,
+    organization: String?
+): String = buildString {
+    appendLine("BEGIN:VCARD")
+    appendLine("VERSION:3.0")
+    appendLine("FN:${escapeVCardValue(name)}")
+    if (!phone.isNullOrEmpty()) appendLine("TEL:${escapeVCardValue(phone)}")
+    if (!email.isNullOrEmpty()) appendLine("EMAIL:${escapeVCardValue(email)}")
+    if (!organization.isNullOrEmpty()) appendLine("ORG:${escapeVCardValue(organization)}")
+    append("END:VCARD")
+}
+
+/**
  * Escapes special characters in a WiFi QR code field value.
  *
  * According to the WiFi QR code format specification, the characters

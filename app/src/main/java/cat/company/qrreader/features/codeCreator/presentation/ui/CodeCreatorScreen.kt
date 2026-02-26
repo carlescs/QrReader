@@ -6,12 +6,14 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,6 +56,7 @@ fun CodeCreatorScreen(viewModel: CodeCreatorViewModel = koinViewModel()) {
     val focusRequester = remember { FocusRequester() }
     val saveBitmapUseCase: SaveBitmapToMediaStoreUseCase = koinInject()
     var showWifiDialog by remember { mutableStateOf(false) }
+    var showContactDialog by remember { mutableStateOf(false) }
 
     // Update shared events based on text state
     LaunchedEffect(text) {
@@ -90,11 +93,19 @@ fun CodeCreatorScreen(viewModel: CodeCreatorViewModel = koinViewModel()) {
                 .focusRequester(focusRequester),
             singleLine = true,
             leadingIcon = {
-                IconButton(onClick = { showWifiDialog = true }) {
-                    Icon(
-                        imageVector = Icons.Filled.Wifi,
-                        contentDescription = stringResource(R.string.wifi_qr_assistant)
-                    )
+                Row {
+                    IconButton(onClick = { showWifiDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.Wifi,
+                            contentDescription = stringResource(R.string.wifi_qr_assistant)
+                        )
+                    }
+                    IconButton(onClick = { showContactDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.Contacts,
+                            contentDescription = stringResource(R.string.contact_qr_assistant)
+                        )
+                    }
                 }
             },
             trailingIcon = {
@@ -137,6 +148,16 @@ fun CodeCreatorScreen(viewModel: CodeCreatorViewModel = koinViewModel()) {
             onGenerate = { wifiText ->
                 viewModel.onTextChanged(wifiText)
                 showWifiDialog = false
+            }
+        )
+    }
+
+    if (showContactDialog) {
+        ContactAssistantDialog(
+            onDismiss = { showContactDialog = false },
+            onGenerate = { contactText ->
+                viewModel.onTextChanged(contactText)
+                showContactDialog = false
             }
         )
     }

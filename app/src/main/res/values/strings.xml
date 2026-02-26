@@ -59,6 +59,12 @@
     <string name="wifi_security_open">Open</string>
     <string name="wifi_network_password">Password</string>
     <string name="wifi_generate">Generate</string>
+    <string name="contact_qr_assistant">Contact QR Code</string>
+    <string name="contact_full_name">Full name</string>
+    <string name="contact_phone">Phone number</string>
+    <string name="contact_email">Email address</string>
+    <string name="contact_organization">Organization</string>
+    <string name="contact_generate">Generate</string>
 
     <!-- History screen -->
     <string name="search_placeholder">Search barcodes, titles, descriptions</string>
