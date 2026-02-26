@@ -717,6 +717,38 @@ The app uses Firebase Analytics for event tracking:
    - Example: "This will be removed when minSdk is raised to API XX"
    - Do NOT use `@Suppress("OVERRIDE_DEPRECATION")` without documentation
 
+## Documentation Maintenance
+
+Whenever you make changes to the codebase, you **must** keep the relevant documentation in sync. This applies to all of the following files:
+
+### Files to keep updated
+
+| File | Update when… |
+|------|-------------|
+| `.github/copilot-instructions.md` | Architecture changes, new patterns, new libraries, new common tasks, or any convention that future AI assistants need to know about |
+| `README.md` | New user-facing features, changed device requirements, new third-party libraries, or versioning process changes |
+| `VERSIONING.md` | Changes to the version code formula, offset values, or release process |
+| `scripts/README.md` | New or modified scripts in the `scripts/` directory |
+| `docs/VERSION_CODE_TESTING.md` | Changes to version code calculation logic or testing procedures |
+| `docs/VERSION_CODE_APPROACHES.md` | Changes to the chosen versioning approach or its trade-offs |
+| `.github/CICD.md` | Changes to GitHub Actions workflows, secrets, or CI/CD process |
+| Wiki pages (`Home`, `Getting Started`, `Architecture`, `Features`, `AI Features`, `Database & Data Layer`, `CI/CD & Versioning`, `Scripts`) | Any change that affects the corresponding topic — see the wiki at `https://github.com/carlescs/QrReader/wiki` |
+
+### Rules
+
+1. **Always update docs in the same PR** as the code change — never leave documentation as a follow-up task.
+2. **Update the `Last Updated` date** at the bottom of `copilot-instructions.md` and `scripts/README.md` whenever you edit those files.
+3. **Keep the `## Technology Stack` / `### Major Libraries` section** of `copilot-instructions.md` in sync with `gradle/libs.versions.toml` — version numbers must match.
+4. **Keep the database version number** in the `### Migrations` section of `copilot-instructions.md` in sync with the `version` parameter in `BarcodesDb.kt`.
+5. **Keep the `### Common Tasks for AI Assistants`** steps in sync with the actual project structure — if you add a new layer or rename a directory, update the relevant task checklist.
+6. **Wiki pages** cannot be edited via PRs (they live in a separate git repository). Instead, note in the PR description which wiki page(s) need updating and what the change is, so the maintainer can apply it manually.
+
+### What "keeping docs updated" means
+
+- Add new sections / bullet points when introducing new patterns, libraries, or features.
+- Remove or correct outdated information when refactoring.
+- Do **not** leave contradictions between the code and the documentation (e.g., a library version in `copilot-instructions.md` that differs from `libs.versions.toml`).
+
 ## Questions or Issues?
 
 When uncertain about implementation details:
@@ -728,6 +760,6 @@ When uncertain about implementation details:
 
 ---
 
-**Last Updated**: 2026-02-08  
+**Last Updated**: 2026-02-26  
 **Project Version**: 5.0.0 (versionCode 250)  
 **Maintained by**: QR Reader Development Team
