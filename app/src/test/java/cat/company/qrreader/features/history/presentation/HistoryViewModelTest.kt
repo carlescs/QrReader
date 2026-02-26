@@ -541,14 +541,14 @@ class HistoryViewModelTest {
     }
 
     @Test
-    fun onTagSelected_null_doesNotClearFavoritesFilter() {
+    fun onTagSelected_null_clearsFavoritesFilter() {
         val vm = makeViewModel(FakeBarcodeRepository())
         vm.toggleFavoritesFilter()
         assertEquals(true, vm.showOnlyFavorites.value)
 
         vm.onTagSelected(null)
         assertEquals(null, vm.selectedTagId.value)
-        assertEquals(true, vm.showOnlyFavorites.value)
+        assertEquals(false, vm.showOnlyFavorites.value)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
