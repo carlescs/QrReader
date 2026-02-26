@@ -369,14 +369,16 @@ fun BarcodeCard(
                     contentDescription = stringResource(R.string.share)
                 )
             }
-            if (barcode.barcode.type == Barcode.TYPE_WIFI && wifiInfo?.ssid != null && !isWifiWep) {
+            val wifiSsid = wifiInfo?.ssid
+            if (barcode.barcode.type == Barcode.TYPE_WIFI && wifiSsid != null && !isWifiWep) {
                 IconButton(onClick = {
                     wifiNetworkCallback.value?.let {
                         try { connectivityManager.unregisterNetworkCallback(it) } catch (_: Exception) {}
                     }
-                    val specifierBuilder = WifiNetworkSpecifier.Builder().setSsid(wifiInfo.ssid)
-                    if (!wifiInfo.password.isNullOrEmpty()) {
-                        specifierBuilder.setWpa2Passphrase(wifiInfo.password)
+                    val specifierBuilder = WifiNetworkSpecifier.Builder().setSsid(wifiSsid)
+                    val wifiPassword = wifiInfo?.password
+                    if (!wifiPassword.isNullOrEmpty()) {
+                        specifierBuilder.setWpa2Passphrase(wifiPassword)
                     }
                     val request = NetworkRequest.Builder()
                         .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
