@@ -27,10 +27,8 @@ class SaveBitmapToMediaStoreUseCase {
 
             val outputStream = context.contentResolver.openOutputStream(uri) ?: return null
             val bitmapWithWhiteBackground = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
-            Canvas(bitmapWithWhiteBackground).apply {
-                drawColor(Color.WHITE)
-                drawBitmap(bitmap, 0f, 0f, null)
-            }
+            bitmapWithWhiteBackground.eraseColor(Color.WHITE)
+            Canvas(bitmapWithWhiteBackground).drawBitmap(bitmap, 0f, 0f, null)
             bitmapWithWhiteBackground.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
             bitmapWithWhiteBackground.recycle()
             outputStream.close()
