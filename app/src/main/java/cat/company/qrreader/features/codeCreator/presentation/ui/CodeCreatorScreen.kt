@@ -5,16 +5,19 @@ import android.content.Intent
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -57,6 +60,7 @@ fun CodeCreatorScreen(viewModel: CodeCreatorViewModel = koinViewModel()) {
     val saveBitmapUseCase: SaveBitmapToMediaStoreUseCase = koinInject()
     var showWifiDialog by remember { mutableStateOf(false) }
     var showContactDialog by remember { mutableStateOf(false) }
+    var showAssistantMenu by remember { mutableStateOf(false) }
 
     // Update shared events based on text state
     LaunchedEffect(text) {
@@ -93,17 +97,42 @@ fun CodeCreatorScreen(viewModel: CodeCreatorViewModel = koinViewModel()) {
                 .focusRequester(focusRequester),
             singleLine = true,
             leadingIcon = {
-                Row {
-                    IconButton(onClick = { showWifiDialog = true }) {
+                Box {
+                    IconButton(onClick = { showAssistantMenu = true }) {
                         Icon(
-                            imageVector = Icons.Filled.Wifi,
-                            contentDescription = stringResource(R.string.wifi_qr_assistant)
+                            imageVector = Icons.Filled.AutoAwesome,
+                            contentDescription = stringResource(R.string.qr_code_assistants)
                         )
                     }
-                    IconButton(onClick = { showContactDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Filled.Contacts,
-                            contentDescription = stringResource(R.string.contact_qr_assistant)
+                    DropdownMenu(
+                        expanded = showAssistantMenu,
+                        onDismissRequest = { showAssistantMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.wifi_qr_assistant)) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Filled.Wifi,
+                                    contentDescription = null
+                                )
+                            },
+                            onClick = {
+                                showAssistantMenu = false
+                                showWifiDialog = true
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.contact_qr_assistant)) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Filled.Contacts,
+                                    contentDescription = null
+                                )
+                            },
+                            onClick = {
+                                showAssistantMenu = false
+                                showContactDialog = true
+                            }
                         )
                     }
                 }

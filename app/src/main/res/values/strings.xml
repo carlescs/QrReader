@@ -51,6 +51,7 @@
 
     <!-- Code Creator -->
     <string name="enter_text_to_encode">Enter text to encode</string>
+    <string name="qr_code_assistants">QR Code Assistants</string>
     <string name="wifi_qr_assistant">WiFi QR Code</string>
     <string name="wifi_ssid_label">Network name (SSID)</string>
     <string name="wifi_security_label">Security</string>
