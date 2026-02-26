@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -61,7 +62,7 @@ fun ContactAssistantDialog(
                         value = name,
                         onValueChange = { name = it },
                         singleLine = true,
-                        label = { Text(stringResource(R.string.contact_full_name)) }
+                        label = { Text(stringResource(R.string.contact_full_name), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                     )
                     TextField(
                         modifier = Modifier
@@ -70,7 +71,7 @@ fun ContactAssistantDialog(
                         value = phone,
                         onValueChange = { phone = it },
                         singleLine = true,
-                        label = { Text(stringResource(R.string.contact_phone)) },
+                        label = { Text(stringResource(R.string.contact_phone), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                     )
                     TextField(
@@ -80,7 +81,7 @@ fun ContactAssistantDialog(
                         value = email,
                         onValueChange = { email = it },
                         singleLine = true,
-                        label = { Text(stringResource(R.string.contact_email)) },
+                        label = { Text(stringResource(R.string.contact_email), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                     )
                     TextField(
@@ -90,7 +91,7 @@ fun ContactAssistantDialog(
                         value = organization,
                         onValueChange = { organization = it },
                         singleLine = true,
-                        label = { Text(stringResource(R.string.contact_organization)) }
+                        label = { Text(stringResource(R.string.contact_organization), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                     )
                     Row(modifier = Modifier.align(Alignment.End)) {
                         TextButton(onClick = onDismiss) {
