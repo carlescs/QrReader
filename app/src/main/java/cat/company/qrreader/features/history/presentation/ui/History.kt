@@ -93,7 +93,6 @@ fun History(
                 onNavigateToSettings = onNavigateToSettings
             ) {
                 viewModel.onTagSelected(it?.id)
-                drawerState.value = DrawerValue.Closed
             }
         }
     ) {
