@@ -51,6 +51,14 @@
 
     <!-- Code Creator -->
     <string name="enter_text_to_encode">Enter text to encode</string>
+    <string name="wifi_qr_assistant">WiFi QR Code</string>
+    <string name="wifi_ssid_label">Network name (SSID)</string>
+    <string name="wifi_security_label">Security</string>
+    <string name="wifi_security_wpa">WPA/WPA2</string>
+    <string name="wifi_security_wep">WEP</string>
+    <string name="wifi_security_open">Open</string>
+    <string name="wifi_network_password">Password</string>
+    <string name="wifi_generate">Generate</string>
 
     <!-- History screen -->
     <string name="search_placeholder">Search barcodes, titles, descriptions</string>

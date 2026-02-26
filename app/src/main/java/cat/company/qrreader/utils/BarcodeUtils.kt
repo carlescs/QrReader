@@ -124,12 +124,75 @@ private fun parseMecardContact(content: String): ContactInfo {
 
 
 /**
+ * Escapes special characters in a WiFi QR code field value.
+ *
+ * According to the WiFi QR code format specification, the characters
+ * `\`, `;`, `,`, `"`, and `:` must be escaped with a preceding backslash
+ * when they appear in SSID or password values.
+ */
+private fun escapeWifiValue(value: String): String =
+    value.replace("\\", "\\\\")
+        .replace(";", "\\;")
+        .replace(",", "\\,")
+        .replace("\"", "\\\"")
+        .replace(":", "\\:")
+
+/**
+ * Formats WiFi credentials into a QR-code-compatible string.
+ *
+ * Produces a string in the standard `WIFI:T:<type>;S:<ssid>;P:<password>;;` format
+ * used by most QR code scanners and Android's built-in WiFi QR feature.
+ * Special characters in the SSID and password are escaped per the specification.
+ *
+ * @param ssid The network name (SSID).
+ * @param password The network password. Ignored when [securityType] is `"nopass"`.
+ * @param securityType The security protocol: `"WPA"`, `"WEP"`, or `"nopass"` for open networks.
+ * @return The formatted WiFi QR code text.
+ */
+fun formatWifiQrText(ssid: String, password: String?, securityType: String): String {
+    return buildString {
+        append("WIFI:T:$securityType;S:${escapeWifiValue(ssid)};")
+        if (securityType != "nopass" && !password.isNullOrEmpty()) {
+            append("P:${escapeWifiValue(password)};")
+        }
+        append(";")
+    }
+}
+
+/**
+ * Unescapes special characters in a WiFi QR code field value.
+ *
+ * Reverses the escaping applied by [escapeWifiValue]: a backslash followed by
+ * any character is replaced by that character alone (e.g., `\;` → `;`, `\\` → `\`).
+ */
+private fun unescapeWifiValue(value: String): String = buildString {
+    var i = 0
+    while (i < value.length) {
+        if (value[i] == '\\' && i + 1 < value.length) {
+            append(value[i + 1])
+            i += 2
+        } else {
+            append(value[i])
+            i++
+        }
+    }
+}
+
+/**
  * Parses a raw WiFi QR code string in the format `WIFI:T:<type>;S:<ssid>;P:<password>;;`
  * and returns the extracted [WifiInfo].
+ *
+ * Field values may contain escaped characters (e.g., `\;` for a literal semicolon).
+ * This function correctly handles such values by matching escaped sequences before
+ * treating `;` as a delimiter, then unescaping the extracted values.
  */
 fun parseWifiContent(content: String): WifiInfo {
-    val ssid = Regex("S:([^;]+)").find(content)?.groupValues?.getOrNull(1)
-    val password = Regex("P:([^;]*)").find(content)?.groupValues?.getOrNull(1)?.takeIf { it.isNotEmpty() }
+    // Pattern (?:\\.|[^;])+ matches a sequence of either an escaped character (\X)
+    // or any non-semicolon character, so escaped semicolons are not treated as delimiters.
+    val ssid = Regex("S:((?:\\\\.|[^;])+)").find(content)?.groupValues?.getOrNull(1)
+        ?.let { unescapeWifiValue(it) }
+    val password = Regex("P:((?:\\\\.|[^;])*)").find(content)?.groupValues?.getOrNull(1)
+        ?.takeIf { it.isNotEmpty() }?.let { unescapeWifiValue(it) }
     val securityType = Regex("T:([^;]+)").find(content)?.groupValues?.getOrNull(1)
     return WifiInfo(ssid, password, securityType)
 }
