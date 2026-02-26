@@ -336,4 +336,22 @@ class GenerateQrCodeUseCaseTest {
         // Verify bitmap can be accessed (no exceptions thrown)
         bitmap.getPixel(0, 0)
     }
+
+    @Test
+    fun invoke_withValidText_bitmapHasWhiteMargin() {
+        val text = "Test"
+
+        val bitmap = useCase(text)
+
+        assertNotNull(bitmap)
+        val margin = GenerateQrCodeUseCase.MARGIN_PX
+        // Corner pixels of the margin area should be white
+        assertEquals(android.graphics.Color.WHITE, bitmap!!.getPixel(0, 0))
+        assertEquals(android.graphics.Color.WHITE, bitmap.getPixel(bitmap.width - 1, 0))
+        assertEquals(android.graphics.Color.WHITE, bitmap.getPixel(0, bitmap.height - 1))
+        assertEquals(android.graphics.Color.WHITE, bitmap.getPixel(bitmap.width - 1, bitmap.height - 1))
+        // Bitmap dimensions should include the margin on each side
+        assertTrue(bitmap.width >= margin * 2)
+        assertTrue(bitmap.height >= margin * 2)
+    }
 }
