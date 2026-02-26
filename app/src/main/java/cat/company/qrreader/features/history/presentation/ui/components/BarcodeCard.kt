@@ -124,11 +124,15 @@ fun BarcodeCard(
     val isWifiWep = wifiInfo?.securityType?.uppercase() == "WEP"
     val connectivityManager = remember { context.getSystemService(ConnectivityManager::class.java) }
     val wifiNetworkCallback = remember { mutableStateOf<ConnectivityManager.NetworkCallback?>(null) }
+    val wifiNetworkCallbackWpa3 = remember { mutableStateOf<ConnectivityManager.NetworkCallback?>(null) }
     val showWifiQrCodeDialog = remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
         onDispose {
             wifiNetworkCallback.value?.let {
+                try { connectivityManager.unregisterNetworkCallback(it) } catch (_: Exception) {}
+            }
+            wifiNetworkCallbackWpa3.value?.let {
                 try { connectivityManager.unregisterNetworkCallback(it) } catch (_: Exception) {}
             }
         }
@@ -375,19 +379,42 @@ fun BarcodeCard(
                     wifiNetworkCallback.value?.let {
                         try { connectivityManager.unregisterNetworkCallback(it) } catch (_: Exception) {}
                     }
-                    val specifierBuilder = WifiNetworkSpecifier.Builder().setSsid(wifiSsid)
-                    val wifiPassword = wifiInfo?.password
-                    if (!wifiPassword.isNullOrEmpty()) {
-                        specifierBuilder.setWpa2Passphrase(wifiPassword)
+                    wifiNetworkCallback.value = null
+                    wifiNetworkCallbackWpa3.value?.let {
+                        try { connectivityManager.unregisterNetworkCallback(it) } catch (_: Exception) {}
                     }
-                    val request = NetworkRequest.Builder()
-                        .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                        .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                        .setNetworkSpecifier(specifierBuilder.build())
-                        .build()
-                    val callback = object : ConnectivityManager.NetworkCallback() {}
-                    wifiNetworkCallback.value = callback
-                    connectivityManager.requestNetwork(request, callback)
+                    wifiNetworkCallbackWpa3.value = null
+                    val wifiPassword = wifiInfo?.password
+                    try {
+                        val specifierBuilder = WifiNetworkSpecifier.Builder().setSsid(wifiSsid)
+                        if (!wifiPassword.isNullOrEmpty()) {
+                            specifierBuilder.setWpa2Passphrase(wifiPassword)
+                        }
+                        val request = NetworkRequest.Builder()
+                            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                            .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                            .setNetworkSpecifier(specifierBuilder.build())
+                            .build()
+                        val wpa2Callback = object : ConnectivityManager.NetworkCallback() {}
+                        wifiNetworkCallback.value = wpa2Callback
+                        connectivityManager.requestNetwork(request, wpa2Callback)
+                    } catch (_: Exception) {}
+                    if (!wifiPassword.isNullOrEmpty()) {
+                        try {
+                            val wpa3Specifier = WifiNetworkSpecifier.Builder()
+                                .setSsid(wifiSsid)
+                                .setWpa3Passphrase(wifiPassword)
+                                .build()
+                            val wpa3Request = NetworkRequest.Builder()
+                                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                                .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                                .setNetworkSpecifier(wpa3Specifier)
+                                .build()
+                            val wpa3Callback = object : ConnectivityManager.NetworkCallback() {}
+                            wifiNetworkCallbackWpa3.value = wpa3Callback
+                            connectivityManager.requestNetwork(wpa3Request, wpa3Callback)
+                        } catch (_: Exception) {}
+                    }
                 }) {
                     Icon(
                         imageVector = Icons.Filled.Wifi,
