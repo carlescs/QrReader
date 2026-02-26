@@ -224,6 +224,44 @@ class HistoryTest {
     }
 
     /**
+     * Test that clearing the tag filter (onTagSelected(null)) also clears the favorites filter
+     */
+    @Test
+    fun clearTagFilter_alsoClearsFavoritesFilter() = runTest {
+        val getBarcodesUseCase = GetBarcodesWithTagsUseCase(fakeRepository)
+        val updateBarcodeUseCase = UpdateBarcodeUseCase(fakeRepository)
+        val deleteBarcodeUseCase = DeleteBarcodeUseCase(fakeRepository)
+        val fakeSettingsRepo = object : cat.company.qrreader.domain.repository.SettingsRepository {
+            override val hideTaggedWhenNoTagSelected: Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
+            override val searchAcrossAllTagsWhenFiltering: Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {}
+            override val aiGenerationEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setAiGenerationEnabled(value: Boolean) {}
+            override val aiLanguage: kotlinx.coroutines.flow.Flow<String>
+                get() = kotlinx.coroutines.flow.flowOf("en")
+            override suspend fun setAiLanguage(value: String) {}
+            override val aiHumorousDescriptions: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setAiHumorousDescriptions(value: Boolean) {}
+        }
+        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo, FakeGenerateBarcodeAiDataUseCase(), GetAiLanguageUseCase(fakeSettingsRepo), GetAiHumorousDescriptionsUseCase(fakeSettingsRepo), ToggleFavoriteUseCase(fakeRepository))
+
+        // Enable favorites filter
+        viewModel.toggleFavoritesFilter()
+        assertTrue(viewModel.showOnlyFavorites.value)
+
+        // Clear the tag filter (simulates pressing the unselect-tags button)
+        viewModel.onTagSelected(null)
+
+        // Favorites filter should also be cleared
+        assertFalse(viewModel.showOnlyFavorites.value)
+    }
+
+    /**
      * Test SnackbarHostState initialization
      */
     @Test

@@ -101,9 +101,7 @@ class HistoryViewModel(
 
     fun onTagSelected(tagId: Int?) {
         _selectedTagId.value = tagId
-        if (tagId != null) {
-            _showOnlyFavorites.value = false
-        }
+        _showOnlyFavorites.value = false
     }
 
     fun onQueryChange(query: String) {
