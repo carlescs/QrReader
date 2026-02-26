@@ -127,6 +127,7 @@ fun BottomSheetContent(
                                     Barcode.TYPE_WIFI -> {
                                         WifiBarcodeDisplay(
                                             barcode = barcode,
+                                            snackbarHostState = snackbarHostState,
                                             selectedTagNames = selectedTagNames,
                                             aiGeneratedDescription = aiDescription,
                                             aiGenerationEnabled = state.aiGenerationEnabled,
