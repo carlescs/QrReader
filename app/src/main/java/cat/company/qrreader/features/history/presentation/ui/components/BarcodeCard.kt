@@ -141,6 +141,15 @@ fun BarcodeCard(
                     else
                         OtherHistoryContent(sdf = sdf, barcode = barcode.barcode)
                 }
+                IconButton(onClick = { historyViewModel.toggleFavorite(barcode.barcode.id, !barcode.barcode.isFavorite) }) {
+                    Icon(
+                        imageVector = if (barcode.barcode.isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                        contentDescription = stringResource(
+                            if (barcode.barcode.isFavorite) R.string.remove_from_favorites else R.string.add_to_favorites
+                        ),
+                        tint = if (barcode.barcode.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
@@ -387,16 +396,6 @@ fun BarcodeCard(
                         contentDescription = stringResource(R.string.add_to_contacts)
                     )
                 }
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = { historyViewModel.toggleFavorite(barcode.barcode.id, !barcode.barcode.isFavorite) }) {
-                Icon(
-                    imageVector = if (barcode.barcode.isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                    contentDescription = stringResource(
-                        if (barcode.barcode.isFavorite) R.string.remove_from_favorites else R.string.add_to_favorites
-                    ),
-                    tint = if (barcode.barcode.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
         if (editOpen.value) {
