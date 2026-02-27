@@ -39,6 +39,8 @@ fun BottomSheetContent(
     val lastBarcode = state.lastBarcode
     val sharedWifiInfo = state.sharedWifiInfo
     val sharedWifiRawText = state.sharedWifiRawText
+    val sharedContactInfo = state.sharedContactInfo
+    val sharedContactRawText = state.sharedContactRawText
 
     Column(
         modifier = Modifier
@@ -48,7 +50,45 @@ fun BottomSheetContent(
         val clipboard: Clipboard = LocalClipboard.current
         val coroutineScope = rememberCoroutineScope()
 
-        if (sharedWifiInfo != null && sharedWifiRawText != null) {
+        if (sharedContactInfo != null && sharedContactRawText != null) {
+            val contactHash = sharedContactRawText.hashCode()
+            val suggestedTags = state.barcodeTags[contactHash] ?: emptyList()
+            val isLoading = state.isLoadingTags.contains(contactHash)
+            val error = state.tagSuggestionErrors[contactHash]
+            val selectedTagNames = suggestedTags.filter { it.isSelected }.map { it.name }
+            val aiDescription = state.barcodeDescriptions[contactHash]
+            val isLoadingDescription = state.isLoadingDescriptions.contains(contactHash)
+            val descriptionError = state.descriptionErrors[contactHash]
+
+            LazyColumn(modifier = Modifier.fillMaxHeight().padding(horizontal = 16.dp)) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(15.dp)) {
+                            ContactBarcodeDisplayContent(
+                                contactInfo = sharedContactInfo,
+                                rawContent = sharedContactRawText,
+                                selectedTagNames = selectedTagNames,
+                                aiGeneratedDescription = aiDescription,
+                                aiGenerationEnabled = state.aiGenerationEnabled,
+                                suggestedTags = suggestedTags,
+                                isLoadingTags = isLoading,
+                                tagError = error,
+                                description = aiDescription,
+                                isLoadingDescription = isLoadingDescription,
+                                descriptionError = descriptionError,
+                                onToggleTag = { tagName -> onToggleTag(contactHash, tagName) }
+                            )
+                        }
+                    }
+                }
+            }
+        } else if (sharedWifiInfo != null && sharedWifiRawText != null) {
             val wifiHash = sharedWifiRawText.hashCode()
             val suggestedTags = state.barcodeTags[wifiHash] ?: emptyList()
             val isLoading = state.isLoadingTags.contains(wifiHash)
