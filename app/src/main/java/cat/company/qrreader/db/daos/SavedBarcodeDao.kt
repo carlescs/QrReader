@@ -8,6 +8,14 @@ import cat.company.qrreader.db.entities.compound.SavedBarcodeWithTags
 import kotlinx.coroutines.flow.Flow
 
 /**
+ * Query projection holding barcode count for a single tag.
+ *
+ * @property tagId The tag identifier
+ * @property count Number of barcodes associated with this tag
+ */
+data class TagBarcodeCount(val tagId: Int, val count: Int)
+
+/**
  * Dao for the saved barcodes
  */
 @Dao
@@ -83,6 +91,12 @@ abstract class SavedBarcodeDao {
 
     @Delete
     abstract suspend fun delete(barcode:SavedBarcode)
+
+    @Query("SELECT tagId, COUNT(*) as count FROM barcode_tag_cross_ref GROUP BY tagId")
+    abstract fun getTagBarcodeCounts(): Flow<List<TagBarcodeCount>>
+
+    @Query("SELECT COUNT(*) FROM saved_barcodes WHERE is_favorite = 1")
+    abstract fun getFavoritesCount(): Flow<Int>
 
     @Transaction
     open suspend fun switchTag(barcode: SavedBarcodeWithTags, tag: Tag){

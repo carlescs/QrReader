@@ -70,4 +70,14 @@ interface BarcodeRepository {
      * Toggle a tag on a barcode (add if not present, remove if present)
      */
     suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel)
+
+    /**
+     * Get barcode counts grouped by tag ID
+     */
+    fun getTagBarcodeCounts(): Flow<Map<Int, Int>>
+
+    /**
+     * Get the count of favorite barcodes
+     */
+    fun getFavoritesCount(): Flow<Int>
 }

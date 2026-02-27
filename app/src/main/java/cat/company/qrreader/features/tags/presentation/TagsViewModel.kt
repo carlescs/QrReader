@@ -1,7 +1,8 @@
-﻿package cat.company.qrreader.features.tags.presentation
+package cat.company.qrreader.features.tags.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.model.TagModel
+import cat.company.qrreader.domain.repository.BarcodeRepository
 import cat.company.qrreader.domain.usecase.tags.DeleteTagUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import cat.company.qrreader.domain.repository.TagRepository
@@ -13,10 +14,13 @@ import org.koin.java.KoinJavaComponent.inject
  */
 class TagsViewModel(
     private val getAllTagsUseCase: GetAllTagsUseCase,
-    private val deleteTagUseCase: DeleteTagUseCase
+    private val deleteTagUseCase: DeleteTagUseCase,
+    private val barcodeRepository: BarcodeRepository
 ) : ViewModel() {
     private val tagRepository: TagRepository by inject(TagRepository::class.java)
     lateinit var tags: Flow<List<TagModel>>
+    val tagBarcodeCounts: Flow<Map<Int, Int>> = barcodeRepository.getTagBarcodeCounts()
+    val favoritesCount: Flow<Int> = barcodeRepository.getFavoritesCount()
     fun loadTags() {
         tags = getAllTagsUseCase()
     }

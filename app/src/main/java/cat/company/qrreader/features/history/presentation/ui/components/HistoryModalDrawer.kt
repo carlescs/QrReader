@@ -14,11 +14,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -26,8 +29,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.TagModel
+import cat.company.qrreader.features.tags.presentation.TagsViewModel
 import cat.company.qrreader.features.tags.presentation.ui.components.AddTagDialog
 import cat.company.qrreader.features.tags.presentation.ui.components.TagsFilterList
+import org.koin.androidx.compose.koinViewModel
 
 /**
  * Content of the history modal drawer.
@@ -51,8 +56,10 @@ fun HistoryModalDrawerContent(
     showOnlyFavorites: Boolean,
     onToggleFavorites: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    selectTag: (TagModel?) -> Unit
+    selectTag: (TagModel?) -> Unit,
+    tagsViewModel: TagsViewModel = koinViewModel()
 ) {
+    val favoritesCount by tagsViewModel.favoritesCount.collectAsState(initial = 0)
     ModalDrawerSheet {
         Column(
             modifier = Modifier
@@ -80,7 +87,10 @@ fun HistoryModalDrawerContent(
                 },
                 label = { Text(stringResource(R.string.favorites)) },
                 selected = showOnlyFavorites,
-                onClick = onToggleFavorites
+                onClick = onToggleFavorites,
+                badge = if (favoritesCount > 0) {
+                    { Text(favoritesCount.toString(), style = MaterialTheme.typography.labelSmall) }
+                } else null
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             Box(modifier = Modifier.weight(1f)) {

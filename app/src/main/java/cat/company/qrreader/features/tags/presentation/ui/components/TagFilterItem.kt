@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -42,7 +43,8 @@ fun TagFilterItem(
     isSelected: Boolean,
     onSelectTag: (TagModel?) -> Unit,
     ioCoroutine: CoroutineScope,
-    viewModel: TagsViewModel
+    viewModel: TagsViewModel,
+    barcodeCount: Int = 0
 ) {
     val tagColor = Utils.parseColor(tag.color) ?: MaterialTheme.colorScheme.primary
     val deleteDialogOpen = remember { mutableStateOf(false) }
@@ -62,7 +64,13 @@ fun TagFilterItem(
             if (isSelected) onSelectTag(null) else onSelectTag(tag)
         },
         badge = {
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (barcodeCount > 0) {
+                    Text(
+                        text = barcodeCount.toString(),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
                 IconButton(
                     onClick = { editTag.value = tag },
                     modifier = Modifier.size(32.dp)

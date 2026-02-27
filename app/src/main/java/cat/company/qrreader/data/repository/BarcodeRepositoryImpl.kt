@@ -83,5 +83,15 @@ class BarcodeRepositoryImpl(database: BarcodesDb) : BarcodeRepository {
     override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {
         barcodeDao.setFavorite(barcodeId, isFavorite)
     }
+
+    override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> {
+        return barcodeDao.getTagBarcodeCounts().map { list ->
+            list.associate { it.tagId to it.count }
+        }
+    }
+
+    override fun getFavoritesCount(): Flow<Int> {
+        return barcodeDao.getFavoritesCount()
+    }
 }
 

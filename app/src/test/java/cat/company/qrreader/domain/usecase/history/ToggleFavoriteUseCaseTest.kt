@@ -32,6 +32,8 @@ class ToggleFavoriteUseCaseTest {
                 lastId = barcodeId
                 lastIsFavorite = isFavorite
             }
+            override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
+            override fun getFavoritesCount(): Flow<Int> = flowOf(0)
         }
 
         val barcode = BarcodeModel(id = 7, date = Date(), type = 1, format = 1, barcode = "TEST")
@@ -59,6 +61,8 @@ class ToggleFavoriteUseCaseTest {
             override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {
                 lastIsFavorite = isFavorite
             }
+            override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
+            override fun getFavoritesCount(): Flow<Int> = flowOf(0)
         }
 
         val uc = ToggleFavoriteUseCase(repo)

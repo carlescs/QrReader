@@ -29,6 +29,8 @@ class SwitchBarcodeTagUseCaseTest {
             override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
             override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) { switchedPair = Pair(barcode, tag) }
             override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
+            override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
+            override fun getFavoritesCount(): Flow<Int> = flowOf(0)
         }
 
         val barcode = BarcodeWithTagsModel(BarcodeModel(id = 1, date = Date(), type = 1, format = 1, barcode = "val"), emptyList())

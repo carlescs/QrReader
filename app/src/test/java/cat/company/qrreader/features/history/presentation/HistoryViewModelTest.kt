@@ -82,6 +82,9 @@ class HistoryViewModelTest {
 
         override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
 
+        override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
+        override fun getFavoritesCount(): Flow<Int> = flowOf(0)
+
         fun emitResult(list: List<BarcodeWithTagsModel>) {
             resultFlow.value = list
         }
@@ -402,6 +405,8 @@ class HistoryViewModelTest {
             override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
             override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
             override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
+            override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
+            override fun getFavoritesCount(): Flow<Int> = flowOf(0)
         }
         val fakeSettingsRepo = makeFakeSettingsRepo()
         val vm = HistoryViewModel(
@@ -470,6 +475,8 @@ class HistoryViewModelTest {
             override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
             override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
             override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
+            override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
+            override fun getFavoritesCount(): Flow<Int> = flowOf(0)
         }
         val fakeSettingsRepo = makeFakeSettingsRepo()
         val vm = HistoryViewModel(
@@ -577,6 +584,8 @@ class HistoryViewModelTest {
                 lastBarcodeId = barcodeId
                 lastIsFavorite = isFavorite
             }
+            override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
+            override fun getFavoritesCount(): Flow<Int> = flowOf(0)
         }
         val fakeSettingsRepo = makeFakeSettingsRepo()
         val vm = HistoryViewModel(

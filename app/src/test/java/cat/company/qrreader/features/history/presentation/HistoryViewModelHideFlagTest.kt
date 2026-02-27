@@ -58,9 +58,10 @@ class HistoryViewModelHideFlagTest {
         override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
 
         override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
-    }
 
-    private class FakeGenerateBarcodeAiDataUseCase : GenerateBarcodeAiDataUseCase() {
+        override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
+        override fun getFavoritesCount(): Flow<Int> = flowOf(0)
+    } : GenerateBarcodeAiDataUseCase() {
         override suspend fun invoke(
             barcodeContent: String,
             barcodeType: String?,

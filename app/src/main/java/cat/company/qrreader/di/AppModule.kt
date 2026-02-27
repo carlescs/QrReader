@@ -99,7 +99,7 @@ val useCaseModule = module {
 
 val viewModelModule = module {
     viewModel { HistoryViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
-    viewModel { TagsViewModel(get(), get()) }
+    viewModel { TagsViewModel(get(), get(), get()) }
     viewModel { QrCameraViewModel(get<GenerateBarcodeAiDataUseCase>(), get<GetAllTagsUseCase>(), get<GetAiGenerationEnabledUseCase>(), get<GetAiLanguageUseCase>(), get<GetAiHumorousDescriptionsUseCase>()) }
     viewModel { CodeCreatorViewModel(get<GenerateQrCodeUseCase>()) }
     viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<GenerateBarcodeAiDataUseCase>()) }
