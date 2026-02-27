@@ -73,7 +73,7 @@ fun BottomSheetContent(
                         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
                     ) {
                         Column(modifier = Modifier.padding(15.dp)) {
-                            WifiBarcodeDisplay(
+                            WifiBarcodeDisplayContent(
                                 ssid = sharedWifiInfo.ssid,
                                 password = sharedWifiInfo.password,
                                 encryptionType = encryptionType,
@@ -173,29 +173,22 @@ fun BottomSheetContent(
                                         )
                                     }
                                     Barcode.TYPE_WIFI -> {
-                                        val rawContent = barcode.rawValue ?: barcode.displayValue
-                                        if (rawContent != null) {
-                                            WifiBarcodeDisplay(
-                                                ssid = barcode.wifi?.ssid,
-                                                password = barcode.wifi?.password,
-                                                encryptionType = barcode.wifi?.encryptionType,
-                                                rawContent = rawContent,
-                                                barcodeFormat = barcode.format,
-                                                snackbarHostState = snackbarHostState,
-                                                selectedTagNames = selectedTagNames,
-                                                aiGeneratedDescription = aiDescription,
-                                                aiGenerationEnabled = state.aiGenerationEnabled,
-                                                suggestedTags = suggestedTags,
-                                                isLoadingTags = isLoading,
-                                                tagError = error,
-                                                description = aiDescription,
-                                                isLoadingDescription = isLoadingDescription,
-                                                descriptionError = descriptionError,
-                                                onToggleTag = { tagName ->
-                                                    onToggleTag(barcodeHash, tagName)
-                                                }
-                                            )
-                                        }
+                                        WifiBarcodeDisplay(
+                                            barcode = barcode,
+                                            snackbarHostState = snackbarHostState,
+                                            selectedTagNames = selectedTagNames,
+                                            aiGeneratedDescription = aiDescription,
+                                            aiGenerationEnabled = state.aiGenerationEnabled,
+                                            suggestedTags = suggestedTags,
+                                            isLoadingTags = isLoading,
+                                            tagError = error,
+                                            description = aiDescription,
+                                            isLoadingDescription = isLoadingDescription,
+                                            descriptionError = descriptionError,
+                                            onToggleTag = { tagName ->
+                                                onToggleTag(barcodeHash, tagName)
+                                            }
+                                        )
                                     }
                                     else -> {
                                         OtherContent(

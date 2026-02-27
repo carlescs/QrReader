@@ -36,6 +36,47 @@ import java.util.Date
 /**
  * Display the content of a WiFi barcode with a direct connect action.
  *
+ * @param barcode The scanned [Barcode] of type [Barcode.TYPE_WIFI].
+ */
+@Composable
+fun WifiBarcodeDisplay(
+    barcode: Barcode,
+    snackbarHostState: SnackbarHostState,
+    selectedTagNames: List<String> = emptyList(),
+    aiGeneratedDescription: String? = null,
+    aiGenerationEnabled: Boolean = true,
+    suggestedTags: List<SuggestedTagModel> = emptyList(),
+    isLoadingTags: Boolean = false,
+    tagError: String? = null,
+    description: String? = null,
+    isLoadingDescription: Boolean = false,
+    descriptionError: String? = null,
+    onToggleTag: (String) -> Unit = {}
+) {
+    val rawContent = barcode.rawValue ?: barcode.displayValue ?: return
+    WifiBarcodeDisplayContent(
+        ssid = barcode.wifi?.ssid,
+        password = barcode.wifi?.password,
+        encryptionType = barcode.wifi?.encryptionType,
+        rawContent = rawContent,
+        barcodeFormat = barcode.format,
+        snackbarHostState = snackbarHostState,
+        selectedTagNames = selectedTagNames,
+        aiGeneratedDescription = aiGeneratedDescription,
+        aiGenerationEnabled = aiGenerationEnabled,
+        suggestedTags = suggestedTags,
+        isLoadingTags = isLoadingTags,
+        tagError = tagError,
+        description = description,
+        isLoadingDescription = isLoadingDescription,
+        descriptionError = descriptionError,
+        onToggleTag = onToggleTag
+    )
+}
+
+/**
+ * Internal implementation used by both the scanned-barcode and shared-WiFi-text paths.
+ *
  * @param ssid The network SSID, or null if unknown.
  * @param password The network password, or null for open networks.
  * @param encryptionType The encryption type using [Barcode.WiFi] constants, or null if unknown.
@@ -43,7 +84,7 @@ import java.util.Date
  * @param barcodeFormat The barcode format constant (defaults to [Barcode.FORMAT_QR_CODE]).
  */
 @Composable
-fun WifiBarcodeDisplay(
+internal fun WifiBarcodeDisplayContent(
     ssid: String?,
     password: String?,
     encryptionType: Int?,
