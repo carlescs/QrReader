@@ -10,6 +10,7 @@ import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCas
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
+import cat.company.qrreader.utils.ContactInfo
 import cat.company.qrreader.utils.WifiInfo
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.Dispatchers
@@ -733,5 +734,109 @@ class QrCameraViewModelTest {
 
         assertEquals(null, state.sharedWifiInfo)
         assertEquals(null, state.sharedWifiRawText)
+    }
+
+    // ==================== Tests for setSharedContactText ====================
+
+    @Test
+    fun setSharedContactText_parsesVCardAndStoresInState() {
+        val vCard = "BEGIN:VCARD\nVERSION:3.0\nFN:Jane Smith\nTEL:+1234567890\nEMAIL:jane@example.com\nEND:VCARD"
+
+        viewModel.setSharedContactText(vCard)
+
+        val state = viewModel.uiState.value
+        assertEquals(ContactInfo("Jane Smith", "+1234567890", "jane@example.com", null), state.sharedContactInfo)
+        assertEquals(vCard, state.sharedContactRawText)
+        assertEquals(null, state.lastBarcode)
+    }
+
+    @Test
+    fun setSharedContactText_clearsWifiAndBarcodeState() {
+        viewModel.setSharedWifiText("WIFI:T:WPA;S:Net;P:pass;;")
+        assertNotNull(viewModel.uiState.value.sharedWifiInfo)
+
+        viewModel.setSharedContactText("BEGIN:VCARD\nFN:Alice\nEND:VCARD")
+
+        assertEquals(null, viewModel.uiState.value.sharedWifiInfo)
+        assertEquals(null, viewModel.uiState.value.sharedWifiRawText)
+        assertEquals(null, viewModel.uiState.value.lastBarcode)
+    }
+
+    @Test
+    fun setSharedWifiText_clearsContactState() {
+        viewModel.setSharedContactText("BEGIN:VCARD\nFN:Alice\nEND:VCARD")
+        assertNotNull(viewModel.uiState.value.sharedContactInfo)
+
+        viewModel.setSharedWifiText("WIFI:T:WPA;S:Net;P:pass;;")
+
+        assertEquals(null, viewModel.uiState.value.sharedContactInfo)
+        assertEquals(null, viewModel.uiState.value.sharedContactRawText)
+    }
+
+    @Test
+    fun saveBarcodes_afterSetSharedContactText_clearsContactState() {
+        viewModel.setSharedContactText("BEGIN:VCARD\nFN:Alice\nEND:VCARD")
+        assertNotNull(viewModel.uiState.value.sharedContactInfo)
+
+        viewModel.saveBarcodes(emptyList())
+
+        assertEquals(null, viewModel.uiState.value.sharedContactInfo)
+        assertEquals(null, viewModel.uiState.value.sharedContactRawText)
+    }
+
+    @Test
+    fun setSharedContactText_withMecard_parsesAndStoresInState() {
+        val mecard = "MECARD:N:Bob Jones;TEL:555-1234;EMAIL:bob@test.com;;"
+
+        viewModel.setSharedContactText(mecard)
+
+        val state = viewModel.uiState.value
+        assertEquals("Bob Jones", state.sharedContactInfo?.name)
+        assertEquals("555-1234", state.sharedContactInfo?.phone)
+        assertEquals(mecard, state.sharedContactRawText)
+    }
+
+    @Test
+    fun setSharedContactText_triggersAiTagAndDescriptionGeneration() = runTest {
+        val vCard = "BEGIN:VCARD\nVERSION:3.0\nFN:Eve\nEND:VCARD"
+        val contactHash = vCard.hashCode()
+
+        fakeGenerateBarcodeAiDataUseCase.suggestionsToReturn = listOf(SuggestedTagModel("Contact", true))
+        fakeGenerateBarcodeAiDataUseCase.descriptionToReturn = "A contact card"
+
+        viewModel.setSharedContactText(vCard)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(1, state.barcodeTags[contactHash]?.size)
+        assertEquals("Contact", state.barcodeTags[contactHash]?.first()?.name)
+        assertEquals("A contact card", state.barcodeDescriptions[contactHash])
+        assertFalse(state.isLoadingTags.contains(contactHash))
+        assertFalse(state.isLoadingDescriptions.contains(contactHash))
+    }
+
+    @Test
+    fun setSharedContactText_onAiFailure_storesError() = runTest {
+        val vCard = "BEGIN:VCARD\nFN:Foo\nEND:VCARD"
+        val contactHash = vCard.hashCode()
+
+        fakeGenerateBarcodeAiDataUseCase.shouldSucceed = false
+
+        viewModel.setSharedContactText(vCard)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state.tagSuggestionErrors[contactHash])
+        assertNotNull(state.descriptionErrors[contactHash])
+        assertFalse(state.isLoadingTags.contains(contactHash))
+        assertFalse(state.isLoadingDescriptions.contains(contactHash))
+    }
+
+    @Test
+    fun barcodeState_sharedContactFields_defaultToNull() {
+        val state = viewModel.uiState.value
+
+        assertEquals(null, state.sharedContactInfo)
+        assertEquals(null, state.sharedContactRawText)
     }
 }

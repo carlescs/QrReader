@@ -33,6 +33,7 @@ import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.domain.model.SuggestedTagModel
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
+import cat.company.qrreader.utils.ContactInfo
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -56,6 +57,61 @@ fun ContactBarcodeDisplay(
     descriptionError: String? = null,
     onToggleTag: (String) -> Unit = {}
 ) {
+    val name = barcode.contactInfo?.name
+    val formattedName = name?.formattedName?.takeIf { it.isNotEmpty() }
+        ?: listOfNotNull(name?.first, name?.middle, name?.last)
+            .filter { it.isNotEmpty() }
+            .joinToString(" ")
+    val phone = barcode.contactInfo?.phones?.firstOrNull()?.number
+    val email = barcode.contactInfo?.emails?.firstOrNull()?.address
+    val organization = barcode.contactInfo?.organization?.takeIf { it.isNotEmpty() }
+    val rawContent = barcode.rawValue ?: barcode.displayValue ?: return
+
+    ContactBarcodeDisplayContent(
+        contactInfo = ContactInfo(
+            name = formattedName.takeIf { it.isNotEmpty() },
+            phone = phone,
+            email = email,
+            organization = organization
+        ),
+        rawContent = rawContent,
+        barcodeFormat = barcode.format,
+        selectedTagNames = selectedTagNames,
+        aiGeneratedDescription = aiGeneratedDescription,
+        aiGenerationEnabled = aiGenerationEnabled,
+        suggestedTags = suggestedTags,
+        isLoadingTags = isLoadingTags,
+        tagError = tagError,
+        description = description,
+        isLoadingDescription = isLoadingDescription,
+        descriptionError = descriptionError,
+        onToggleTag = onToggleTag
+    )
+}
+
+/**
+ * Internal implementation used by both the scanned-barcode and shared-contact paths.
+ *
+ * @param contactInfo Parsed contact fields to display.
+ * @param rawContent The raw vCard/MECARD string to persist when the user saves the barcode.
+ * @param barcodeFormat The barcode format constant (defaults to [Barcode.FORMAT_QR_CODE]).
+ */
+@Composable
+internal fun ContactBarcodeDisplayContent(
+    contactInfo: ContactInfo,
+    rawContent: String,
+    barcodeFormat: Int = Barcode.FORMAT_QR_CODE,
+    selectedTagNames: List<String> = emptyList(),
+    aiGeneratedDescription: String? = null,
+    aiGenerationEnabled: Boolean = true,
+    suggestedTags: List<SuggestedTagModel> = emptyList(),
+    isLoadingTags: Boolean = false,
+    tagError: String? = null,
+    description: String? = null,
+    isLoadingDescription: Boolean = false,
+    descriptionError: String? = null,
+    onToggleTag: (String) -> Unit = {}
+) {
     val context = LocalContext.current
     val saveBarcodeWithTagsUseCase: SaveBarcodeWithTagsUseCase = koinInject()
     val getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
@@ -65,24 +121,18 @@ fun ContactBarcodeDisplay(
 
     Title(title = stringResource(R.string.contact))
 
-    val name = barcode.contactInfo?.name
-    val formattedName = name?.formattedName?.takeIf { it.isNotEmpty() }
-        ?: listOfNotNull(name?.first, name?.middle, name?.last)
-            .filter { it.isNotEmpty() }
-            .joinToString(" ")
-
-    if (formattedName.isNotEmpty()) {
+    if (!contactInfo.name.isNullOrEmpty()) {
         Text(text = buildAnnotatedString {
-            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(formattedName) }
+            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(contactInfo.name) }
         })
     }
 
-    barcode.contactInfo?.phones?.firstOrNull()?.number?.let { phone ->
+    contactInfo.phone?.let { phone ->
         Text(text = phone)
     }
 
     val emailLabel = stringResource(R.string.email_label)
-    barcode.contactInfo?.emails?.firstOrNull()?.address?.let { email ->
+    contactInfo.email?.let { email ->
         Text(text = buildAnnotatedString {
             withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(emailLabel) }
             append(email)
@@ -127,16 +177,16 @@ fun ContactBarcodeDisplay(
         IconButton(onClick = {
             val intent = Intent(ContactsContract.Intents.Insert.ACTION).apply {
                 type = ContactsContract.RawContacts.CONTENT_TYPE
-                if (formattedName.isNotEmpty()) {
-                    putExtra(ContactsContract.Intents.Insert.NAME, formattedName)
+                if (!contactInfo.name.isNullOrEmpty()) {
+                    putExtra(ContactsContract.Intents.Insert.NAME, contactInfo.name)
                 }
-                barcode.contactInfo?.phones?.firstOrNull()?.number?.let {
+                contactInfo.phone?.let {
                     putExtra(ContactsContract.Intents.Insert.PHONE, it)
                 }
-                barcode.contactInfo?.emails?.firstOrNull()?.address?.let {
+                contactInfo.email?.let {
                     putExtra(ContactsContract.Intents.Insert.EMAIL, it)
                 }
-                barcode.contactInfo?.organization?.takeIf { it.isNotEmpty() }?.let {
+                contactInfo.organization?.let {
                     putExtra(ContactsContract.Intents.Insert.COMPANY, it)
                 }
             }
@@ -152,12 +202,11 @@ fun ContactBarcodeDisplay(
             onClick = {
                 coroutineScope.launch {
                     try {
-                        val barcodeContent = barcode.rawValue ?: barcode.displayValue ?: return@launch
                         val barcodeModel = BarcodeModel(
                             date = Date(),
-                            type = barcode.valueType,
-                            barcode = barcodeContent,
-                            format = barcode.format
+                            type = Barcode.TYPE_CONTACT_INFO,
+                            barcode = rawContent,
+                            format = barcodeFormat
                         )
                         val tags = if (selectedTagNames.isNotEmpty()) {
                             val tagColors = suggestedTags.associate { it.name to it.color }

@@ -65,6 +65,8 @@ fun QrCameraScreen(
     onSharedImageConsumed: () -> Unit = {},
     sharedText: String? = null,
     onSharedTextConsumed: () -> Unit = {},
+    sharedContactText: String? = null,
+    onSharedContactTextConsumed: () -> Unit = {},
     viewModel: QrCameraViewModel = koinViewModel()
 ) {
     var openBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -123,6 +125,16 @@ fun QrCameraScreen(
             openBottomSheet = true
             bottomSheetState.show()
             onSharedTextConsumed()
+        }
+    }
+
+    // Show shared contact (vCard) as if it was scanned from a barcode
+    LaunchedEffect(sharedContactText) {
+        if (sharedContactText != null) {
+            viewModel.setSharedContactText(sharedContactText)
+            openBottomSheet = true
+            bottomSheetState.show()
+            onSharedContactTextConsumed()
         }
     }
 
