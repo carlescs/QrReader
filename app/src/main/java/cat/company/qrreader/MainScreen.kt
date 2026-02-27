@@ -106,10 +106,10 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
             }
         }
 
-        // Navigate to code creator screen when shared text is received
+        // Navigate to camera screen when shared text is received
         LaunchedEffect(sharedText) {
             if (sharedText != null) {
-                navController.navigate("codeCreator") {
+                navController.navigate("camera") {
                     launchSingleTop = true
                 }
             }
@@ -161,7 +161,7 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
                         route = "camera",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://camera" })
                     ) {
-                        QrCameraScreen(snackBarHostState, sharedImageUri = sharedImageUri, onSharedImageConsumed = onSharedImageConsumed)
+                        QrCameraScreen(snackBarHostState, sharedImageUri = sharedImageUri, onSharedImageConsumed = onSharedImageConsumed, sharedText = sharedText, onSharedTextConsumed = onSharedTextConsumed)
                     }
                     composable("history") {
                         History(
@@ -177,7 +177,7 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
                         route="codeCreator",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://codeCreator" })
                     ) {
-                        CodeCreatorScreen(sharedText = sharedText, onSharedTextConsumed = onSharedTextConsumed)
+                        CodeCreatorScreen()
                     }
                     composable("settings") {
                         SettingsScreen(

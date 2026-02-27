@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
 import cat.company.qrreader.core.camera.CameraPreview
 import cat.company.qrreader.domain.usecase.camera.ScanImageUseCase
+import cat.company.qrreader.domain.usecase.codecreator.GenerateQrCodeUseCase
 import cat.company.qrreader.features.camera.presentation.QrCameraViewModel
 import cat.company.qrreader.features.camera.presentation.ui.components.BottomSheetContent
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -48,7 +49,14 @@ import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import org.koin.compose.koinInject
 import org.koin.androidx.compose.koinViewModel
 
@@ -63,6 +71,8 @@ fun QrCameraScreen(
     snackbarHostState: SnackbarHostState,
     sharedImageUri: Uri? = null,
     onSharedImageConsumed: () -> Unit = {},
+    sharedText: String? = null,
+    onSharedTextConsumed: () -> Unit = {},
     viewModel: QrCameraViewModel = koinViewModel()
 ) {
     var openBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -75,6 +85,7 @@ fun QrCameraScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val scanImageUseCase: ScanImageUseCase = koinInject()
+    val generateQrCodeUseCase: GenerateQrCodeUseCase = koinInject()
     val noBarcodes = stringResource(R.string.no_barcodes_found)
     val imageProcessingFailed = stringResource(R.string.image_processing_failed)
 
@@ -111,6 +122,45 @@ fun QrCameraScreen(
         if (sharedImageUri != null) {
             scanUriAndShowResult(sharedImageUri)
             onSharedImageConsumed()
+        }
+    }
+
+    // Show shared text (e.g. WiFi QR string) as if it was scanned from a barcode
+    LaunchedEffect(sharedText) {
+        if (sharedText != null) {
+            try {
+                val bitmap = generateQrCodeUseCase(sharedText)
+                if (bitmap != null) {
+                    val inputImage = InputImage.fromBitmap(bitmap, 0)
+                    val barcodeScanner = BarcodeScanning.getClient(
+                        BarcodeScannerOptions.Builder()
+                            .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS)
+                            .build()
+                    )
+                    val barcodes = try {
+                        suspendCoroutine { continuation ->
+                            barcodeScanner.process(inputImage)
+                                .addOnSuccessListener { result ->
+                                    continuation.resume(result)
+                                }
+                                .addOnFailureListener { exception ->
+                                    continuation.resumeWithException(exception)
+                                }
+                        }
+                    } finally {
+                        barcodeScanner.close()
+                    }
+                    if (barcodes.isNotEmpty()) {
+                        viewModel.saveBarcodes(barcodes)
+                        openBottomSheet = true
+                        bottomSheetState.show()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("QrCameraScreen", "Failed to process shared text", e)
+                snackbarHostState.showSnackbar(imageProcessingFailed)
+            }
+            onSharedTextConsumed()
         }
     }
 
