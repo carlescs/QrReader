@@ -88,6 +88,8 @@
     <string name="description_label">Description</string>
     <string name="ai_description">AI Description</string>
     <string name="regenerate_ai_description">Regenerate AI description</string>
+    <string name="generate_ai_description">Generate AI description</string>
+    <string name="no_ai_description_yet">No AI description yet. Tap the generate button to create one.</string>
     <string name="delete_ai_description">Delete AI description</string>
 
     <!-- Delete confirm dialog -->

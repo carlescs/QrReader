@@ -80,10 +80,18 @@ fun AiDescriptionDialog(
         title = { Text(text = stringResource(R.string.ai_description)) },
         text = {
             Column {
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                if (hasContent) {
+                    Text(
+                        text = description,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                } else if (!regenerateState.isLoading) {
+                    Text(
+                        text = stringResource(R.string.no_ai_description_yet),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 if (regenerateState.error != null) {
                     Text(
                         text = regenerateState.error!!,
@@ -112,7 +120,10 @@ fun AiDescriptionDialog(
                     IconButton(onClick = { viewModel.regenerateAiDescription(currentBarcode) }) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = stringResource(R.string.regenerate_ai_description)
+                            contentDescription = stringResource(
+                                if (hasContent) R.string.regenerate_ai_description
+                                else R.string.generate_ai_description
+                            )
                         )
                     }
                     if (hasContent) {
