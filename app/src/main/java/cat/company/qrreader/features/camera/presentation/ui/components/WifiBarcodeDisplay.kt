@@ -35,10 +35,20 @@ import java.util.Date
 
 /**
  * Display the content of a WiFi barcode with a direct connect action.
+ *
+ * @param ssid The network SSID, or null if unknown.
+ * @param password The network password, or null for open networks.
+ * @param encryptionType The encryption type using [Barcode.WiFi] constants, or null if unknown.
+ * @param rawContent The raw WIFI: string to persist when the user saves the barcode.
+ * @param barcodeFormat The barcode format constant (defaults to [Barcode.FORMAT_QR_CODE]).
  */
 @Composable
 fun WifiBarcodeDisplay(
-    barcode: Barcode,
+    ssid: String?,
+    password: String?,
+    encryptionType: Int?,
+    rawContent: String,
+    barcodeFormat: Int = Barcode.FORMAT_QR_CODE,
     snackbarHostState: SnackbarHostState,
     selectedTagNames: List<String> = emptyList(),
     aiGeneratedDescription: String? = null,
@@ -56,11 +66,6 @@ fun WifiBarcodeDisplay(
     val coroutineScope = rememberCoroutineScope()
     val saved = remember { mutableStateOf(false) }
     val saveDescription = remember(description) { mutableStateOf(true) }
-
-    val wifi = barcode.wifi
-    val ssid = wifi?.ssid
-    val password = wifi?.password
-    val encryptionType = wifi?.encryptionType
 
     Title(title = stringResource(R.string.wifi))
 
@@ -126,12 +131,11 @@ fun WifiBarcodeDisplay(
             onClick = {
                 coroutineScope.launch {
                     try {
-                        val barcodeContent = barcode.rawValue ?: barcode.displayValue ?: return@launch
                         val barcodeModel = BarcodeModel(
                             date = Date(),
-                            type = barcode.valueType,
-                            barcode = barcodeContent,
-                            format = barcode.format
+                            type = Barcode.TYPE_WIFI,
+                            barcode = rawContent,
+                            format = barcodeFormat
                         )
                         val tags = if (selectedTagNames.isNotEmpty()) {
                             val tagColors = suggestedTags.associate { it.name to it.color }

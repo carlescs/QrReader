@@ -9,8 +9,10 @@ import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCas
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
+import cat.company.qrreader.utils.WifiInfo
 import cat.company.qrreader.utils.getBarcodeFormatName
 import cat.company.qrreader.utils.getBarcodeTypeName
+import cat.company.qrreader.utils.parseWifiContent
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,7 +81,7 @@ class QrCameraViewModel(
     val uiState: StateFlow<BarcodeState> = _uiState.asStateFlow()
 
     fun saveBarcodes(barcodes: List<Barcode>?) {
-        _uiState.update { it.copy(lastBarcode = barcodes) }
+        _uiState.update { it.copy(lastBarcode = barcodes, sharedWifiInfo = null, sharedWifiRawText = null) }
         
         // Generate tag suggestions and descriptions for ALL barcodes
         if (!barcodes.isNullOrEmpty()) {
@@ -165,7 +167,80 @@ class QrCameraViewModel(
             }
         }
     }
-    
+
+    /**
+     * Parses a shared WiFi QR string (e.g. `WIFI:T:WPA;S:ssid;P:pass;;`) and stores the
+     * parsed [WifiInfo] in state so it can be displayed in the bottom sheet without needing
+     * to generate and scan a QR code bitmap.
+     */
+    fun setSharedWifiText(text: String) {
+        val wifiInfo = parseWifiContent(text)
+        val wifiHash = text.hashCode()
+        _uiState.update { it.copy(lastBarcode = null, sharedWifiInfo = wifiInfo, sharedWifiRawText = text) }
+
+        viewModelScope.launch {
+            _aiSupportCheckComplete.await()
+            if (!_uiState.value.aiGenerationEnabled) return@launch
+
+            _uiState.update { state ->
+                state.copy(
+                    isLoadingTags = state.isLoadingTags + wifiHash,
+                    isLoadingDescriptions = state.isLoadingDescriptions + wifiHash
+                )
+            }
+
+            try {
+                val content = wifiInfo.ssid ?: getBarcodeTypeName(Barcode.TYPE_WIFI)
+                val existingTags = getAllTagsUseCase().first()
+                val language = getAiLanguageUseCase().first()
+                val humorous = getAiHumorousDescriptionsUseCase().first()
+
+                val result = generateBarcodeAiDataUseCase(
+                    barcodeContent = content,
+                    barcodeType = getBarcodeTypeName(Barcode.TYPE_WIFI),
+                    barcodeFormat = getBarcodeFormatName(Barcode.FORMAT_QR_CODE),
+                    existingTags = existingTags.map { it.name },
+                    language = language,
+                    humorous = humorous
+                )
+
+                result.onSuccess { aiData ->
+                    _uiState.update { state ->
+                        state.copy(
+                            barcodeTags = state.barcodeTags + (wifiHash to aiData.tags),
+                            isLoadingTags = state.isLoadingTags - wifiHash,
+                            tagSuggestionErrors = state.tagSuggestionErrors - wifiHash,
+                            barcodeDescriptions = state.barcodeDescriptions + (wifiHash to aiData.description),
+                            isLoadingDescriptions = state.isLoadingDescriptions - wifiHash,
+                            descriptionErrors = state.descriptionErrors - wifiHash
+                        )
+                    }
+                }.onFailure { error ->
+                    _uiState.update { state ->
+                        state.copy(
+                            barcodeTags = state.barcodeTags + (wifiHash to emptyList()),
+                            isLoadingTags = state.isLoadingTags - wifiHash,
+                            tagSuggestionErrors = state.tagSuggestionErrors + (wifiHash to (error.message ?: "Unknown error")),
+                            isLoadingDescriptions = state.isLoadingDescriptions - wifiHash,
+                            descriptionErrors = state.descriptionErrors + (wifiHash to (error.message ?: "Unknown error"))
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception generating AI data for shared WiFi", e)
+                _uiState.update { state ->
+                    state.copy(
+                        barcodeTags = state.barcodeTags + (wifiHash to emptyList()),
+                        isLoadingTags = state.isLoadingTags - wifiHash,
+                        tagSuggestionErrors = state.tagSuggestionErrors + (wifiHash to (e.message ?: "Unknown error")),
+                        isLoadingDescriptions = state.isLoadingDescriptions - wifiHash,
+                        descriptionErrors = state.descriptionErrors + (wifiHash to (e.message ?: "Unknown error"))
+                    )
+                }
+            }
+        }
+    }
+
     /**
      * Toggle tag selection for a specific barcode
      */
@@ -245,6 +320,8 @@ class QrCameraViewModel(
  * State for the barcode
  * 
  * @property lastBarcode List of scanned barcodes
+ * @property sharedWifiInfo Parsed WiFi credentials from a directly-shared WiFi QR string, or null.
+ * @property sharedWifiRawText The raw `WIFI:` string that was shared, used as the save content.
  * @property aiGenerationEnabled Whether AI features are enabled in settings
  * @property barcodeTags Map of barcode hash to its suggested tags
  * @property isLoadingTags Set of barcode hashes that are currently loading tags
@@ -255,6 +332,8 @@ class QrCameraViewModel(
  */
 data class BarcodeState(
     var lastBarcode: List<Barcode>? = null,
+    val sharedWifiInfo: WifiInfo? = null,
+    val sharedWifiRawText: String? = null,
     val aiGenerationEnabled: Boolean = true,
     val barcodeTags: Map<Int, List<SuggestedTagModel>> = emptyMap(),
     val isLoadingTags: Set<Int> = emptySet(),
