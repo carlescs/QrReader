@@ -63,6 +63,8 @@ fun QrCameraScreen(
     snackbarHostState: SnackbarHostState,
     sharedImageUri: Uri? = null,
     onSharedImageConsumed: () -> Unit = {},
+    sharedText: String? = null,
+    onSharedTextConsumed: () -> Unit = {},
     viewModel: QrCameraViewModel = koinViewModel()
 ) {
     var openBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -111,6 +113,16 @@ fun QrCameraScreen(
         if (sharedImageUri != null) {
             scanUriAndShowResult(sharedImageUri)
             onSharedImageConsumed()
+        }
+    }
+
+    // Show shared text (e.g. WiFi QR string) as if it was scanned from a barcode
+    LaunchedEffect(sharedText) {
+        if (sharedText != null) {
+            viewModel.setSharedWifiText(sharedText)
+            openBottomSheet = true
+            bottomSheetState.show()
+            onSharedTextConsumed()
         }
     }
 

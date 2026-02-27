@@ -64,7 +64,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 @ExperimentalGetImage
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null, onSharedImageConsumed: () -> Unit = {}) {
+fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null, onSharedImageConsumed: () -> Unit = {}, sharedText: String? = null, onSharedTextConsumed: () -> Unit = {}) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -100,6 +100,15 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
         // Navigate to camera screen when a shared image is received
         LaunchedEffect(sharedImageUri) {
             if (sharedImageUri != null) {
+                navController.navigate("camera") {
+                    launchSingleTop = true
+                }
+            }
+        }
+
+        // Navigate to camera screen when shared text is received
+        LaunchedEffect(sharedText) {
+            if (sharedText != null) {
                 navController.navigate("camera") {
                     launchSingleTop = true
                 }
@@ -152,7 +161,7 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
                         route = "camera",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://camera" })
                     ) {
-                        QrCameraScreen(snackBarHostState, sharedImageUri = sharedImageUri, onSharedImageConsumed = onSharedImageConsumed)
+                        QrCameraScreen(snackBarHostState, sharedImageUri = sharedImageUri, onSharedImageConsumed = onSharedImageConsumed, sharedText = sharedText, onSharedTextConsumed = onSharedTextConsumed)
                     }
                     composable("history") {
                         History(

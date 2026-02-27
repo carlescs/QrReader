@@ -37,6 +37,8 @@ fun BottomSheetContent(
     onToggleTag: (barcodeHash: Int, tagName: String) -> Unit
 ) {
     val lastBarcode = state.lastBarcode
+    val sharedWifiInfo = state.sharedWifiInfo
+    val sharedWifiRawText = state.sharedWifiRawText
 
     Column(
         modifier = Modifier
@@ -45,8 +47,54 @@ fun BottomSheetContent(
     ) {
         val clipboard: Clipboard = LocalClipboard.current
         val coroutineScope = rememberCoroutineScope()
-        
-        if (lastBarcode != null) {
+
+        if (sharedWifiInfo != null && sharedWifiRawText != null) {
+            val wifiHash = sharedWifiRawText.hashCode()
+            val suggestedTags = state.barcodeTags[wifiHash] ?: emptyList()
+            val isLoading = state.isLoadingTags.contains(wifiHash)
+            val error = state.tagSuggestionErrors[wifiHash]
+            val selectedTagNames = suggestedTags.filter { it.isSelected }.map { it.name }
+            val aiDescription = state.barcodeDescriptions[wifiHash]
+            val isLoadingDescription = state.isLoadingDescriptions.contains(wifiHash)
+            val descriptionError = state.descriptionErrors[wifiHash]
+            val encryptionType = when (sharedWifiInfo.securityType?.uppercase()) {
+                "WPA", "WPA2", "SAE" -> Barcode.WiFi.TYPE_WPA
+                "WEP" -> Barcode.WiFi.TYPE_WEP
+                else -> Barcode.WiFi.TYPE_OPEN
+            }
+
+            LazyColumn(modifier = Modifier.fillMaxHeight().padding(horizontal = 16.dp)) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(15.dp)) {
+                            WifiBarcodeDisplayContent(
+                                ssid = sharedWifiInfo.ssid,
+                                password = sharedWifiInfo.password,
+                                encryptionType = encryptionType,
+                                rawContent = sharedWifiRawText,
+                                snackbarHostState = snackbarHostState,
+                                selectedTagNames = selectedTagNames,
+                                aiGeneratedDescription = aiDescription,
+                                aiGenerationEnabled = state.aiGenerationEnabled,
+                                suggestedTags = suggestedTags,
+                                isLoadingTags = isLoading,
+                                tagError = error,
+                                description = aiDescription,
+                                isLoadingDescription = isLoadingDescription,
+                                descriptionError = descriptionError,
+                                onToggleTag = { tagName -> onToggleTag(wifiHash, tagName) }
+                            )
+                        }
+                    }
+                }
+            }
+        } else if (lastBarcode != null) {
             LazyColumn(modifier = Modifier.fillMaxHeight().padding(horizontal = 16.dp)) {
                 items(
                     items = lastBarcode,

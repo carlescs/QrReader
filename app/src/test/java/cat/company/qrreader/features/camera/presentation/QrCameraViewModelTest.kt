@@ -10,6 +10,7 @@ import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCas
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
+import cat.company.qrreader.utils.WifiInfo
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -641,5 +642,96 @@ class QrCameraViewModelTest {
         val state2 = BarcodeState(barcodeDescriptions = mapOf(1 to "desc"))
 
         assertEquals(state1.hashCode(), state2.hashCode())
+    }
+
+    // ==================== Tests for setSharedWifiText ====================
+
+    @Test
+    fun setSharedWifiText_parsesWifiContentAndStoresInState() {
+        val wifiText = "WIFI:T:WPA;S:MyNetwork;P:mypassword;;"
+
+        viewModel.setSharedWifiText(wifiText)
+
+        val state = viewModel.uiState.value
+        assertEquals(WifiInfo("MyNetwork", "mypassword", "WPA"), state.sharedWifiInfo)
+        assertEquals(wifiText, state.sharedWifiRawText)
+        assertEquals(null, state.lastBarcode)
+    }
+
+    @Test
+    fun setSharedWifiText_clearsLastBarcodeFromState() {
+        viewModel.saveBarcodes(emptyList())
+        assertNotNull(viewModel.uiState.value.lastBarcode)
+
+        viewModel.setSharedWifiText("WIFI:T:WPA;S:Test;P:pass;;")
+
+        assertEquals(null, viewModel.uiState.value.lastBarcode)
+    }
+
+    @Test
+    fun setSharedWifiText_withNullFields_storesNullWifiInfo() {
+        // An incomplete WIFI string with no recognised fields
+        viewModel.setSharedWifiText("WIFI:;;")
+
+        val state = viewModel.uiState.value
+        assertEquals(WifiInfo(null, null, null), state.sharedWifiInfo)
+        assertEquals("WIFI:;;", state.sharedWifiRawText)
+    }
+
+    @Test
+    fun setSharedWifiText_triggersAiTagAndDescriptionGeneration() = runTest {
+        val wifiText = "WIFI:T:WPA;S:HomeNet;P:secret;;"
+        val wifiHash = wifiText.hashCode()
+
+        fakeGenerateBarcodeAiDataUseCase.suggestionsToReturn = listOf(SuggestedTagModel("WiFi", true))
+        fakeGenerateBarcodeAiDataUseCase.descriptionToReturn = "Home WiFi network"
+
+        viewModel.setSharedWifiText(wifiText)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(1, state.barcodeTags[wifiHash]?.size)
+        assertEquals("WiFi", state.barcodeTags[wifiHash]?.first()?.name)
+        assertEquals("Home WiFi network", state.barcodeDescriptions[wifiHash])
+        assertFalse(state.isLoadingTags.contains(wifiHash))
+        assertFalse(state.isLoadingDescriptions.contains(wifiHash))
+    }
+
+    @Test
+    fun setSharedWifiText_onAiFailure_storesError() = runTest {
+        val wifiText = "WIFI:T:WPA;S:HomeNet;P:secret;;"
+        val wifiHash = wifiText.hashCode()
+
+        fakeGenerateBarcodeAiDataUseCase.shouldSucceed = false
+
+        viewModel.setSharedWifiText(wifiText)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state.tagSuggestionErrors[wifiHash])
+        assertNotNull(state.descriptionErrors[wifiHash])
+        assertFalse(state.isLoadingTags.contains(wifiHash))
+        assertFalse(state.isLoadingDescriptions.contains(wifiHash))
+    }
+
+    @Test
+    fun saveBarcodes_afterSetSharedWifiText_clearsSharedWifiState() {
+        viewModel.setSharedWifiText("WIFI:T:WPA;S:MyNet;P:pass;;")
+
+        assertNotNull(viewModel.uiState.value.sharedWifiInfo)
+        assertNotNull(viewModel.uiState.value.sharedWifiRawText)
+
+        viewModel.saveBarcodes(emptyList())
+
+        assertEquals(null, viewModel.uiState.value.sharedWifiInfo)
+        assertEquals(null, viewModel.uiState.value.sharedWifiRawText)
+    }
+
+    @Test
+    fun barcodeState_sharedWifiFields_defaultToNull() {
+        val state = viewModel.uiState.value
+
+        assertEquals(null, state.sharedWifiInfo)
+        assertEquals(null, state.sharedWifiRawText)
     }
 }

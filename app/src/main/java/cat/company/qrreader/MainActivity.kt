@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
     private val db: BarcodesDb by inject()
 
     private val _sharedImageUri = MutableStateFlow<Uri?>(null)
+    private val _sharedText = MutableStateFlow<String?>(null)
 
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -34,14 +35,20 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         firebaseAnalytics = FirebaseAnalytics.getInstance(this)
         _sharedImageUri.value = extractSharedImageUri(intent)
+        _sharedText.value = extractSharedText(intent)
 
         enableEdgeToEdge()
         setContent {
             QrReaderTheme {
                 val sharedImageUri by _sharedImageUri.collectAsState()
-                MainScreen(firebaseAnalytics, sharedImageUri) {
-                    _sharedImageUri.value = null
-                }
+                val sharedText by _sharedText.collectAsState()
+                MainScreen(
+                    firebaseAnalytics,
+                    sharedImageUri,
+                    onSharedImageConsumed = { _sharedImageUri.value = null },
+                    sharedText = sharedText,
+                    onSharedTextConsumed = { _sharedText.value = null }
+                )
             }
         }
     }
@@ -50,6 +57,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         _sharedImageUri.value = extractSharedImageUri(intent)
+        _sharedText.value = extractSharedText(intent)
     }
 
     private fun extractSharedImageUri(intent: Intent): Uri? {
@@ -61,5 +69,13 @@ class MainActivity : ComponentActivity() {
             @Suppress("DEPRECATION")
             intent.getParcelableExtra(Intent.EXTRA_STREAM)
         }
+    }
+
+    private fun extractSharedText(intent: Intent): String? {
+        if (intent.action != Intent.ACTION_SEND) return null
+        if (intent.type != "text/plain") return null
+        val text = intent.getStringExtra(Intent.EXTRA_TEXT)?.trim()
+        if (text.isNullOrEmpty()) return null
+        return if (text.startsWith("WIFI:", ignoreCase = true)) text else null
     }
 }
