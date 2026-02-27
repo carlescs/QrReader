@@ -106,8 +106,15 @@ fun QrCameraScreen(
         }
     }
 
+    // Hide the bottom sheet on initial composition only when there is no shared content
+    // about to be displayed. If sharedText or sharedContactText is already set, skipping
+    // hide() avoids a race with the show() call in the effects below, which would cause
+    // the bottom sheet to be hidden right after it is opened for the shared content.
     LaunchedEffect(Unit) {
-        bottomSheetState.hide()
+        if (sharedText == null && sharedContactText == null) {
+            bottomSheetState.hide()
+            openBottomSheet = false
+        }
     }
 
     // Scan the shared image when a URI is provided
