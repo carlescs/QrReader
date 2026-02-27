@@ -1,9 +1,7 @@
 package cat.company.qrreader.features.history.presentation.ui.components
 
-import android.content.ClipData
 import android.content.Intent
 import android.provider.ContactsContract
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -41,11 +39,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ClipEntry
-import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -78,7 +73,6 @@ import java.text.SimpleDateFormat
  */
 @Composable
 fun BarcodeCard(
-    clipboardManager: Clipboard,
     barcode: BarcodeWithTagsModel,
     snackBarHostState: SnackbarHostState,
     sdf: SimpleDateFormat,
@@ -92,10 +86,8 @@ fun BarcodeCard(
     val tagEditOpen = remember { mutableStateOf(false) }
     val aiDescriptionOpen = remember { mutableStateOf(false) }
     val moreMenuExpanded = remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
     val ioCoroutineScope = CoroutineScope(Dispatchers.IO)
     val context = LocalContext.current
-    val copiedMsg = stringResource(R.string.copied)
     val aiGenerationEnabled by historyViewModel.aiGenerationEnabled.collectAsState()
     val allTags by tagsViewModel.tags.collectAsState(initial = emptyList())
     val tagSuggestionStates by historyViewModel.tagSuggestionStates.collectAsState()
@@ -126,13 +118,7 @@ fun BarcodeCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(5.dp)
-            .clickable {
-                coroutineScope.launch {
-                    clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText("barcode", barcode.barcode.barcode)))
-                    snackBarHostState.showSnackbar(copiedMsg)
-                }
-            },
+            .padding(5.dp),
         colors = CardDefaults.cardColors(),
         shape = RoundedCornerShape(10.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
