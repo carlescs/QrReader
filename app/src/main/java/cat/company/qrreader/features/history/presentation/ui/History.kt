@@ -34,8 +34,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.Clipboard
-import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -63,7 +61,7 @@ import java.util.Locale
  * User interactions are tracked via [snackbarHostState] for feedback messages.
  *
  * @param snackbarHostState SnackbarHostState for displaying user feedback messages like
- *                          "Copied to clipboard" or "Barcode deleted"
+ *                          "Barcode deleted"
  * @param viewModel HistoryViewModel instance managing the screen state. Defaults to
  *                  Koin-injected instance via [koinViewModel]
  *
@@ -163,7 +161,6 @@ private fun HistoryContent(
     val isFiltered = query.isNotBlank() || selectedTagId != null || showOnlyFavorites
 
     Column(modifier = Modifier.fillMaxSize()) {
-        val clipboard: Clipboard = LocalClipboard.current
         val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
 
         HistorySearchBar(
@@ -183,7 +180,6 @@ private fun HistoryContent(
                 sdf = sdf
             ),
             interactionDeps = BarcodeInteractionDeps(
-                clipboard = clipboard,
                 snackbarHostState = snackbarHostState,
                 viewModel = viewModel,
                 lazyListState = lazyListState
@@ -500,13 +496,10 @@ private data class BarcodeDisplayData(
  * that enable **how** users interact with the displayed barcodes, separate from display data.
  *
  * These dependencies are typically stable across re-compositions and provide the infrastructure
- * for user actions like copying, deleting, updating, and scrolling through barcode items.
+ * for user actions like deleting, updating, and scrolling through barcode items.
  *
- * @property clipboard Android system clipboard for copying barcode content. Used when user
- *                     taps the copy button on a barcode card to copy the barcode value to
- *                     the system clipboard.
  * @property snackbarHostState Material3 SnackbarHostState for displaying user feedback messages
- *                             (e.g., "Copied to clipboard", "Barcode deleted"). Provides a
+ *                             (e.g., "Barcode deleted"). Provides a
  *                             consistent way to communicate action results to the user.
  * @property viewModel HistoryViewModel instance that manages the barcode list state and
  *                     provides actions for updating or deleting barcodes. Acts as the bridge
@@ -519,7 +512,6 @@ private data class BarcodeDisplayData(
  * @see HistoryResults for usage example
  */
 private data class BarcodeInteractionDeps(
-    val clipboard: Clipboard,
     val snackbarHostState: SnackbarHostState,
     val viewModel: HistoryViewModel,
     val lazyListState: androidx.compose.foundation.lazy.LazyListState
@@ -554,7 +546,6 @@ private fun HistoryResults(
         } else {
             BarcodeResultsList(
                 visibleItems = displayData.visibleItems,
-                clipboard = interactionDeps.clipboard,
                 snackbarHostState = interactionDeps.snackbarHostState,
                 sdf = displayData.sdf,
                 viewModel = interactionDeps.viewModel,
@@ -592,13 +583,11 @@ private fun EmptyResultsState(isFiltered: Boolean) {
  *
  * Each card provides:
  * - Barcode content display with formatted timestamp
- * - Copy to clipboard functionality
  * - Delete action with confirmation
  * - Tag management
  * - Visual indication of barcode type
  *
  * @param visibleItems Filtered list of barcode items to display
- * @param clipboard Android system clipboard for copy operations
  * @param snackbarHostState For displaying user feedback messages
  * @param sdf SimpleDateFormat for consistent timestamp formatting
  * @param viewModel HistoryViewModel for barcode actions (update, delete)
@@ -609,7 +598,6 @@ private fun EmptyResultsState(isFiltered: Boolean) {
 @Composable
 private fun BarcodeResultsList(
     visibleItems: List<cat.company.qrreader.domain.model.BarcodeWithTagsModel>,
-    clipboard: Clipboard,
     snackbarHostState: SnackbarHostState,
     sdf: SimpleDateFormat,
     viewModel: HistoryViewModel,
@@ -623,7 +611,6 @@ private fun BarcodeResultsList(
     ) {
         items(items = visibleItems, key = { it.barcode.id }) { barcode ->
             BarcodeCard(
-                clipboard,
                 barcode,
                 snackbarHostState,
                 sdf,
