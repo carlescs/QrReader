@@ -309,12 +309,15 @@ fun BarcodeCard(
                     )
                 }
             }
-            if (aiGenerationEnabled && !barcode.barcode.aiGeneratedDescription.isNullOrBlank()) {
+            if (aiGenerationEnabled) {
                 IconButton(onClick = { aiDescriptionOpen.value = true }) {
                     Icon(
                         imageVector = Icons.Default.AutoAwesome,
                         contentDescription = stringResource(R.string.ai_description),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = if (!barcode.barcode.aiGeneratedDescription.isNullOrBlank())
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -413,7 +416,7 @@ fun BarcodeCard(
                 }
             }
         }
-        if (aiDescriptionOpen.value && !barcode.barcode.aiGeneratedDescription.isNullOrBlank()) {
+        if (aiDescriptionOpen.value) {
             AiDescriptionDialog(
                 savedBarcode = barcode.barcode,
                 viewModel = historyViewModel,
