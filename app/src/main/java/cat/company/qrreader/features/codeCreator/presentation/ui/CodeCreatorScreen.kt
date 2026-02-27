@@ -50,10 +50,22 @@ import org.koin.compose.koinInject
  * Create a QR code from a text
  */
 @Composable
-fun CodeCreatorScreen(viewModel: CodeCreatorViewModel = koinViewModel()) {
+fun CodeCreatorScreen(
+    sharedText: String? = null,
+    onSharedTextConsumed: () -> Unit = {},
+    viewModel: CodeCreatorViewModel = koinViewModel()
+) {
     val text by viewModel.text.collectAsStateWithLifecycle()
     val qrCodeBitmap by viewModel.qrCodeBitmap.collectAsStateWithLifecycle()
     val isSharing by viewModel.isSharing.collectAsStateWithLifecycle()
+
+    // Pre-populate text field when shared text is received (e.g. WiFi QR from Android settings)
+    LaunchedEffect(sharedText) {
+        if (sharedText != null) {
+            viewModel.onTextChanged(sharedText)
+            onSharedTextConsumed()
+        }
+    }
 
     val context = LocalContext.current
     val focusRequester = remember { FocusRequester() }

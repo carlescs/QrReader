@@ -64,7 +64,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 @ExperimentalGetImage
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null, onSharedImageConsumed: () -> Unit = {}) {
+fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null, onSharedImageConsumed: () -> Unit = {}, sharedText: String? = null, onSharedTextConsumed: () -> Unit = {}) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -101,6 +101,15 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
         LaunchedEffect(sharedImageUri) {
             if (sharedImageUri != null) {
                 navController.navigate("camera") {
+                    launchSingleTop = true
+                }
+            }
+        }
+
+        // Navigate to code creator screen when shared text is received
+        LaunchedEffect(sharedText) {
+            if (sharedText != null) {
+                navController.navigate("codeCreator") {
                     launchSingleTop = true
                 }
             }
@@ -168,7 +177,7 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
                         route="codeCreator",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://codeCreator" })
                     ) {
-                        CodeCreatorScreen()
+                        CodeCreatorScreen(sharedText = sharedText, onSharedTextConsumed = onSharedTextConsumed)
                     }
                     composable("settings") {
                         SettingsScreen(
