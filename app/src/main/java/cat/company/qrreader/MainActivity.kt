@@ -74,6 +74,8 @@ class MainActivity : ComponentActivity() {
     private fun extractSharedText(intent: Intent): String? {
         if (intent.action != Intent.ACTION_SEND) return null
         if (intent.type != "text/plain") return null
-        return intent.getStringExtra(Intent.EXTRA_TEXT)
+        val text = intent.getStringExtra(Intent.EXTRA_TEXT)?.trim()
+        if (text.isNullOrEmpty()) return null
+        return if (text.startsWith("WIFI:", ignoreCase = true)) text else null
     }
 }

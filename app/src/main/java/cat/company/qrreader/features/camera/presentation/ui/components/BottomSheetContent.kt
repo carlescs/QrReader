@@ -58,7 +58,7 @@ fun BottomSheetContent(
             val isLoadingDescription = state.isLoadingDescriptions.contains(wifiHash)
             val descriptionError = state.descriptionErrors[wifiHash]
             val encryptionType = when (sharedWifiInfo.securityType?.uppercase()) {
-                "WPA", "WPA2" -> Barcode.WiFi.TYPE_WPA
+                "WPA", "WPA2", "SAE" -> Barcode.WiFi.TYPE_WPA
                 "WEP" -> Barcode.WiFi.TYPE_WEP
                 else -> Barcode.WiFi.TYPE_OPEN
             }
