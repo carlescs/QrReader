@@ -132,33 +132,35 @@ fun AiSettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
             },
             colors = androidx.compose.material3.ListItemDefaults.colors()
         )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        val currentLanguageName = SUPPORTED_LANGUAGES.firstOrNull { it.code == aiLanguageState }
-            ?.let { stringResource(it.nameRes) }
-            ?: stringResource(R.string.language_english)
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.ai_language)) },
-            supportingContent = { Text(text = stringResource(R.string.ai_language_description)) },
-            trailingContent = {
-                TextButton(onClick = { showLanguageDialog = true }) {
-                    Text(text = currentLanguageName)
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = androidx.compose.material3.ListItemDefaults.colors()
-        )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.ai_humorous_descriptions)) },
-            supportingContent = { Text(text = stringResource(R.string.ai_humorous_descriptions_description)) },
-            trailingContent = {
-                Switch(checked = aiHumorousState, onCheckedChange = { newValue ->
-                    viewModel.setAiHumorousDescriptions(newValue)
-                })
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = androidx.compose.material3.ListItemDefaults.colors()
-        )
+        if (aiGenerationState) {
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            val currentLanguageName = SUPPORTED_LANGUAGES.firstOrNull { it.code == aiLanguageState }
+                ?.let { stringResource(it.nameRes) }
+                ?: stringResource(R.string.language_english)
+            ListItem(
+                headlineContent = { Text(text = stringResource(R.string.ai_language)) },
+                supportingContent = { Text(text = stringResource(R.string.ai_language_description)) },
+                trailingContent = {
+                    TextButton(onClick = { showLanguageDialog = true }) {
+                        Text(text = currentLanguageName)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = androidx.compose.material3.ListItemDefaults.colors()
+            )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            ListItem(
+                headlineContent = { Text(text = stringResource(R.string.ai_humorous_descriptions)) },
+                supportingContent = { Text(text = stringResource(R.string.ai_humorous_descriptions_description)) },
+                trailingContent = {
+                    Switch(checked = aiHumorousState, onCheckedChange = { newValue ->
+                        viewModel.setAiHumorousDescriptions(newValue)
+                    })
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = androidx.compose.material3.ListItemDefaults.colors()
+            )
+        }
     }
 
     if (showLanguageDialog) {
