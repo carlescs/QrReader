@@ -38,6 +38,8 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import cat.company.qrreader.features.camera.presentation.QrCameraViewModel
 import cat.company.qrreader.features.codeCreator.presentation.CodeCreatorViewModel
 import cat.company.qrreader.features.history.presentation.HistoryViewModel
+import cat.company.qrreader.features.settings.presentation.AiSettingsUseCases
+import cat.company.qrreader.features.settings.presentation.HistorySettingsUseCases
 import cat.company.qrreader.features.settings.presentation.SettingsViewModel
 import cat.company.qrreader.features.tags.presentation.TagsViewModel
 import org.koin.android.ext.koin.androidContext
@@ -106,7 +108,13 @@ val viewModelModule = module {
     viewModel { TagsViewModel(get(), get(), get(), get()) }
     viewModel { QrCameraViewModel(get<GenerateBarcodeAiDataUseCase>(), get<GetAllTagsUseCase>(), get<GetAiGenerationEnabledUseCase>(), get<GetAiLanguageUseCase>(), get<GetAiHumorousDescriptionsUseCase>()) }
     viewModel { CodeCreatorViewModel(get<GenerateQrCodeUseCase>()) }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<GenerateBarcodeAiDataUseCase>(), get<CheckAppUpdateUseCase>()) }
+    viewModel {
+        SettingsViewModel(
+            historySettings = HistorySettingsUseCases(get(), get(), get(), get()),
+            aiSettings = AiSettingsUseCases(get(), get(), get(), get(), get(), get(), get<GenerateBarcodeAiDataUseCase>()),
+            checkAppUpdateUseCase = get()
+        )
+    }
 }
 
 // Combine all modules

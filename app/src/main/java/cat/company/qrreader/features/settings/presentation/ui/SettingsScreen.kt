@@ -94,12 +94,18 @@ fun SettingsScreen(
         val result = updateCheckResult
         if (result is UpdateCheckResult.UpdateAvailable) {
             try {
-                appUpdateManager.startUpdateFlowForResult(
+                val flowStarted = appUpdateManager.startUpdateFlowForResult(
                     result.appUpdateInfo,
                     launcher,
-                    AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build()
+                    AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build()
                 )
-                viewModel.clearUpdateCheckResult()
+                if (flowStarted) {
+                    viewModel.clearUpdateCheckResult()
+                } else {
+                    viewModel.onUpdateFlowFailed(
+                        context.getString(R.string.update_check_failed)
+                    )
+                }
             } catch (e: Exception) {
                 viewModel.onUpdateFlowFailed(
                     context.getString(R.string.update_check_failed)
@@ -387,31 +393,6 @@ private fun UpdateCheckResultDialog(
                 }
             },
             onDismissRequest = onDismiss
-/**
- * About sub-screen showing app name, version, copyright and licence information.
- */
-@Composable
-fun AboutScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium) },
-            supportingContent = { Text(text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME)) },
-            colors = androidx.compose.material3.ListItemDefaults.colors()
-        )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.about_copyright)) },
-            colors = androidx.compose.material3.ListItemDefaults.colors()
-        )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.about_licence)) },
-            colors = androidx.compose.material3.ListItemDefaults.colors()
         )
     }
 }

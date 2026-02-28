@@ -38,7 +38,9 @@ class CheckAppUpdateUseCase(private val appUpdateManager: AppUpdateManager) {
         return try {
             val info = appUpdateManager.appUpdateInfo.await()
             when (info.updateAvailability()) {
-                UpdateAvailability.UPDATE_AVAILABLE -> UpdateCheckResult.UpdateAvailable(info)
+                UpdateAvailability.UPDATE_AVAILABLE,
+                UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS ->
+                    UpdateCheckResult.UpdateAvailable(info)
                 UpdateAvailability.UPDATE_NOT_AVAILABLE -> UpdateCheckResult.UpToDate
                 else -> UpdateCheckResult.Error("Update status unavailable")
             }
@@ -48,10 +50,8 @@ class CheckAppUpdateUseCase(private val appUpdateManager: AppUpdateManager) {
     }
 
     private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { cont ->
-        addOnSuccessListener { result -> cont.resume(result) }
-        addOnFailureListener { exception -> cont.resumeWithException(exception) }
-        // GMS Tasks do not expose a cancellation API; the continuation itself handles
-        // safe no-op resumption if the coroutine is cancelled before the task finishes.
+        addOnSuccessListener { result -> if (cont.isActive) cont.resume(result) }
+        addOnFailureListener { exception -> if (cont.isActive) cont.resumeWithException(exception) }
         cont.invokeOnCancellation { /* no-op – Task will still complete but the result is discarded */ }
     }
 }
