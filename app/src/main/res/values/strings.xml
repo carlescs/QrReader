@@ -32,7 +32,8 @@
     <string name="no_barcodes_found">No barcodes found in image</string>
     <string name="image_processing_failed">Failed to process image</string>
     <string name="upload_image">Upload image</string>
-    <string name="toggle_torch">Toggle torch</string>
+    <string name="turn_torch_on">Turn torch on</string>
+    <string name="turn_torch_off">Turn torch off</string>
 
     <!-- Camera bottom sheet barcode types -->
     <string name="url">URL</string>
