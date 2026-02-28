@@ -2,6 +2,7 @@ package cat.company.qrreader.ui.components.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
@@ -38,12 +39,13 @@ fun CountCircle(count: Int, countDescription: String? = null) {
         contentAlignment = Alignment.Center,
         modifier = semanticsModifier
             .defaultMinSize(minWidth = MIN_CIRCLE_SIZE, minHeight = MIN_CIRCLE_SIZE)
-            .background(MaterialTheme.colorScheme.error, CircleShape)
+            .aspectRatio(1f)
+            .background(MaterialTheme.colorScheme.primary, CircleShape)
             .padding(horizontal = 2.dp)
     ) {
         Text(
             text = displayText,
-            color = MaterialTheme.colorScheme.onError,
+            color = MaterialTheme.colorScheme.onPrimary,
             fontSize = 9.sp
         )
     }
