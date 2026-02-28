@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -21,6 +22,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,12 +30,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import cat.company.qrreader.BuildConfig
 import cat.company.qrreader.R
+import cat.company.qrreader.domain.usecase.update.UpdateCheckResult
 import cat.company.qrreader.features.settings.presentation.SettingsViewModel
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.model.ActivityResult as PlayActivityResult
+import com.google.android.play.core.install.model.AppUpdateType
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 private data class LanguageOption(val code: String, @StringRes val nameRes: Int)
 
@@ -56,11 +69,56 @@ private val SUPPORTED_LANGUAGES = listOf(
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = koinViewModel(),
+    appUpdateManager: AppUpdateManager = koinInject(),
     onNavigateToHistorySettings: () -> Unit = {},
     onNavigateToAiSettings: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {}
 ) {
     val isAiAvailableOnDevice by viewModel.isAiAvailableOnDevice.collectAsState()
+    val updateCheckResult by viewModel.updateCheckResult.collectAsState()
+    val isCheckingForUpdates by viewModel.isCheckingForUpdates.collectAsState()
+    val context = LocalContext.current
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { activityResult ->
+        if (activityResult.resultCode == PlayActivityResult.RESULT_IN_APP_UPDATE_FAILED) {
+            viewModel.onUpdateFlowFailed(
+                context.getString(R.string.update_check_failed)
+            )
+        }
+    }
+
+    // When an update is available, launch the Play Store in-app update flow immediately.
+    LaunchedEffect(updateCheckResult) {
+        val result = updateCheckResult
+        if (result is UpdateCheckResult.UpdateAvailable) {
+            try {
+                if (!result.appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
+                    viewModel.onUpdateFlowFailed(
+                        context.getString(R.string.update_check_failed)
+                    )
+                    return@LaunchedEffect
+                }
+                val flowStarted = appUpdateManager.startUpdateFlowForResult(
+                    result.appUpdateInfo,
+                    launcher,
+                    AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build()
+                )
+                if (flowStarted) {
+                    viewModel.clearUpdateCheckResult()
+                } else {
+                    viewModel.onUpdateFlowFailed(
+                        context.getString(R.string.update_check_failed)
+                    )
+                }
+            } catch (e: Exception) {
+                viewModel.onUpdateFlowFailed(
+                    context.getString(R.string.update_check_failed)
+                )
+            }
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         SettingsNavigationItem(
@@ -83,6 +141,50 @@ fun SettingsScreen(
             onClick = onNavigateToAbout
         )
         HorizontalDivider()
+        AppVersionItem(
+            isChecking = isCheckingForUpdates,
+            onCheckForUpdates = { viewModel.checkForUpdates() }
+        )
+    }
+
+    // Only show our own dialog for UpToDate and Error results.
+    // UpdateAvailable is handled above by the Play Store in-app update sheet.
+    updateCheckResult?.let { result ->
+        if (result !is UpdateCheckResult.UpdateAvailable) {
+            UpdateCheckResultDialog(
+                result = result,
+                onDismiss = { viewModel.clearUpdateCheckResult() }
+            )
+        }
+    }
+}
+
+/**
+ * About sub-screen showing app name, version, copyright and licence information.
+ */
+@Composable
+fun AboutScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium) },
+            supportingContent = { Text(text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME)) },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.about_copyright)) },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.about_licence)) },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
     }
 }
 
@@ -239,31 +341,64 @@ private fun LanguagePickerDialog(
     )
 }
 
-/**
- * About sub-screen showing app name, version, copyright and licence information.
- */
 @Composable
-fun AboutScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium) },
-            supportingContent = { Text(text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME)) },
-            colors = androidx.compose.material3.ListItemDefaults.colors()
+private fun AppVersionItem(
+    isChecking: Boolean,
+    onCheckForUpdates: () -> Unit
+) {
+    val checkingLabel = stringResource(R.string.checking_for_updates)
+    ListItem(
+        headlineContent = {
+            Text(
+                text = stringResource(R.string.app_version),
+                style = MaterialTheme.typography.titleMedium
+            )
+        },
+        supportingContent = { Text(text = BuildConfig.VERSION_NAME) },
+        trailingContent = {
+            if (isChecking) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .semantics { contentDescription = checkingLabel }
+                )
+            } else {
+                TextButton(onClick = onCheckForUpdates) {
+                    Text(text = stringResource(R.string.check_for_updates))
+                }
+            }
+        },
+        modifier = Modifier.fillMaxWidth(),
+        colors = androidx.compose.material3.ListItemDefaults.colors()
+    )
+}
+
+@Composable
+private fun UpdateCheckResultDialog(
+    result: UpdateCheckResult,
+    onDismiss: () -> Unit
+) {
+    when (result) {
+        is UpdateCheckResult.UpdateAvailable -> { /* handled by Play Store in-app update sheet */ }
+        is UpdateCheckResult.UpToDate -> AlertDialog(
+            title = { Text(text = stringResource(R.string.already_up_to_date)) },
+            text = { Text(text = BuildConfig.VERSION_NAME) },
+            confirmButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(text = stringResource(R.string.ok))
+                }
+            },
+            onDismissRequest = onDismiss
         )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.about_copyright)) },
-            colors = androidx.compose.material3.ListItemDefaults.colors()
-        )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.about_license)) },
-            colors = androidx.compose.material3.ListItemDefaults.colors()
+        is UpdateCheckResult.Error -> AlertDialog(
+            title = { Text(text = stringResource(R.string.update_check_failed)) },
+            text = { Text(text = stringResource(R.string.update_check_failed_description)) },
+            confirmButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(text = stringResource(R.string.ok))
+                }
+            },
+            onDismissRequest = onDismiss
         )
     }
 }
