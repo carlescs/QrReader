@@ -130,6 +130,9 @@ class SettingsUseCasesTest {
             override suspend fun setAiLanguage(value: String) {}
             override val aiHumorousDescriptions = humorousFlow
             override suspend fun setAiHumorousDescriptions(value: Boolean) { humorousFlow.value = value }
+            override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setBiometricLockEnabled(value: Boolean) {}
         }
 
         val getHumorous = GetAiHumorousDescriptionsUseCase(settingsRepo)
