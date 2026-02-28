@@ -13,6 +13,8 @@ import cat.company.qrreader.domain.usecase.settings.SetAiHumorousDescriptionsUse
 import cat.company.qrreader.domain.usecase.settings.SetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCase
+import cat.company.qrreader.domain.usecase.update.CheckAppUpdateUseCase
+import org.mockito.kotlin.mock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -87,17 +89,22 @@ class SettingsViewModelTest {
     private fun createViewModel(aiSupported: Boolean = false): SettingsViewModel {
         fakeRepo = FakeSettingsRepository()
         return SettingsViewModel(
-            getHideTaggedSettingUseCase = GetHideTaggedSettingUseCase(fakeRepo),
-            setHideTaggedSettingUseCase = SetHideTaggedSettingUseCase(fakeRepo),
-            getSearchAcrossAllTagsUseCase = GetSearchAcrossAllTagsUseCase(fakeRepo),
-            setSearchAcrossAllTagsUseCase = SetSearchAcrossAllTagsUseCase(fakeRepo),
-            getAiGenerationEnabledUseCase = GetAiGenerationEnabledUseCase(fakeRepo),
-            setAiGenerationEnabledUseCase = SetAiGenerationEnabledUseCase(fakeRepo),
-            getAiLanguageUseCase = GetAiLanguageUseCase(fakeRepo),
-            setAiLanguageUseCase = SetAiLanguageUseCase(fakeRepo),
-            getAiHumorousDescriptionsUseCase = GetAiHumorousDescriptionsUseCase(fakeRepo),
-            setAiHumorousDescriptionsUseCase = SetAiHumorousDescriptionsUseCase(fakeRepo),
-            generateBarcodeAiDataUseCase = FakeGenerateBarcodeAiDataUseCase(aiSupported)
+            historySettings = HistorySettingsUseCases(
+                getHideTaggedSetting = GetHideTaggedSettingUseCase(fakeRepo),
+                setHideTaggedSetting = SetHideTaggedSettingUseCase(fakeRepo),
+                getSearchAcrossAllTags = GetSearchAcrossAllTagsUseCase(fakeRepo),
+                setSearchAcrossAllTags = SetSearchAcrossAllTagsUseCase(fakeRepo)
+            ),
+            aiSettings = AiSettingsUseCases(
+                getAiGenerationEnabled = GetAiGenerationEnabledUseCase(fakeRepo),
+                setAiGenerationEnabled = SetAiGenerationEnabledUseCase(fakeRepo),
+                getAiLanguage = GetAiLanguageUseCase(fakeRepo),
+                setAiLanguage = SetAiLanguageUseCase(fakeRepo),
+                getAiHumorousDescriptions = GetAiHumorousDescriptionsUseCase(fakeRepo),
+                setAiHumorousDescriptions = SetAiHumorousDescriptionsUseCase(fakeRepo),
+                generateBarcodeAiData = FakeGenerateBarcodeAiDataUseCase(aiSupported)
+            ),
+            checkAppUpdateUseCase = mock()
         )
     }
 
