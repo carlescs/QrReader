@@ -2,11 +2,11 @@ package cat.company.qrreader.utils
 
 import android.content.Context
 import android.content.ContextWrapper
-import androidx.activity.ComponentActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 
 /**
  * Returns true if the device can authenticate using biometrics (fingerprint/face/iris).
@@ -22,12 +22,12 @@ fun canAuthenticate(context: Context): Boolean {
 }
 
 /**
- * Resolves the nearest [ComponentActivity] from a [Context], unwrapping any [ContextWrapper]
- * layers. Returns null if no [ComponentActivity] is found in the chain.
+ * Resolves the nearest [FragmentActivity] from a [Context], unwrapping any [ContextWrapper]
+ * layers. Returns null if no [FragmentActivity] is found in the chain.
  */
-fun Context.findComponentActivity(): ComponentActivity? {
+fun Context.findFragmentActivity(): FragmentActivity? {
     var ctx: Context = this
-    while (ctx !is ComponentActivity) {
+    while (ctx !is FragmentActivity) {
         ctx = (ctx as? ContextWrapper)?.baseContext ?: return null
     }
     return ctx
@@ -36,7 +36,7 @@ fun Context.findComponentActivity(): ComponentActivity? {
 /**
  * Shows a biometric prompt to unlock a locked barcode.
  *
- * @param activity The ComponentActivity hosting the prompt
+ * @param activity The [FragmentActivity] hosting the prompt
  * @param title Prompt title
  * @param subtitle Prompt subtitle
  * @param negativeButtonText Text for the negative (cancel) button
@@ -44,7 +44,7 @@ fun Context.findComponentActivity(): ComponentActivity? {
  * @param onError Called when authentication fails or is cancelled
  */
 fun showBiometricPrompt(
-    activity: ComponentActivity,
+    activity: FragmentActivity,
     title: String,
     subtitle: String,
     negativeButtonText: String,

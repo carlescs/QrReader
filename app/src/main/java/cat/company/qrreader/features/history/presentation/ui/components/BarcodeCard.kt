@@ -62,7 +62,7 @@ import cat.company.qrreader.ui.components.common.WifiConnectButton
 import cat.company.qrreader.domain.usecase.history.SwitchBarcodeTagUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import cat.company.qrreader.utils.canAuthenticate
-import cat.company.qrreader.utils.findComponentActivity
+import cat.company.qrreader.utils.findFragmentActivity
 import cat.company.qrreader.utils.parseContactVCard
 import cat.company.qrreader.utils.parseWifiContent
 import cat.company.qrreader.utils.showBiometricPrompt
@@ -158,7 +158,7 @@ fun BarcodeCard(
                     val canAuth = canAuthenticate(context)
                     TextButton(
                         onClick = {
-                            val activity = context.findComponentActivity()
+                            val activity = context.findFragmentActivity()
                             if (activity != null && canAuth) {
                                 biometricError.value = null
                                 showBiometricPrompt(
