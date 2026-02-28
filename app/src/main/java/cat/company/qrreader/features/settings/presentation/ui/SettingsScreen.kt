@@ -262,7 +262,7 @@ fun AboutScreen() {
         )
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         ListItem(
-            headlineContent = { Text(text = stringResource(R.string.about_licence)) },
+            headlineContent = { Text(text = stringResource(R.string.about_license)) },
             colors = androidx.compose.material3.ListItemDefaults.colors()
         )
     }
