@@ -56,9 +56,7 @@ fun TagFilterItem(
         icon = {
             BadgedBox(
                 badge = {
-                    if (barcodeCount > 0) {
-                        Badge { Text(barcodeCount.toString()) }
-                    }
+                    Badge { Text(barcodeCount.toString()) }
                 }
             ) {
                 Icon(
