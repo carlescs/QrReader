@@ -164,10 +164,18 @@
     <!-- App shortcuts -->
     <string name="shortcut_disabled_message">Disabled</string>
 
+    <!-- Version update check -->
+    <string name="app_version">App version</string>
+    <string name="check_for_updates">Check for updates</string>
+    <string name="checking_for_updates">Checking for updates\u2026</string>
+    <string name="already_up_to_date">You\'re up to date!</string>
+    <string name="update_check_failed">Could not check for updates</string>
+    <string name="update_check_failed_description">Please check your network connection and try again.</string>
+
     <!-- About -->
     <string name="about">About</string>
     <string name="about_description">App info, copyright and license</string>
-    <string name="about_version">Version</string>
+    <string name="about_version">Version %s</string>
     <string name="about_copyright">© 2024 QR Reader contributors</string>
-    <string name="about_license">Licensed under the Apache License, Version 2.0</string>
+    <string name="about_licence">Licensed under the Apache License, Version 2.0</string>
 </resources>

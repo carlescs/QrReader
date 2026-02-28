@@ -3,6 +3,8 @@ package cat.company.qrreader.features.settings.presentation
 import androidx.lifecycle.ViewModel
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.update.CheckAppUpdateUseCase
+import cat.company.qrreader.domain.usecase.update.UpdateCheckResult
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
@@ -20,28 +22,63 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
+ * History-related settings use cases grouped for constructor injection.
+ *
+ * Encapsulates the four use cases that read and write history display settings.
+ *
+ * @property getHideTaggedSetting Reads the "hide tagged when no tag selected" preference.
+ * @property setHideTaggedSetting Writes the "hide tagged when no tag selected" preference.
+ * @property getSearchAcrossAllTags Reads the "search across all tags when filtering" preference.
+ * @property setSearchAcrossAllTags Writes the "search across all tags when filtering" preference.
+ */
+data class HistorySettingsUseCases(
+    val getHideTaggedSetting: GetHideTaggedSettingUseCase,
+    val setHideTaggedSetting: SetHideTaggedSettingUseCase,
+    val getSearchAcrossAllTags: GetSearchAcrossAllTagsUseCase,
+    val setSearchAcrossAllTags: SetSearchAcrossAllTagsUseCase
+)
+
+/**
+ * AI-related settings use cases grouped for constructor injection.
+ *
+ * Encapsulates all use cases for reading/writing AI feature preferences and checking device
+ * support.
+ *
+ * @property getAiGenerationEnabled Reads the AI generation enabled flag.
+ * @property setAiGenerationEnabled Writes the AI generation enabled flag.
+ * @property getAiLanguage Reads the AI response language preference.
+ * @property setAiLanguage Writes the AI response language preference.
+ * @property getAiHumorousDescriptions Reads the humorous descriptions toggle.
+ * @property setAiHumorousDescriptions Writes the humorous descriptions toggle.
+ * @property generateBarcodeAiData Provides device-support check for Gemini Nano.
+ */
+data class AiSettingsUseCases(
+    val getAiGenerationEnabled: GetAiGenerationEnabledUseCase,
+    val setAiGenerationEnabled: SetAiGenerationEnabledUseCase,
+    val getAiLanguage: GetAiLanguageUseCase,
+    val setAiLanguage: SetAiLanguageUseCase,
+    val getAiHumorousDescriptions: GetAiHumorousDescriptionsUseCase,
+    val setAiHumorousDescriptions: SetAiHumorousDescriptionsUseCase,
+    val generateBarcodeAiData: GenerateBarcodeAiDataUseCase
+)
+
+/**
  * ViewModel for Settings screen
  * Manages settings state and coordinates use cases
  */
 class SettingsViewModel(
-    getHideTaggedSettingUseCase: GetHideTaggedSettingUseCase,
-    private val setHideTaggedSettingUseCase: SetHideTaggedSettingUseCase,
-    getSearchAcrossAllTagsUseCase: GetSearchAcrossAllTagsUseCase,
-    private val setSearchAcrossAllTagsUseCase: SetSearchAcrossAllTagsUseCase,
-    getAiGenerationEnabledUseCase: GetAiGenerationEnabledUseCase,
-    private val setAiGenerationEnabledUseCase: SetAiGenerationEnabledUseCase,
-    getAiLanguageUseCase: GetAiLanguageUseCase,
-    private val setAiLanguageUseCase: SetAiLanguageUseCase,
-    getAiHumorousDescriptionsUseCase: GetAiHumorousDescriptionsUseCase,
-    private val setAiHumorousDescriptionsUseCase: SetAiHumorousDescriptionsUseCase,
-    private val generateBarcodeAiDataUseCase: GenerateBarcodeAiDataUseCase
+    private val historySettings: HistorySettingsUseCases,
+    private val aiSettings: AiSettingsUseCases,
+    private val checkAppUpdateUseCase: CheckAppUpdateUseCase
 ) : ViewModel() {
 
     private val _isAiAvailableOnDevice = MutableStateFlow(false)
+    private val _updateCheckResult = MutableStateFlow<UpdateCheckResult?>(null)
+    private val _isCheckingForUpdates = MutableStateFlow(false)
 
     init {
         viewModelScope.launch {
-            _isAiAvailableOnDevice.value = generateBarcodeAiDataUseCase.isAiSupportedOnDevice()
+            _isAiAvailableOnDevice.value = aiSettings.generateBarcodeAiData.isAiSupportedOnDevice()
         }
     }
 
@@ -51,61 +88,90 @@ class SettingsViewModel(
      */
     val isAiAvailableOnDevice: StateFlow<Boolean> = _isAiAvailableOnDevice.asStateFlow()
 
+    /** The most recent update check result, or `null` if no check has been performed yet. */
+    val updateCheckResult: StateFlow<UpdateCheckResult?> = _updateCheckResult.asStateFlow()
+
+    /** `true` while an update check network request is in progress. */
+    val isCheckingForUpdates: StateFlow<Boolean> = _isCheckingForUpdates.asStateFlow()
+
     /**
      * Flow of the hide tagged when no tag selected setting
      */
-    val hideTaggedWhenNoTagSelected: Flow<Boolean> = getHideTaggedSettingUseCase()
+    val hideTaggedWhenNoTagSelected: Flow<Boolean> = historySettings.getHideTaggedSetting()
 
     /**
      * Flow for the 'search across all tags when filtering' setting
      */
-    val searchAcrossAllTagsWhenFiltering: Flow<Boolean> = getSearchAcrossAllTagsUseCase()
+    val searchAcrossAllTagsWhenFiltering: Flow<Boolean> = historySettings.getSearchAcrossAllTags()
 
     /**
      * Flow for the 'AI generation enabled' setting
      */
-    val aiGenerationEnabled: Flow<Boolean> = getAiGenerationEnabledUseCase()
+    val aiGenerationEnabled: Flow<Boolean> = aiSettings.getAiGenerationEnabled()
 
     /**
      * Flow for the AI language setting
      */
-    val aiLanguage: Flow<String> = getAiLanguageUseCase()
+    val aiLanguage: Flow<String> = aiSettings.getAiLanguage()
 
     /**
      * Flow for the 'AI humorous descriptions' setting
      */
-    val aiHumorousDescriptions: Flow<Boolean> = getAiHumorousDescriptionsUseCase()
+    val aiHumorousDescriptions: Flow<Boolean> = aiSettings.getAiHumorousDescriptions()
 
     /**
      * Update the hide tagged when no tag selected setting
      */
     fun setHideTaggedWhenNoTagSelected(value: Boolean) {
         viewModelScope.launch {
-            setHideTaggedSettingUseCase(value)
+            historySettings.setHideTaggedSetting(value)
         }
     }
 
     fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {
         viewModelScope.launch {
-            setSearchAcrossAllTagsUseCase(value)
+            historySettings.setSearchAcrossAllTags(value)
         }
     }
 
     fun setAiGenerationEnabled(value: Boolean) {
         viewModelScope.launch {
-            setAiGenerationEnabledUseCase(value)
+            aiSettings.setAiGenerationEnabled(value)
         }
     }
 
     fun setAiLanguage(value: String) {
         viewModelScope.launch {
-            setAiLanguageUseCase(value)
+            aiSettings.setAiLanguage(value)
         }
     }
 
     fun setAiHumorousDescriptions(value: Boolean) {
         viewModelScope.launch {
-            setAiHumorousDescriptionsUseCase(value)
+            aiSettings.setAiHumorousDescriptions(value)
         }
+    }
+
+    /** Triggers a remote update check and updates [updateCheckResult]. */
+    fun checkForUpdates() {
+        if (_isCheckingForUpdates.value) return
+        viewModelScope.launch {
+            _isCheckingForUpdates.value = true
+            try {
+                _updateCheckResult.value = checkAppUpdateUseCase()
+            } finally {
+                _isCheckingForUpdates.value = false
+            }
+        }
+    }
+
+    /** Clears the last update check result (e.g. after the user dismisses the result dialog). */
+    fun clearUpdateCheckResult() {
+        _updateCheckResult.value = null
+    }
+
+    /** Records an error that occurred while trying to launch the in-app update flow. */
+    fun onUpdateFlowFailed(message: String) {
+        _updateCheckResult.value = UpdateCheckResult.Error(message)
     }
 }
