@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.BuildConfig
 import cat.company.qrreader.R
 import cat.company.qrreader.features.settings.presentation.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -56,7 +57,8 @@ private val SUPPORTED_LANGUAGES = listOf(
 fun SettingsScreen(
     viewModel: SettingsViewModel = koinViewModel(),
     onNavigateToHistorySettings: () -> Unit = {},
-    onNavigateToAiSettings: () -> Unit = {}
+    onNavigateToAiSettings: () -> Unit = {},
+    onNavigateToAbout: () -> Unit = {}
 ) {
     val isAiAvailableOnDevice by viewModel.isAiAvailableOnDevice.collectAsState()
 
@@ -75,6 +77,12 @@ fun SettingsScreen(
             )
             HorizontalDivider()
         }
+        SettingsNavigationItem(
+            title = stringResource(R.string.about),
+            subtitle = stringResource(R.string.about_description),
+            onClick = onNavigateToAbout
+        )
+        HorizontalDivider()
     }
 }
 
@@ -229,4 +237,33 @@ private fun LanguagePickerDialog(
         },
         onDismissRequest = onDismiss
     )
+}
+
+/**
+ * About sub-screen showing app name, version, copyright and licence information.
+ */
+@Composable
+fun AboutScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium) },
+            supportingContent = { Text(text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME)) },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.about_copyright)) },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.about_licence)) },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+    }
 }
