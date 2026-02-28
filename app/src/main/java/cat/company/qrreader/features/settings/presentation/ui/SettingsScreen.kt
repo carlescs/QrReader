@@ -252,7 +252,7 @@ fun AboutScreen() {
     ) {
         ListItem(
             headlineContent = { Text(text = stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium) },
-            supportingContent = { Text(text = "${stringResource(R.string.about_version)} ${BuildConfig.VERSION_NAME}") },
+            supportingContent = { Text(text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME)) },
             colors = androidx.compose.material3.ListItemDefaults.colors()
         )
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
