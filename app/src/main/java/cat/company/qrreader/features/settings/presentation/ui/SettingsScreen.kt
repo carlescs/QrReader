@@ -41,6 +41,7 @@ import cat.company.qrreader.BuildConfig
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.usecase.update.UpdateCheckResult
 import cat.company.qrreader.features.settings.presentation.SettingsViewModel
+import cat.company.qrreader.utils.canAuthenticate
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.ActivityResult as PlayActivityResult
@@ -197,6 +198,8 @@ fun HistorySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val hideTaggedState by viewModel.hideTaggedWhenNoTagSelected.collectAsState(initial = false)
     val searchAcrossAllState by viewModel.searchAcrossAllTagsWhenFiltering.collectAsState(initial = false)
     val biometricLockState by viewModel.biometricLockEnabled.collectAsState(initial = false)
+    val context = LocalContext.current
+    val canUseBiometrics = remember { canAuthenticate(context) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         ListItem(
@@ -223,11 +226,20 @@ fun HistorySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         ListItem(
             headlineContent = { Text(text = stringResource(R.string.biometric_lock_enabled)) },
-            supportingContent = { Text(text = stringResource(R.string.biometric_lock_description)) },
+            supportingContent = {
+                Text(
+                    text = stringResource(
+                        if (canUseBiometrics) R.string.biometric_lock_description
+                        else R.string.biometric_not_available
+                    )
+                )
+            },
             trailingContent = {
-                Switch(checked = biometricLockState, onCheckedChange = { newValue ->
-                    viewModel.setBiometricLockEnabled(newValue)
-                })
+                Switch(
+                    checked = biometricLockState && canUseBiometrics,
+                    onCheckedChange = { newValue -> viewModel.setBiometricLockEnabled(newValue) },
+                    enabled = canUseBiometrics
+                )
             },
             colors = androidx.compose.material3.ListItemDefaults.colors()
         )

@@ -40,6 +40,8 @@ import cat.company.qrreader.domain.usecase.update.CheckAppUpdateUseCase
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import cat.company.qrreader.features.camera.presentation.QrCameraViewModel
 import cat.company.qrreader.features.codeCreator.presentation.CodeCreatorViewModel
+import cat.company.qrreader.features.history.presentation.HistoryAiUseCases
+import cat.company.qrreader.features.history.presentation.HistoryBarcodeUseCases
 import cat.company.qrreader.features.history.presentation.HistoryViewModel
 import cat.company.qrreader.features.settings.presentation.AiSettingsUseCases
 import cat.company.qrreader.features.settings.presentation.HistorySettingsUseCases
@@ -111,7 +113,13 @@ val useCaseModule = module {
 }
 
 val viewModelModule = module {
-    viewModel { HistoryViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel {
+        HistoryViewModel(
+            barcodeUseCases = HistoryBarcodeUseCases(get(), get(), get(), get(), get()),
+            settingsRepository = get(),
+            aiUseCases = HistoryAiUseCases(get(), get(), get())
+        )
+    }
     viewModel { TagsViewModel(get(), get(), get(), get()) }
     viewModel { QrCameraViewModel(get<GenerateBarcodeAiDataUseCase>(), get<GetAllTagsUseCase>(), get<GetAiGenerationEnabledUseCase>(), get<GetAiLanguageUseCase>(), get<GetAiHumorousDescriptionsUseCase>()) }
     viewModel { CodeCreatorViewModel(get<GenerateQrCodeUseCase>()) }

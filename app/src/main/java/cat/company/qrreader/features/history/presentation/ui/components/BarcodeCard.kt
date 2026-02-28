@@ -389,7 +389,7 @@ fun BarcodeCard(
                             confirmDeleteOpen.value = true
                         }
                     )
-                    if (biometricLockEnabled) {
+                    if (biometricLockEnabled && canAuthenticate(context)) {
                         DropdownMenuItem(
                             text = {
                                 Text(
