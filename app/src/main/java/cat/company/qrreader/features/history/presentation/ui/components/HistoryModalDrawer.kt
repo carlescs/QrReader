@@ -2,8 +2,11 @@ package cat.company.qrreader.features.history.presentation.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -11,7 +14,6 @@ import androidx.compose.material.icons.filled.FilterListOff
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -25,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -81,17 +84,15 @@ fun HistoryModalDrawerContent(
                 })
             NavigationDrawerItem(
                 icon = {
-                    BadgedBox(
-                        badge = {
-                            if (favoritesCount > 0) {
-                                Badge { Text(favoritesCount.toString()) }
-                            }
-                        }
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Filled.Star,
                             contentDescription = null
                         )
+                        if (favoritesCount > 0) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Badge { Text(favoritesCount.toString()) }
+                        }
                     }
                 },
                 label = { Text(stringResource(R.string.favorites)) },
