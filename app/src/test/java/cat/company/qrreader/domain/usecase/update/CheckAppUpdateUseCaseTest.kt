@@ -1,8 +1,9 @@
 package cat.company.qrreader.domain.usecase.update
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
-import com.google.android.play.core.appupdate.testing.FakeAppUpdateManager
+import com.google.android.gms.tasks.Tasks
+import com.google.android.play.core.appupdate.AppUpdateInfo
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.install.model.UpdateAvailability
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -15,6 +16,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -23,12 +26,9 @@ import org.robolectric.annotation.Config
 @OptIn(ExperimentalCoroutinesApi::class)
 class CheckAppUpdateUseCaseTest {
 
-    private val context: Context = ApplicationProvider.getApplicationContext()
-    private val testDispatcher = StandardTestDispatcher()
-
     @Before
     fun setup() {
-        Dispatchers.setMain(testDispatcher)
+        Dispatchers.setMain(StandardTestDispatcher())
     }
 
     @After
@@ -36,19 +36,31 @@ class CheckAppUpdateUseCaseTest {
         Dispatchers.resetMain()
     }
 
+    private fun createMockManager(availability: Int): AppUpdateManager {
+        val mockInfo = mock(AppUpdateInfo::class.java)
+        `when`(mockInfo.updateAvailability()).thenReturn(availability)
+        val mockManager = mock(AppUpdateManager::class.java)
+        `when`(mockManager.appUpdateInfo).thenReturn(Tasks.forResult(mockInfo))
+        return mockManager
+    }
+
     @Test
     fun `invoke returns UpdateAvailable when Play Store has a newer version`() = runTest {
-        val fakeManager = FakeAppUpdateManager(context)
-        fakeManager.setUpdateAvailable(2)
-        val result = CheckAppUpdateUseCase(fakeManager)()
+        val result = CheckAppUpdateUseCase(createMockManager(UpdateAvailability.UPDATE_AVAILABLE))()
+        assertTrue(result is UpdateCheckResult.UpdateAvailable)
+    }
+
+    @Test
+    fun `invoke returns UpdateAvailable for developer-triggered in-progress update`() = runTest {
+        val result = CheckAppUpdateUseCase(
+            createMockManager(UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS)
+        )()
         assertTrue(result is UpdateCheckResult.UpdateAvailable)
     }
 
     @Test
     fun `invoke returns UpToDate when no update is available`() = runTest {
-        val fakeManager = FakeAppUpdateManager(context)
-        // Default FakeAppUpdateManager state: no update available
-        val result = CheckAppUpdateUseCase(fakeManager)()
+        val result = CheckAppUpdateUseCase(createMockManager(UpdateAvailability.UPDATE_NOT_AVAILABLE))()
         assertEquals(UpdateCheckResult.UpToDate, result)
     }
 

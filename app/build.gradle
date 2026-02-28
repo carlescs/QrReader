@@ -105,7 +105,7 @@ dependencies {
     testImplementation libs.androidx.test.core
     testImplementation libs.koin.test
     testImplementation libs.koin.test.junit4
-    testImplementation libs.play.app.update.testing
+    testImplementation libs.mockito.core
     androidTestImplementation libs.androidx.test.ext.junit
     androidTestImplementation libs.androidx.espresso.core
     androidTestImplementation libs.androidx.compose.ui.test.junit4
