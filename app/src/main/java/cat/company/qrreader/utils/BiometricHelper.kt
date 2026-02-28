@@ -1,20 +1,36 @@
 package cat.company.qrreader.utils
 
 import android.content.Context
+import android.content.ContextWrapper
 import androidx.activity.ComponentActivity
 import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
-import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 
 /**
- * Returns true if the device can authenticate using biometrics or device credentials.
+ * Returns true if the device can authenticate using biometrics (fingerprint/face/iris).
+ *
+ * Uses [BIOMETRIC_WEAK], which covers both weak (face) and strong (fingerprint) biometrics
+ * as defined in [BiometricManager.Authenticators]. Note that [DEVICE_CREDENTIAL] (PIN/pattern)
+ * is intentionally excluded: combining DEVICE_CREDENTIAL with biometric authenticators prevents
+ * setting a negative button text in [BiometricPrompt.PromptInfo].
  */
 fun canAuthenticate(context: Context): Boolean {
     val manager = BiometricManager.from(context)
-    val authenticators = BIOMETRIC_STRONG or DEVICE_CREDENTIAL
-    return manager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS
+    return manager.canAuthenticate(BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS
+}
+
+/**
+ * Resolves the nearest [ComponentActivity] from a [Context], unwrapping any [ContextWrapper]
+ * layers. Returns null if no [ComponentActivity] is found in the chain.
+ */
+fun Context.findComponentActivity(): ComponentActivity? {
+    var ctx: Context = this
+    while (ctx !is ComponentActivity) {
+        ctx = (ctx as? ContextWrapper)?.baseContext ?: return null
+    }
+    return ctx
 }
 
 /**
@@ -42,6 +58,9 @@ fun showBiometricPrompt(
         }
 
         override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+            // ERROR_USER_CANCELED and ERROR_NEGATIVE_BUTTON indicate the user chose to dismiss
+            // the prompt intentionally (tapped Cancel or the negative button). These are not
+            // failures worth reporting; the barcode simply remains locked.
             if (errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
                 errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON
             ) {

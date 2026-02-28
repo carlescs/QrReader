@@ -135,9 +135,11 @@ class HistoryViewModel(
     fun toggleLockBarcode(barcodeId: Int, isLocked: Boolean) {
         viewModelScope.launch {
             toggleLockBarcodeUseCase(barcodeId, isLocked)
-            // Always remove from the in-memory unlock set when toggling the persistent lock state.
-            // If locking: barcode should no longer appear as temporarily unlocked.
-            // If unlocking persistently: cleanup the in-memory set since the DB state takes precedence.
+            // Always remove from in-memory unlock set when changing the persistent lock state.
+            // If locking (isLocked=true): the barcode may currently be in the unlocked set
+            //   (user was viewing it before deciding to lock it), so we must evict it.
+            // If unlocking persistently (isLocked=false): cleanup is safe; the DB state (false)
+            //   already makes the barcode visible, so the set entry is redundant.
             _unlockedBarcodeIds.update { it - barcodeId }
         }
     }

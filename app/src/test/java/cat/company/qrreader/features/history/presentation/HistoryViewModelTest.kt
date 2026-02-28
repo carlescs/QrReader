@@ -428,8 +428,10 @@ class HistoryViewModelTest {
             override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
             override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
             override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
+            override suspend fun toggleLock(barcodeId: Int, isLocked: Boolean) {}
             override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
             override fun getFavoritesCount(): Flow<Int> = flowOf(0)
+            override fun getLockedCount(): Flow<Int> = flowOf(0)
         }
         val fakeSettingsRepo = makeFakeSettingsRepo()
         val vm = HistoryViewModel(
@@ -440,7 +442,8 @@ class HistoryViewModelTest {
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(repo)
+            ToggleFavoriteUseCase(repo),
+            ToggleLockBarcodeUseCase(repo)
         )
 
         val job = launch { vm.savedBarcodes.collect { } }
@@ -498,8 +501,10 @@ class HistoryViewModelTest {
             override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
             override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
             override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
+            override suspend fun toggleLock(barcodeId: Int, isLocked: Boolean) {}
             override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
             override fun getFavoritesCount(): Flow<Int> = flowOf(0)
+            override fun getLockedCount(): Flow<Int> = flowOf(0)
         }
         val fakeSettingsRepo = makeFakeSettingsRepo()
         val vm = HistoryViewModel(
@@ -510,7 +515,8 @@ class HistoryViewModelTest {
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(repo)
+            ToggleFavoriteUseCase(repo),
+            ToggleLockBarcodeUseCase(repo)
         )
 
         val job = launch { vm.savedBarcodes.collect { } }
@@ -607,8 +613,10 @@ class HistoryViewModelTest {
                 lastBarcodeId = barcodeId
                 lastIsFavorite = isFavorite
             }
+            override suspend fun toggleLock(barcodeId: Int, isLocked: Boolean) {}
             override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
             override fun getFavoritesCount(): Flow<Int> = flowOf(0)
+            override fun getLockedCount(): Flow<Int> = flowOf(0)
         }
         val fakeSettingsRepo = makeFakeSettingsRepo()
         val vm = HistoryViewModel(
@@ -619,7 +627,8 @@ class HistoryViewModelTest {
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(repo)
+            ToggleFavoriteUseCase(repo),
+            ToggleLockBarcodeUseCase(repo)
         )
 
         // Mark barcode 42 as favorite
