@@ -102,7 +102,7 @@ fun SettingsScreen(
                 viewModel.clearUpdateCheckResult()
             } catch (e: Exception) {
                 viewModel.onUpdateFlowFailed(
-                    e.message ?: context.getString(R.string.update_check_failed)
+                    context.getString(R.string.update_check_failed)
                 )
             }
         }
@@ -380,7 +380,7 @@ private fun UpdateCheckResultDialog(
         )
         is UpdateCheckResult.Error -> AlertDialog(
             title = { Text(text = stringResource(R.string.update_check_failed)) },
-            text = { Text(text = result.message) },
+            text = { Text(text = stringResource(R.string.update_check_failed_description)) },
             confirmButton = {
                 TextButton(onClick = onDismiss) {
                     Text(text = stringResource(R.string.ok))
