@@ -94,6 +94,12 @@ fun SettingsScreen(
         val result = updateCheckResult
         if (result is UpdateCheckResult.UpdateAvailable) {
             try {
+                if (!result.appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
+                    viewModel.onUpdateFlowFailed(
+                        context.getString(R.string.update_check_failed)
+                    )
+                    return@LaunchedEffect
+                }
                 val flowStarted = appUpdateManager.startUpdateFlowForResult(
                     result.appUpdateInfo,
                     launcher,
@@ -393,10 +399,6 @@ private fun UpdateCheckResultDialog(
                 }
             },
             onDismissRequest = onDismiss
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.about_license)) },
-            colors = androidx.compose.material3.ListItemDefaults.colors()
         )
     }
 }
