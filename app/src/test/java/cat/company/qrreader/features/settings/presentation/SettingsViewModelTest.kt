@@ -114,7 +114,7 @@ class SettingsViewModelTest {
     // ── AI availability ──────────────────────────────────────────────────────
 
     @Test
-    fun `isAiAvailableOnDevice is false when device does not support AI`() = runTest {
+    fun `isAiAvailableOnDevice is false when device does not support AI`() = runTest(testDispatcher) {
         val viewModel = createViewModel(aiSupported = false)
         advanceUntilIdle()
 
@@ -122,7 +122,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `isAiAvailableOnDevice is true when device supports AI`() = runTest {
+    fun `isAiAvailableOnDevice is true when device supports AI`() = runTest(testDispatcher) {
         val viewModel = createViewModel(aiSupported = true)
         advanceUntilIdle()
 
@@ -132,7 +132,7 @@ class SettingsViewModelTest {
     // ── Hide tagged setting ──────────────────────────────────────────────────
 
     @Test
-    fun `hideTaggedWhenNoTagSelected emits initial value`() = runTest {
+    fun `hideTaggedWhenNoTagSelected emits initial value`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -140,7 +140,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `setHideTaggedWhenNoTagSelected updates flow`() = runTest {
+    fun `setHideTaggedWhenNoTagSelected updates flow`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -151,7 +151,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `setHideTaggedWhenNoTagSelected toggle back to false`() = runTest {
+    fun `setHideTaggedWhenNoTagSelected toggle back to false`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -166,7 +166,7 @@ class SettingsViewModelTest {
     // ── Search across all tags setting ───────────────────────────────────────
 
     @Test
-    fun `searchAcrossAllTagsWhenFiltering emits initial value`() = runTest {
+    fun `searchAcrossAllTagsWhenFiltering emits initial value`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -174,7 +174,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `setSearchAcrossAllTagsWhenFiltering updates flow`() = runTest {
+    fun `setSearchAcrossAllTagsWhenFiltering updates flow`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -187,7 +187,7 @@ class SettingsViewModelTest {
     // ── AI generation enabled setting ────────────────────────────────────────
 
     @Test
-    fun `aiGenerationEnabled emits initial value`() = runTest {
+    fun `aiGenerationEnabled emits initial value`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -195,7 +195,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `setAiGenerationEnabled updates flow`() = runTest {
+    fun `setAiGenerationEnabled updates flow`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -206,7 +206,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `setAiGenerationEnabled toggle back to true`() = runTest {
+    fun `setAiGenerationEnabled toggle back to true`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -221,7 +221,7 @@ class SettingsViewModelTest {
     // ── AI language setting ──────────────────────────────────────────────────
 
     @Test
-    fun `aiLanguage emits initial value`() = runTest {
+    fun `aiLanguage emits initial value`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -229,7 +229,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `setAiLanguage updates flow`() = runTest {
+    fun `setAiLanguage updates flow`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -240,7 +240,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `setAiLanguage to multiple values`() = runTest {
+    fun `setAiLanguage to multiple values`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -256,7 +256,7 @@ class SettingsViewModelTest {
     // ── AI humorous descriptions setting ─────────────────────────────────────
 
     @Test
-    fun `aiHumorousDescriptions emits initial value`() = runTest {
+    fun `aiHumorousDescriptions emits initial value`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -264,7 +264,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `setAiHumorousDescriptions updates flow`() = runTest {
+    fun `setAiHumorousDescriptions updates flow`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -275,7 +275,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `setAiHumorousDescriptions toggle back to false`() = runTest {
+    fun `setAiHumorousDescriptions toggle back to false`() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
