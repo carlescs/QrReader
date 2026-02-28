@@ -62,7 +62,9 @@ class QrCameraViewModelTest {
             barcodeFormat: String?,
             existingTags: List<String>,
             language: String,
-            humorous: Boolean
+            humorous: Boolean,
+            userTitle: String?,
+            userDescription: String?
         ): Result<BarcodeAiData> {
             return if (shouldSucceed) {
                 Result.success(BarcodeAiData(tags = suggestionsToReturn, description = descriptionToReturn))

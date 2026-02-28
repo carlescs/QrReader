@@ -23,10 +23,6 @@ import org.json.JSONObject
  * ML Kit GenAI request, reducing latency and resource usage.
  */
 open class GenerateBarcodeAiDataUseCase {
-    companion object {
-        private const val TAG = "GenerateBarcodeAiData"
-        private const val MAX_DESCRIPTION_LENGTH = 200
-    }
 
     private var model: GenerativeModel? = null
 
@@ -38,6 +34,9 @@ open class GenerateBarcodeAiDataUseCase {
      * @param barcodeFormat Human-readable format (QR Code, EAN-13, etc.)
      * @param existingTags List of tag names already in the user's library
      * @param language ISO 639-1 language code for the generated text (e.g., "en", "es")
+     * @param humorous Whether the generated tags and description should have a humorous, playful tone instead of a neutral one
+     * @param userTitle Optional user-defined label for the barcode that helps contextualize the AI analysis
+     * @param userDescription Optional user notes providing additional context about the barcode's purpose or usage
      * @return Result containing [BarcodeAiData] with both tags and description, or an error
      */
     open suspend operator fun invoke(
@@ -46,7 +45,9 @@ open class GenerateBarcodeAiDataUseCase {
         barcodeFormat: String? = null,
         existingTags: List<String>,
         language: String = "en",
-        humorous: Boolean = false
+        humorous: Boolean = false,
+        userTitle: String? = null,
+        userDescription: String? = null
     ): Result<BarcodeAiData> = withContext(Dispatchers.IO) {
         try {
             if (model == null) {
@@ -129,6 +130,8 @@ open class GenerateBarcodeAiDataUseCase {
                 ""
             }
 
+            val userProvidedContextSection = buildUserProvidedContextSection(userTitle, userDescription)
+
             val existingTagsText = if (existingTags.isNotEmpty()) {
                 "Existing tags you can reuse: ${existingTags.joinToString(", ")}"
             } else {
@@ -152,6 +155,7 @@ open class GenerateBarcodeAiDataUseCase {
                 Barcode content: "$barcodeContent"
                 $barcodeContext
                 $extractedContextSection
+                $userProvidedContextSection
                 $existingTagsText
                 
                 Tags rules:
@@ -334,5 +338,43 @@ open class GenerateBarcodeAiDataUseCase {
 
     open fun cleanup() {
         model = null
+    }
+
+    companion object {
+        private const val TAG = "GenerateBarcodeAiData"
+        private const val MAX_DESCRIPTION_LENGTH = 200
+        internal const val MAX_USER_TITLE_LENGTH = 100
+        internal const val MAX_USER_DESCRIPTION_LENGTH = 200
+
+        /**
+         * Builds the "User-provided context" section to inject into the AI prompt.
+         *
+         * Each field is normalised (whitespace collapsed) and truncated to avoid bloating
+         * the prompt or exceeding the model's context window.  Returns an empty string when
+         * both [userTitle] and [userDescription] are blank, so callers can omit the section
+         * from the prompt entirely.
+         */
+        internal fun buildUserProvidedContextSection(
+            userTitle: String?,
+            userDescription: String?
+        ): String {
+            val normalizedTitle = userTitle?.trim()
+                ?.replace(Regex("\\s+"), " ")
+                ?.take(MAX_USER_TITLE_LENGTH)
+            val normalizedDescription = userDescription?.trim()
+                ?.replace(Regex("\\s+"), " ")
+                ?.take(MAX_USER_DESCRIPTION_LENGTH)
+
+            val context = buildString {
+                if (!normalizedTitle.isNullOrBlank()) appendLine("User-provided title: $normalizedTitle")
+                if (!normalizedDescription.isNullOrBlank()) appendLine("User-provided description: $normalizedDescription")
+            }.trim()
+
+            return if (context.isNotEmpty()) {
+                "User-provided context (use this to refine the tags and description):\n$context"
+            } else {
+                ""
+            }
+        }
     }
 }
