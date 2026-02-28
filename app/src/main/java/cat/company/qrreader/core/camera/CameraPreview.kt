@@ -2,6 +2,7 @@ package cat.company.qrreader.core.camera
 
 import android.util.Log
 import android.view.ViewGroup
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -12,6 +13,7 @@ import androidx.camera.view.TransformExperimental
 import androidx.camera.view.transform.CoordinateTransform
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,16 +31,30 @@ import java.util.concurrent.Executors
 
 /**
  * Camera preview
+ *
+ * @param isTorchOn Whether the torch/flashlight should be enabled.
+ * @param onHasFlashUnit Called once when the camera is bound to report whether the device has
+ *   a flash unit available for the back camera.
+ * @param notifyBarcode Called with the list of detected barcodes when the user taps the preview.
  */
 @Composable
 @ExperimentalGetImage
 @TransformExperimental
-fun CameraPreview(notifyBarcode:((List<Barcode>?)->Unit)?) {
+fun CameraPreview(
+    isTorchOn: Boolean = false,
+    onHasFlashUnit: (Boolean) -> Unit = {},
+    notifyBarcode: ((List<Barcode>?) -> Unit)?
+) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var preview by remember { mutableStateOf<Preview?>(null) }
-
+    var camera by remember { mutableStateOf<Camera?>(null) }
     var savedBarcodes by remember { mutableStateOf<List<Barcode>?>(null) }
+
+    // Enable or disable the torch whenever isTorchOn or the camera reference changes.
+    LaunchedEffect(isTorchOn, camera) {
+        camera?.cameraControl?.enableTorch(isTorchOn)
+    }
 
     AndroidView(
         factory = { androidViewContext ->
@@ -87,12 +103,14 @@ fun CameraPreview(notifyBarcode:((List<Barcode>?)->Unit)?) {
 
                 try {
                     cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
+                    val boundCamera = cameraProvider.bindToLifecycle(
                         lifecycleOwner,
                         cameraSelector,
                         preview,
                         imageAnalysis
                     )
+                    camera = boundCamera
+                    onHasFlashUnit(boundCamera.cameraInfo.hasFlashUnit())
                 } catch (e: Exception) {
                     Log.d("TAG", "CameraPreview: ${e.localizedMessage}")
                 }

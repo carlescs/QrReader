@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FlashlightOff
+import androidx.compose.material.icons.filled.FlashlightOn
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -81,6 +83,11 @@ fun QrCameraScreen(
     val scanImageUseCase: ScanImageUseCase = koinInject()
     val noBarcodes = stringResource(R.string.no_barcodes_found)
     val imageProcessingFailed = stringResource(R.string.image_processing_failed)
+    // isTorchOn is saved across configuration changes (e.g. rotation) so the user's choice
+    // is preserved when the screen is recreated. hasFlashUnit is not saved because it is
+    // re-detected from the hardware after each camera binding.
+    var isTorchOn by rememberSaveable { mutableStateOf(false) }
+    var hasFlashUnit by remember { mutableStateOf(false) }
 
     suspend fun scanUriAndShowResult(uri: Uri) {
         try {
@@ -162,7 +169,10 @@ fun QrCameraScreen(
             )
         } else {
             Box(modifier = Modifier.fillMaxSize()) {
-                CameraPreview {
+                CameraPreview(
+                    isTorchOn = isTorchOn,
+                    onHasFlashUnit = { hasFlashUnit = it }
+                ) {
                     if (it?.isNotEmpty() == true && !openBottomSheet) {
                         openBottomSheet = true
                         viewModel.saveBarcodes(it)
@@ -171,16 +181,28 @@ fun QrCameraScreen(
                         }
                     }
                 }
-                FilledIconButton(
-                    onClick = { imagePickerLauncher.launch("image/*") },
+                Column(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(16.dp)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Image,
-                        contentDescription = stringResource(R.string.upload_image)
-                    )
+                    if (hasFlashUnit) {
+                        FilledIconButton(onClick = { isTorchOn = !isTorchOn }) {
+                            Icon(
+                                imageVector = if (isTorchOn) Icons.Filled.FlashlightOn else Icons.Filled.FlashlightOff,
+                                contentDescription = stringResource(R.string.toggle_torch)
+                            )
+                        }
+                    }
+                    FilledIconButton(
+                        onClick = { imagePickerLauncher.launch("image/*") }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Image,
+                            contentDescription = stringResource(R.string.upload_image)
+                        )
+                    }
                 }
             }
         }

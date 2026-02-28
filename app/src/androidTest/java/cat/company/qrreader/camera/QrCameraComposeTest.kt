@@ -59,6 +59,10 @@ class QrCameraComposeTest {
         // Verify upload image string exists
         val uploadImage = context.getString(R.string.upload_image)
         assert(uploadImage.isNotEmpty())
+
+        // Verify torch toggle string exists
+        val toggleTorch = context.getString(R.string.toggle_torch)
+        assert(toggleTorch.isNotEmpty())
     }
 
     /**
