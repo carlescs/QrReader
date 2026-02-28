@@ -70,7 +70,9 @@ class HistoryViewModelHideFlagTest {
             barcodeFormat: String?,
             existingTags: List<String>,
             language: String,
-            humorous: Boolean
+            humorous: Boolean,
+            userTitle: String?,
+            userDescription: String?
         ) = Result.failure<cat.company.qrreader.domain.model.BarcodeAiData>(
             UnsupportedOperationException("AI not available in tests")
         )

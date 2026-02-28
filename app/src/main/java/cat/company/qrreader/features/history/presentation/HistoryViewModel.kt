@@ -165,7 +165,9 @@ class HistoryViewModel(
                 barcodeFormat = getBarcodeFormatName(barcode.format),
                 existingTags = emptyList(),
                 language = language,
-                humorous = humorous
+                humorous = humorous,
+                userTitle = barcode.title,
+                userDescription = barcode.description
             )
             result.fold(
                 onSuccess = { aiData ->
@@ -219,7 +221,9 @@ class HistoryViewModel(
                 barcodeFormat = getBarcodeFormatName(barcode.barcode.format),
                 existingTags = existingTagNames,
                 language = language,
-                humorous = humorous
+                humorous = humorous,
+                userTitle = barcode.barcode.title,
+                userDescription = barcode.barcode.description
             )
             result.fold(
                 onSuccess = { aiData ->
