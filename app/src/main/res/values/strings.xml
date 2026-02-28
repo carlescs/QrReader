@@ -164,8 +164,8 @@
 
     <!-- About -->
     <string name="about">About</string>
-    <string name="about_description">App info, copyright and licence</string>
+    <string name="about_description">App info, copyright and license</string>
     <string name="about_version">Version</string>
-    <string name="about_copyright">© 2023 Carles Company Soler</string>
-    <string name="about_licence">Licensed under the Apache License, Version 2.0</string>
+    <string name="about_copyright">© 2024 QR Reader contributors</string>
+    <string name="about_license">Licensed under the Apache License, Version 2.0</string>
 </resources>
