@@ -71,8 +71,8 @@ class SettingsViewModelTest {
             existingTags: List<String>,
             language: String,
             humorous: Boolean,
-            userTitle: String? = null,
-            userDescription: String? = null
+            userTitle: String?,
+            userDescription: String?
         ): Result<BarcodeAiData> = Result.success(
             BarcodeAiData(tags = emptyList(), description = "")
         )
