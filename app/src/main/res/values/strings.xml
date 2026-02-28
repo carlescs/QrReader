@@ -103,6 +103,8 @@
     <string name="clear_filter">Clear filter</string>
     <string name="no_saved_tags">No saved tags!</string>
     <string name="edit_tag">Edit tag</string>
+    <string name="barcode_count_description">%1$d barcodes</string>
+    <string name="favorites_count_description">%1$d favorites</string>
     <string name="delete_tag">Delete tag</string>
 
     <!-- Color picker -->

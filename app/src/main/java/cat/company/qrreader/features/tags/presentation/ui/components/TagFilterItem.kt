@@ -8,7 +8,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Label
-import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.features.tags.presentation.TagsViewModel
+import cat.company.qrreader.ui.components.common.CountCircle
 import cat.company.qrreader.ui.components.common.DeleteConfirmDialog
 import cat.company.qrreader.utils.Utils
 import kotlinx.coroutines.CoroutineScope
@@ -58,11 +58,14 @@ fun TagFilterItem(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Filled.Label,
-                    contentDescription = tag.name,
+                    contentDescription = null,
                     tint = tagColor
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Badge { Text(barcodeCount.toString()) }
+                CountCircle(
+                    count = barcodeCount,
+                    countDescription = stringResource(R.string.barcode_count_description, barcodeCount)
+                )
             }
         },
         label = { Text(tag.name) },

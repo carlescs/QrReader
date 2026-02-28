@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterListOff
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Badge
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -36,6 +35,7 @@ import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.features.tags.presentation.TagsViewModel
 import cat.company.qrreader.features.tags.presentation.ui.components.AddTagDialog
 import cat.company.qrreader.features.tags.presentation.ui.components.TagsFilterList
+import cat.company.qrreader.ui.components.common.CountCircle
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -91,7 +91,10 @@ fun HistoryModalDrawerContent(
                         )
                         if (favoritesCount > 0) {
                             Spacer(modifier = Modifier.width(4.dp))
-                            Badge { Text(favoritesCount.toString()) }
+                            CountCircle(
+                                count = favoritesCount,
+                                countDescription = stringResource(R.string.favorites_count_description, favoritesCount)
+                            )
                         }
                     }
                 },
