@@ -6,6 +6,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Label
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,11 +54,19 @@ fun TagFilterItem(
 
     NavigationDrawerItem(
         icon = {
-            Icon(
-                imageVector = Icons.Filled.Label,
-                contentDescription = tag.name,
-                tint = tagColor
-            )
+            BadgedBox(
+                badge = {
+                    if (barcodeCount > 0) {
+                        Badge { Text(barcodeCount.toString()) }
+                    }
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Label,
+                    contentDescription = tag.name,
+                    tint = tagColor
+                )
+            }
         },
         label = { Text(tag.name) },
         selected = isSelected,
@@ -65,12 +75,6 @@ fun TagFilterItem(
         },
         badge = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (barcodeCount > 0) {
-                    Text(
-                        text = barcodeCount.toString(),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
                 IconButton(
                     onClick = { editTag.value = tag },
                     modifier = Modifier.size(32.dp)

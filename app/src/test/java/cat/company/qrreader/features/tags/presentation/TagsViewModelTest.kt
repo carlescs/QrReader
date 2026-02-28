@@ -66,6 +66,9 @@ class TagsViewModelTest {
 
     // Fake BarcodeRepository for testing counts
     private class FakeBarcodeRepository : BarcodeRepository {
+        private val tagBarcodeCountsFlow = MutableStateFlow<Map<Int, Int>>(emptyMap())
+        private val favoritesCountFlow = MutableStateFlow(0)
+
         override fun getAllBarcodes(): Flow<List<BarcodeModel>> = flowOf(emptyList())
         override fun getBarcodesWithTags(): Flow<List<BarcodeWithTagsModel>> = flowOf(emptyList())
         override fun getBarcodesWithTagsByFilter(tagId: Int?, query: String?, hideTaggedWhenNoTagSelected: Boolean, searchAcrossAllTagsWhenFiltering: Boolean, showOnlyFavorites: Boolean): Flow<List<BarcodeWithTagsModel>> = flowOf(emptyList())
@@ -77,8 +80,11 @@ class TagsViewModelTest {
         override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
         override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
         override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
-        override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
-        override fun getFavoritesCount(): Flow<Int> = flowOf(0)
+        override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = tagBarcodeCountsFlow
+        override fun getFavoritesCount(): Flow<Int> = favoritesCountFlow
+
+        fun emitTagBarcodeCounts(counts: Map<Int, Int>) { tagBarcodeCountsFlow.value = counts }
+        fun emitFavoritesCount(count: Int) { favoritesCountFlow.value = count }
     }
 
     @Before
@@ -219,5 +225,71 @@ class TagsViewModelTest {
         // Now should have one tag
         assertEquals(1, viewModel.tags.first().size)
         assertEquals("New", viewModel.tags.first()[0].name)
+    }
+
+    /**
+     * Test favoritesCount emits zero when no favorites exist (badge not shown)
+     */
+    @Test
+    fun favoritesCount_noFavorites_emitsZero() = runTest {
+        val count = viewModel.favoritesCount.first()
+        assertEquals(0, count)
+    }
+
+    /**
+     * Test favoritesCount emits the value from repository (badge shown with count)
+     */
+    @Test
+    fun favoritesCount_withFavorites_emitsCount() = runTest {
+        fakeBarcodeRepository.emitFavoritesCount(5)
+
+        val count = viewModel.favoritesCount.first()
+        assertEquals(5, count)
+    }
+
+    /**
+     * Test favoritesCount updates reactively when repository emits new value
+     */
+    @Test
+    fun favoritesCount_updatesReactively() = runTest {
+        fakeBarcodeRepository.emitFavoritesCount(0)
+        assertEquals(0, viewModel.favoritesCount.first())
+
+        fakeBarcodeRepository.emitFavoritesCount(3)
+        assertEquals(3, viewModel.favoritesCount.first())
+    }
+
+    /**
+     * Test tagBarcodeCounts emits empty map when no barcodes are tagged (badges not shown)
+     */
+    @Test
+    fun tagBarcodeCounts_noTaggedBarcodes_emitsEmptyMap() = runTest {
+        val counts = viewModel.tagBarcodeCounts.first()
+        assertTrue(counts.isEmpty())
+    }
+
+    /**
+     * Test tagBarcodeCounts emits correct counts per tag (badges shown per tag)
+     */
+    @Test
+    fun tagBarcodeCounts_withTaggedBarcodes_emitsCounts() = runTest {
+        val expectedCounts = mapOf(1 to 3, 2 to 7)
+        fakeBarcodeRepository.emitTagBarcodeCounts(expectedCounts)
+
+        val counts = viewModel.tagBarcodeCounts.first()
+        assertEquals(3, counts[1])
+        assertEquals(7, counts[2])
+    }
+
+    /**
+     * Test tagBarcodeCounts updates reactively when repository emits new value
+     */
+    @Test
+    fun tagBarcodeCounts_updatesReactively() = runTest {
+        fakeBarcodeRepository.emitTagBarcodeCounts(emptyMap())
+        assertTrue(viewModel.tagBarcodeCounts.first().isEmpty())
+
+        fakeBarcodeRepository.emitTagBarcodeCounts(mapOf(1 to 2))
+        assertEquals(2, viewModel.tagBarcodeCounts.first()[1])
     }
 }

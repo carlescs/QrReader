@@ -10,11 +10,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterListOff
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Text
@@ -80,17 +81,22 @@ fun HistoryModalDrawerContent(
                 })
             NavigationDrawerItem(
                 icon = {
-                    Icon(
-                        imageVector = Icons.Filled.Star,
-                        contentDescription = null
-                    )
+                    BadgedBox(
+                        badge = {
+                            if (favoritesCount > 0) {
+                                Badge { Text(favoritesCount.toString()) }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Star,
+                            contentDescription = null
+                        )
+                    }
                 },
                 label = { Text(stringResource(R.string.favorites)) },
                 selected = showOnlyFavorites,
-                onClick = onToggleFavorites,
-                badge = if (favoritesCount > 0) {
-                    { Text(favoritesCount.toString(), style = MaterialTheme.typography.labelSmall) }
-                } else null
+                onClick = onToggleFavorites
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             Box(modifier = Modifier.weight(1f)) {
