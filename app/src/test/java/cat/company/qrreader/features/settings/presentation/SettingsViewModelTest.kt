@@ -68,7 +68,9 @@ class SettingsViewModelTest {
             barcodeFormat: String?,
             existingTags: List<String>,
             language: String,
-            humorous: Boolean
+            humorous: Boolean,
+            userTitle: String? = null,
+            userDescription: String? = null
         ): Result<BarcodeAiData> = Result.success(
             BarcodeAiData(tags = emptyList(), description = "")
         )
