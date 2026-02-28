@@ -768,4 +768,111 @@ class HistoryViewModelTest {
         vm.resetTagSuggestionState(11)
         assertEquals(false, vm.tagSuggestionStates.value.containsKey(11))
     }
+
+    // -------------------------------------------------------------------
+    // Tests verifying that userTitle/userDescription are forwarded
+    // -------------------------------------------------------------------
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun regenerateAiDescription_forwardsTitleAndDescription_toUseCase() = runTest {
+        val fakeSettingsRepo = makeFakeSettingsRepo()
+        var capturedTitle: String? = "NOT_SET"
+        var capturedDescription: String? = "NOT_SET"
+
+        val capturingUseCase = object : GenerateBarcodeAiDataUseCase() {
+            override suspend fun invoke(
+                barcodeContent: String,
+                barcodeType: String?,
+                barcodeFormat: String?,
+                existingTags: List<String>,
+                language: String,
+                humorous: Boolean,
+                userTitle: String?,
+                userDescription: String?
+            ): Result<cat.company.qrreader.domain.model.BarcodeAiData> {
+                capturedTitle = userTitle
+                capturedDescription = userDescription
+                return Result.success(
+                    cat.company.qrreader.domain.model.BarcodeAiData(tags = emptyList(), description = "ok")
+                )
+            }
+            override suspend fun isAiSupportedOnDevice(): Boolean = true
+            override suspend fun downloadModelIfNeeded() {}
+            override fun cleanup() {}
+        }
+
+        val vm = HistoryViewModel(
+            GetBarcodesWithTagsUseCase(FakeBarcodeRepository()),
+            UpdateBarcodeUseCase(FakeBarcodeRepository()),
+            DeleteBarcodeUseCase(FakeBarcodeRepository()),
+            fakeSettingsRepo,
+            capturingUseCase,
+            GetAiLanguageUseCase(fakeSettingsRepo),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
+            ToggleFavoriteUseCase(FakeBarcodeRepository())
+        )
+
+        val barcode = BarcodeModel(
+            id = 1, type = 4, format = 256, barcode = "https://example.com", date = Date(),
+            title = "My Link", description = "A useful website"
+        )
+        vm.regenerateAiDescription(barcode)
+        advanceUntilIdle()
+
+        assertEquals("My Link", capturedTitle)
+        assertEquals("A useful website", capturedDescription)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun suggestTags_forwardsTitleAndDescription_toUseCase() = runTest {
+        val fakeSettingsRepo = makeFakeSettingsRepo()
+        var capturedTitle: String? = "NOT_SET"
+        var capturedDescription: String? = "NOT_SET"
+
+        val capturingUseCase = object : GenerateBarcodeAiDataUseCase() {
+            override suspend fun invoke(
+                barcodeContent: String,
+                barcodeType: String?,
+                barcodeFormat: String?,
+                existingTags: List<String>,
+                language: String,
+                humorous: Boolean,
+                userTitle: String?,
+                userDescription: String?
+            ): Result<cat.company.qrreader.domain.model.BarcodeAiData> {
+                capturedTitle = userTitle
+                capturedDescription = userDescription
+                return Result.success(
+                    cat.company.qrreader.domain.model.BarcodeAiData(tags = emptyList(), description = "ok")
+                )
+            }
+            override suspend fun isAiSupportedOnDevice(): Boolean = true
+            override suspend fun downloadModelIfNeeded() {}
+            override fun cleanup() {}
+        }
+
+        val vm = HistoryViewModel(
+            GetBarcodesWithTagsUseCase(FakeBarcodeRepository()),
+            UpdateBarcodeUseCase(FakeBarcodeRepository()),
+            DeleteBarcodeUseCase(FakeBarcodeRepository()),
+            fakeSettingsRepo,
+            capturingUseCase,
+            GetAiLanguageUseCase(fakeSettingsRepo),
+            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
+            ToggleFavoriteUseCase(FakeBarcodeRepository())
+        )
+
+        val barcode = BarcodeModel(
+            id = 5, type = 1, format = 1, barcode = "https://shop.example.com", date = Date(),
+            title = "Coffee Shop", description = "Tuesday loyalty card"
+        )
+        val barcodeWithTags = BarcodeWithTagsModel(barcode, emptyList())
+        vm.suggestTags(barcodeWithTags, emptyList())
+        advanceUntilIdle()
+
+        assertEquals("Coffee Shop", capturedTitle)
+        assertEquals("Tuesday loyalty card", capturedDescription)
+    }
 }

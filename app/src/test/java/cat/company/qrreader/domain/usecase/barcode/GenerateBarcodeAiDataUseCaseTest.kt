@@ -265,4 +265,91 @@ class GenerateBarcodeAiDataUseCaseTest {
         assertEquals(2, data?.tags?.size)
         assertFalse(data?.description?.isEmpty() ?: true)
     }
+
+    // -------------------------------------------------------------------
+    // buildUserProvidedContextSection — unit tests for the pure helper
+    // -------------------------------------------------------------------
+
+    @Test
+    fun `buildUserProvidedContextSection with both values produces expected section`() {
+        val section = GenerateBarcodeAiDataUseCase.buildUserProvidedContextSection(
+            userTitle = "My Coffee Shop Card",
+            userDescription = "Used for the Tuesday discount"
+        )
+        assertTrue(section.startsWith("User-provided context (use this to refine the tags and description):"))
+        assertTrue(section.contains("User-provided title: My Coffee Shop Card"))
+        assertTrue(section.contains("User-provided description: Used for the Tuesday discount"))
+    }
+
+    @Test
+    fun `buildUserProvidedContextSection with only title omits description line`() {
+        val section = GenerateBarcodeAiDataUseCase.buildUserProvidedContextSection(
+            userTitle = "Grocery Store",
+            userDescription = null
+        )
+        assertTrue(section.contains("User-provided title: Grocery Store"))
+        assertFalse(section.contains("User-provided description:"))
+    }
+
+    @Test
+    fun `buildUserProvidedContextSection with only description omits title line`() {
+        val section = GenerateBarcodeAiDataUseCase.buildUserProvidedContextSection(
+            userTitle = null,
+            userDescription = "Weekly loyalty card scan"
+        )
+        assertFalse(section.contains("User-provided title:"))
+        assertTrue(section.contains("User-provided description: Weekly loyalty card scan"))
+    }
+
+    @Test
+    fun `buildUserProvidedContextSection with both null returns empty string`() {
+        val section = GenerateBarcodeAiDataUseCase.buildUserProvidedContextSection(
+            userTitle = null,
+            userDescription = null
+        )
+        assertEquals("", section)
+    }
+
+    @Test
+    fun `buildUserProvidedContextSection with both blank returns empty string`() {
+        val section = GenerateBarcodeAiDataUseCase.buildUserProvidedContextSection(
+            userTitle = "   ",
+            userDescription = "  "
+        )
+        assertEquals("", section)
+    }
+
+    @Test
+    fun `buildUserProvidedContextSection truncates title exceeding max length`() {
+        val longTitle = "A".repeat(GenerateBarcodeAiDataUseCase.MAX_USER_TITLE_LENGTH + 50)
+        val section = GenerateBarcodeAiDataUseCase.buildUserProvidedContextSection(
+            userTitle = longTitle,
+            userDescription = null
+        )
+        val expected = "User-provided title: ${"A".repeat(GenerateBarcodeAiDataUseCase.MAX_USER_TITLE_LENGTH)}"
+        assertTrue(section.contains(expected))
+        assertFalse(section.contains("A".repeat(GenerateBarcodeAiDataUseCase.MAX_USER_TITLE_LENGTH + 1)))
+    }
+
+    @Test
+    fun `buildUserProvidedContextSection truncates description exceeding max length`() {
+        val longDesc = "B".repeat(GenerateBarcodeAiDataUseCase.MAX_USER_DESCRIPTION_LENGTH + 50)
+        val section = GenerateBarcodeAiDataUseCase.buildUserProvidedContextSection(
+            userTitle = null,
+            userDescription = longDesc
+        )
+        val expected = "User-provided description: ${"B".repeat(GenerateBarcodeAiDataUseCase.MAX_USER_DESCRIPTION_LENGTH)}"
+        assertTrue(section.contains(expected))
+        assertFalse(section.contains("B".repeat(GenerateBarcodeAiDataUseCase.MAX_USER_DESCRIPTION_LENGTH + 1)))
+    }
+
+    @Test
+    fun `buildUserProvidedContextSection collapses whitespace in title and description`() {
+        val section = GenerateBarcodeAiDataUseCase.buildUserProvidedContextSection(
+            userTitle = "My  Coffee   Shop",
+            userDescription = "Used  for  discounts"
+        )
+        assertTrue(section.contains("User-provided title: My Coffee Shop"))
+        assertTrue(section.contains("User-provided description: Used for discounts"))
+    }
 }
