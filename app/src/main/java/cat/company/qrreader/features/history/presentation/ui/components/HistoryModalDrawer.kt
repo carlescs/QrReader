@@ -94,7 +94,7 @@ fun HistoryModalDrawerContent(
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             Box(modifier = Modifier.weight(1f)) {
-                TagsFilterList(selectedTagId = selectedTagId) {
+                TagsFilterList(viewModel = tagsViewModel, selectedTagId = selectedTagId) {
                     selectTag(it)
                 }
             }

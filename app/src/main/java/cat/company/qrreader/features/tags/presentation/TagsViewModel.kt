@@ -3,27 +3,25 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.model.TagModel
 import cat.company.qrreader.domain.repository.BarcodeRepository
+import cat.company.qrreader.domain.repository.TagRepository
 import cat.company.qrreader.domain.usecase.tags.DeleteTagUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
-import cat.company.qrreader.domain.repository.TagRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import org.koin.java.KoinJavaComponent.inject
 /**
  * ViewModel for the tags
  */
 class TagsViewModel(
     private val getAllTagsUseCase: GetAllTagsUseCase,
     private val deleteTagUseCase: DeleteTagUseCase,
-    private val barcodeRepository: BarcodeRepository
+    private val barcodeRepository: BarcodeRepository,
+    private val tagRepository: TagRepository
 ) : ViewModel() {
-    private val tagRepository: TagRepository by inject(TagRepository::class.java)
-    lateinit var tags: Flow<List<TagModel>>
+    val tags: Flow<List<TagModel>> = getAllTagsUseCase()
     val tagBarcodeCounts: Flow<Map<Int, Int>> = barcodeRepository.getTagBarcodeCounts()
     val favoritesCount: Flow<Int> = barcodeRepository.getFavoritesCount()
-    fun loadTags() {
-        tags = getAllTagsUseCase()
-    }
+    /** No-op kept for call-site compatibility; [tags] is now a stable Flow. */
+    fun loadTags() {}
     fun deleteTag(tag: TagModel) {
         viewModelScope.launch {
             deleteTagUseCase(tag)

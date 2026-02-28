@@ -88,7 +88,7 @@ class TagsViewModelTest {
         fakeBarcodeRepository = FakeBarcodeRepository()
         getAllTagsUseCase = GetAllTagsUseCase(fakeTagRepository)
         deleteTagUseCase = DeleteTagUseCase(fakeTagRepository)
-        viewModel = TagsViewModel(getAllTagsUseCase, deleteTagUseCase, fakeBarcodeRepository)
+        viewModel = TagsViewModel(getAllTagsUseCase, deleteTagUseCase, fakeBarcodeRepository, fakeTagRepository)
     }
 
     @After
