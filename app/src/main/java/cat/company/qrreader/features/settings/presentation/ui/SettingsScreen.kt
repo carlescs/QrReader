@@ -393,6 +393,10 @@ private fun UpdateCheckResultDialog(
                 }
             },
             onDismissRequest = onDismiss
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.about_license)) },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
         )
     }
 }
