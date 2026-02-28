@@ -8,6 +8,7 @@ import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
 import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
+import cat.company.qrreader.domain.usecase.history.ToggleLockBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
@@ -82,8 +83,11 @@ class HistoryViewModelTest {
 
         override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
 
+        override suspend fun toggleLock(barcodeId: Int, isLocked: Boolean) {}
+
         override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
         override fun getFavoritesCount(): Flow<Int> = flowOf(0)
+        override fun getLockedCount(): Flow<Int> = flowOf(0)
 
         fun emitResult(list: List<BarcodeWithTagsModel>) {
             resultFlow.value = list
@@ -124,6 +128,9 @@ class HistoryViewModelTest {
         override val aiHumorousDescriptions: Flow<Boolean>
             get() = flowOf(false)
         override suspend fun setAiHumorousDescriptions(value: Boolean) {}
+        override val biometricLockEnabled: Flow<Boolean>
+            get() = flowOf(false)
+        override suspend fun setBiometricLockEnabled(value: Boolean) {}
     }
 
     private fun makeViewModel(repository: FakeBarcodeRepository): HistoryViewModel {
@@ -136,7 +143,8 @@ class HistoryViewModelTest {
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(repository)
+            ToggleFavoriteUseCase(repository),
+            ToggleLockBarcodeUseCase(repository)
         )
     }
 
@@ -226,6 +234,9 @@ class HistoryViewModelTest {
             override val aiHumorousDescriptions: Flow<Boolean>
                 get() = flowOf(false)
             override suspend fun setAiHumorousDescriptions(value: Boolean) {}
+            override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = flowOf(false)
+            override suspend fun setBiometricLockEnabled(value: Boolean) {}
         }
 
         val vm = HistoryViewModel(
@@ -236,7 +247,8 @@ class HistoryViewModelTest {
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepository),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepository),
-            ToggleFavoriteUseCase(fakeRepository)
+            ToggleFavoriteUseCase(fakeRepository),
+            ToggleLockBarcodeUseCase(fakeRepository)
         )
 
         val collected = mutableListOf<List<BarcodeWithTagsModel>>()
@@ -290,7 +302,8 @@ class HistoryViewModelTest {
             fakeAiUseCase,
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(FakeBarcodeRepository())
+            ToggleFavoriteUseCase(FakeBarcodeRepository()),
+            ToggleLockBarcodeUseCase(FakeBarcodeRepository())
         )
 
         val barcode = BarcodeModel(id = 1, type = 4, format = 256, barcode = "https://example.com", date = Date())
@@ -332,7 +345,8 @@ class HistoryViewModelTest {
             fakeAiUseCase,
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(FakeBarcodeRepository())
+            ToggleFavoriteUseCase(FakeBarcodeRepository()),
+            ToggleLockBarcodeUseCase(FakeBarcodeRepository())
         )
 
         val barcode = BarcodeModel(id = 1, type = 4, format = 256, barcode = "https://example.com", date = Date())
@@ -373,7 +387,8 @@ class HistoryViewModelTest {
             fakeAiUseCase,
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(FakeBarcodeRepository())
+            ToggleFavoriteUseCase(FakeBarcodeRepository()),
+            ToggleLockBarcodeUseCase(FakeBarcodeRepository())
         )
 
         // Trigger a failure to put the ViewModel in an error state
@@ -635,7 +650,8 @@ class HistoryViewModelTest {
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(FakeBarcodeRepository())
+            ToggleFavoriteUseCase(FakeBarcodeRepository()),
+            ToggleLockBarcodeUseCase(FakeBarcodeRepository())
         )
 
         val barcode = BarcodeModel(id = 5, type = 1, format = 1, barcode = "https://example.com", date = Date())
@@ -662,7 +678,8 @@ class HistoryViewModelTest {
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(FakeBarcodeRepository())
+            ToggleFavoriteUseCase(FakeBarcodeRepository()),
+            ToggleLockBarcodeUseCase(FakeBarcodeRepository())
         )
 
         val barcode = BarcodeModel(id = 7, type = 1, format = 1, barcode = "test", date = Date())
@@ -719,7 +736,8 @@ class HistoryViewModelTest {
             successAiUseCase,
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(FakeBarcodeRepository())
+            ToggleFavoriteUseCase(FakeBarcodeRepository()),
+            ToggleLockBarcodeUseCase(FakeBarcodeRepository())
         )
 
         val barcode = BarcodeModel(id = 9, type = 1, format = 1, barcode = "https://shop.example.com", date = Date())
@@ -751,7 +769,8 @@ class HistoryViewModelTest {
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(FakeBarcodeRepository())
+            ToggleFavoriteUseCase(FakeBarcodeRepository()),
+            ToggleLockBarcodeUseCase(FakeBarcodeRepository())
         )
 
         val barcode = BarcodeModel(id = 11, type = 1, format = 1, barcode = "test", date = Date())
@@ -810,7 +829,8 @@ class HistoryViewModelTest {
             capturingUseCase,
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(FakeBarcodeRepository())
+            ToggleFavoriteUseCase(FakeBarcodeRepository()),
+            ToggleLockBarcodeUseCase(FakeBarcodeRepository())
         )
 
         val barcode = BarcodeModel(
@@ -861,7 +881,8 @@ class HistoryViewModelTest {
             capturingUseCase,
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(FakeBarcodeRepository())
+            ToggleFavoriteUseCase(FakeBarcodeRepository()),
+            ToggleLockBarcodeUseCase(FakeBarcodeRepository())
         )
 
         val barcode = BarcodeModel(

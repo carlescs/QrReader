@@ -67,6 +67,16 @@ interface BarcodeRepository {
     suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean)
 
     /**
+     * Toggle the locked state of a barcode
+     */
+    suspend fun toggleLock(barcodeId: Int, isLocked: Boolean)
+
+    /**
+     * Get the count of locked barcodes
+     */
+    fun getLockedCount(): Flow<Int>
+
+    /**
      * Toggle a tag on a barcode (add if not present, remove if present)
      */
     suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel)

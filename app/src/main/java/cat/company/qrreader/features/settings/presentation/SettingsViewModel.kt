@@ -3,6 +3,8 @@ package cat.company.qrreader.features.settings.presentation
 import androidx.lifecycle.ViewModel
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetBiometricLockEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetBiometricLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.update.CheckAppUpdateUseCase
 import cat.company.qrreader.domain.usecase.update.UpdateCheckResult
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
@@ -30,12 +32,16 @@ import kotlinx.coroutines.launch
  * @property setHideTaggedSetting Writes the "hide tagged when no tag selected" preference.
  * @property getSearchAcrossAllTags Reads the "search across all tags when filtering" preference.
  * @property setSearchAcrossAllTags Writes the "search across all tags when filtering" preference.
+ * @property getBiometricLockEnabled Reads the biometric lock enabled preference.
+ * @property setBiometricLockEnabled Writes the biometric lock enabled preference.
  */
 data class HistorySettingsUseCases(
     val getHideTaggedSetting: GetHideTaggedSettingUseCase,
     val setHideTaggedSetting: SetHideTaggedSettingUseCase,
     val getSearchAcrossAllTags: GetSearchAcrossAllTagsUseCase,
-    val setSearchAcrossAllTags: SetSearchAcrossAllTagsUseCase
+    val setSearchAcrossAllTags: SetSearchAcrossAllTagsUseCase,
+    val getBiometricLockEnabled: GetBiometricLockEnabledUseCase,
+    val setBiometricLockEnabled: SetBiometricLockEnabledUseCase
 )
 
 /**
@@ -105,6 +111,11 @@ class SettingsViewModel(
     val searchAcrossAllTagsWhenFiltering: Flow<Boolean> = historySettings.getSearchAcrossAllTags()
 
     /**
+     * Flow for the biometric lock enabled setting
+     */
+    val biometricLockEnabled: Flow<Boolean> = historySettings.getBiometricLockEnabled()
+
+    /**
      * Flow for the 'AI generation enabled' setting
      */
     val aiGenerationEnabled: Flow<Boolean> = aiSettings.getAiGenerationEnabled()
@@ -131,6 +142,12 @@ class SettingsViewModel(
     fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {
         viewModelScope.launch {
             historySettings.setSearchAcrossAllTags(value)
+        }
+    }
+
+    fun setBiometricLockEnabled(value: Boolean) {
+        viewModelScope.launch {
+            historySettings.setBiometricLockEnabled(value)
         }
     }
 

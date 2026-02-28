@@ -120,6 +120,8 @@ class QrCameraViewModelTest {
         override suspend fun setAiHumorousDescriptions(value: Boolean) {
             this.aiHumorousDescriptions.value = value
         }
+        override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(false)
+        override suspend fun setBiometricLockEnabled(value: Boolean) {}
     }
     
     // Simple fake Barcode for testing - uses reflection to work around internal BarcodeSource

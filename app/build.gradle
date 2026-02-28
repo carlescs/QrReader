@@ -95,6 +95,9 @@ dependencies {
     // Jetpack DataStore (Preferences)
     implementation libs.androidx.datastore.preferences
 
+    // Biometric authentication
+    implementation libs.androidx.biometric
+
     // Koin for dependency injection
     implementation libs.koin.android
     implementation libs.koin.androidx.compose

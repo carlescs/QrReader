@@ -35,5 +35,10 @@ class Migrations {
                 db.execSQL("ALTER TABLE saved_barcodes ADD is_favorite INTEGER NOT NULL DEFAULT 0")
             }
         }
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE saved_barcodes ADD is_locked INTEGER NOT NULL DEFAULT 0")
+            }
+        }
     }
 }

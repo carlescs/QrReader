@@ -57,6 +57,9 @@ mockitoKotlin = "5.4.0"
 # DataStore
 datastorePreferences = "1.2.0"
 
+# Biometric
+biometric = "1.2.0-alpha05"
+
 # Koin
 koin = "4.1.1"
 
@@ -112,6 +115,9 @@ firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics
 
 # DataStore
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastorePreferences" }
+
+# Biometric
+androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 
 # Koin
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }

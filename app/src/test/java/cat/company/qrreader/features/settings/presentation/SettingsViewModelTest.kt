@@ -4,6 +4,8 @@ import cat.company.qrreader.domain.model.BarcodeAiData
 import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetBiometricLockEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetBiometricLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
@@ -59,6 +61,9 @@ class SettingsViewModelTest {
         override suspend fun setAiLanguage(value: String) { aiLanguageFlow.value = value }
         override val aiHumorousDescriptions: Flow<Boolean> = aiHumorousFlow
         override suspend fun setAiHumorousDescriptions(value: Boolean) { aiHumorousFlow.value = value }
+        val biometricLockFlow = MutableStateFlow(false)
+        override val biometricLockEnabled: Flow<Boolean> = biometricLockFlow
+        override suspend fun setBiometricLockEnabled(value: Boolean) { biometricLockFlow.value = value }
     }
 
     private class FakeGenerateBarcodeAiDataUseCase(
@@ -93,7 +98,9 @@ class SettingsViewModelTest {
                 getHideTaggedSetting = GetHideTaggedSettingUseCase(fakeRepo),
                 setHideTaggedSetting = SetHideTaggedSettingUseCase(fakeRepo),
                 getSearchAcrossAllTags = GetSearchAcrossAllTagsUseCase(fakeRepo),
-                setSearchAcrossAllTags = SetSearchAcrossAllTagsUseCase(fakeRepo)
+                setSearchAcrossAllTags = SetSearchAcrossAllTagsUseCase(fakeRepo),
+                getBiometricLockEnabled = GetBiometricLockEnabledUseCase(fakeRepo),
+                setBiometricLockEnabled = SetBiometricLockEnabledUseCase(fakeRepo)
             ),
             aiSettings = AiSettingsUseCases(
                 getAiGenerationEnabled = GetAiGenerationEnabledUseCase(fakeRepo),

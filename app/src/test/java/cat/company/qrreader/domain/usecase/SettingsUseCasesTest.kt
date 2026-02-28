@@ -34,6 +34,9 @@ class SettingsUseCasesTest {
             override suspend fun setAiLanguage(value: String) {}
             override val aiHumorousDescriptions = MutableStateFlow(false)
             override suspend fun setAiHumorousDescriptions(value: Boolean) {}
+            override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setBiometricLockEnabled(value: Boolean) {}
         }
 
         val getHide = GetHideTaggedSettingUseCase(settingsRepo)
@@ -65,6 +68,9 @@ class SettingsUseCasesTest {
             override suspend fun setAiLanguage(value: String) {}
             override val aiHumorousDescriptions = MutableStateFlow(false)
             override suspend fun setAiHumorousDescriptions(value: Boolean) {}
+            override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setBiometricLockEnabled(value: Boolean) {}
         }
 
         val getAi = GetAiGenerationEnabledUseCase(settingsRepo)
@@ -93,6 +99,9 @@ class SettingsUseCasesTest {
             override suspend fun setAiLanguage(value: String) { languageFlow.value = value }
             override val aiHumorousDescriptions = MutableStateFlow(false)
             override suspend fun setAiHumorousDescriptions(value: Boolean) {}
+            override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setBiometricLockEnabled(value: Boolean) {}
         }
 
         val getLanguage = GetAiLanguageUseCase(settingsRepo)

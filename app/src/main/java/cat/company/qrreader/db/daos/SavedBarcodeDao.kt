@@ -74,6 +74,12 @@ abstract class SavedBarcodeDao {
     @Query("UPDATE saved_barcodes SET is_favorite = :isFavorite WHERE id = :id")
     abstract suspend fun setFavorite(id: Int, isFavorite: Boolean)
 
+    @Query("UPDATE saved_barcodes SET is_locked = :isLocked WHERE id = :id")
+    abstract suspend fun setLocked(id: Int, isLocked: Boolean)
+
+    @Query("SELECT COUNT(*) FROM saved_barcodes WHERE is_locked = 1")
+    abstract fun getLockedCount(): Flow<Int>
+
     @Insert
     abstract suspend fun insertAll(vararg savedBarcodes: SavedBarcode)
     

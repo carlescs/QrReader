@@ -60,4 +60,14 @@ interface SettingsRepository {
      * Enable or disable humorous AI-generated barcode descriptions
      */
     suspend fun setAiHumorousDescriptions(value: Boolean)
+
+    /**
+     * Whether biometric lock for sensitive barcodes is enabled
+     */
+    val biometricLockEnabled: Flow<Boolean>
+
+    /**
+     * Enable or disable the biometric lock feature
+     */
+    suspend fun setBiometricLockEnabled(value: Boolean)
 }

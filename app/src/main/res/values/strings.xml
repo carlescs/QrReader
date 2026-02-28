@@ -81,6 +81,15 @@
     <string name="add_to_favorites">Add to favorites</string>
     <string name="remove_from_favorites">Remove from favorites</string>
 
+    <!-- Biometric lock -->
+    <string name="lock_barcode">Lock barcode</string>
+    <string name="remove_lock">Remove lock</string>
+    <string name="locked_barcode">Locked barcode</string>
+    <string name="tap_to_unlock">Tap to unlock</string>
+    <string name="unlock_barcode">Unlock barcode</string>
+    <string name="unlock_barcode_subtitle">Authenticate to view this barcode</string>
+    <string name="biometric_not_available">Biometric authentication not available on this device</string>
+
     <!-- Edit barcode dialog -->
     <string name="edit_barcode">Edit barcode</string>
     <string name="delete_barcode">Delete barcode</string>
@@ -118,6 +127,8 @@
     <string name="hide_tagged_description">When enabled, elements that have any tag will be hidden if the user hasn\'t selected a tag in the history filter.</string>
     <string name="search_across_all_tags">Search across all tags when filtering</string>
     <string name="search_across_all_tags_description">When enabled, typing in the search field will search across all tags even if a particular tag is selected.</string>
+    <string name="biometric_lock_enabled">Biometric lock</string>
+    <string name="biometric_lock_description">When enabled, selected barcodes can be locked and require fingerprint or face authentication to view.</string>
     <string name="ai_features">AI features</string>
     <string name="ai_features_description">When enabled, AI-generated tag suggestions and barcode descriptions will be shown for scanned barcodes on supported devices.</string>
     <string name="ai_language">AI language</string>

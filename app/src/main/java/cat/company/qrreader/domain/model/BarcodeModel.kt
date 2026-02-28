@@ -15,5 +15,6 @@ data class BarcodeModel(
     val barcode: String,
     val aiGeneratedDescription: String? = null,
     val isFavorite: Boolean = false,
+    val isLocked: Boolean = false,
 )
 

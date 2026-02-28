@@ -19,8 +19,11 @@ import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
 import cat.company.qrreader.domain.usecase.history.SwitchBarcodeTagUseCase
 import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
+import cat.company.qrreader.domain.usecase.history.ToggleLockBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetBiometricLockEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetBiometricLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
@@ -62,7 +65,8 @@ val databaseModule = module {
                 Migrations.MIGRATION_2_3,
                 Migrations.MIGRATION_3_4,
                 Migrations.MIGRATION_4_5,
-                Migrations.MIGRATION_5_6
+                Migrations.MIGRATION_5_6,
+                Migrations.MIGRATION_6_7
             )
             .build()
     }
@@ -84,6 +88,9 @@ val useCaseModule = module {
     factory { DeleteBarcodeUseCase(get()) }
     factory { SwitchBarcodeTagUseCase(get()) }
     factory { ToggleFavoriteUseCase(get()) }
+    factory { ToggleLockBarcodeUseCase(get()) }
+    factory { GetBiometricLockEnabledUseCase(get()) }
+    factory { SetBiometricLockEnabledUseCase(get()) }
     factory { GetAllTagsUseCase(get()) }
     factory { GetOrCreateTagsByNameUseCase(get()) }
     factory { GenerateBarcodeAiDataUseCase() }
@@ -104,13 +111,13 @@ val useCaseModule = module {
 }
 
 val viewModelModule = module {
-    viewModel { HistoryViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { HistoryViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { TagsViewModel(get(), get(), get(), get()) }
     viewModel { QrCameraViewModel(get<GenerateBarcodeAiDataUseCase>(), get<GetAllTagsUseCase>(), get<GetAiGenerationEnabledUseCase>(), get<GetAiLanguageUseCase>(), get<GetAiHumorousDescriptionsUseCase>()) }
     viewModel { CodeCreatorViewModel(get<GenerateQrCodeUseCase>()) }
     viewModel {
         SettingsViewModel(
-            historySettings = HistorySettingsUseCases(get(), get(), get(), get()),
+            historySettings = HistorySettingsUseCases(get(), get(), get(), get(), get(), get()),
             aiSettings = AiSettingsUseCases(get(), get(), get(), get(), get(), get(), get<GenerateBarcodeAiDataUseCase>()),
             checkAppUpdateUseCase = get()
         )

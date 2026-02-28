@@ -11,6 +11,7 @@ import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
 import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
+import cat.company.qrreader.domain.usecase.history.ToggleLockBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
@@ -45,7 +46,8 @@ class HistoryViewModel(
     private val generateBarcodeAiDataUseCase: GenerateBarcodeAiDataUseCase,
     private val getAiLanguageUseCase: GetAiLanguageUseCase,
     private val getAiHumorousDescriptionsUseCase: GetAiHumorousDescriptionsUseCase,
-    private val toggleFavoriteUseCase: ToggleFavoriteUseCase
+    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
+    private val toggleLockBarcodeUseCase: ToggleLockBarcodeUseCase
 ) : ViewModel() {
 
     private val _selectedTagId = MutableStateFlow<Int?>(null)
@@ -70,6 +72,14 @@ class HistoryViewModel(
         combine(settingsRepository.aiGenerationEnabled, _isAiSupportedOnDevice) { enabled, supported ->
             enabled && supported
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    /** Whether biometric lock feature is enabled. */
+    val biometricLockEnabled: StateFlow<Boolean> =
+        settingsRepository.biometricLockEnabled
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    private val _unlockedBarcodeIds = MutableStateFlow<Set<Int>>(emptySet())
+    val unlockedBarcodeIds: StateFlow<Set<Int>> = _unlockedBarcodeIds.asStateFlow()
 
     // Debounce input to avoid querying DB on every keystroke
     @OptIn(FlowPreview::class)
@@ -120,6 +130,31 @@ class HistoryViewModel(
         viewModelScope.launch {
             toggleFavoriteUseCase(barcodeId, isFavorite)
         }
+    }
+
+    fun toggleLockBarcode(barcodeId: Int, isLocked: Boolean) {
+        viewModelScope.launch {
+            toggleLockBarcodeUseCase(barcodeId, isLocked)
+            // Always remove from the in-memory unlock set when toggling the persistent lock state.
+            // If locking: barcode should no longer appear as temporarily unlocked.
+            // If unlocking persistently: cleanup the in-memory set since the DB state takes precedence.
+            _unlockedBarcodeIds.update { it - barcodeId }
+        }
+    }
+
+    fun markBarcodeUnlocked(barcodeId: Int) {
+        _unlockedBarcodeIds.update { it + barcodeId }
+    }
+
+    /**
+     * Clears all temporarily unlocked barcodes from the in-memory cache.
+     *
+     * This does NOT modify the persistent lock state in the database. Barcodes that have
+     * [BarcodeModel.isLocked] = true will appear locked again after this call, requiring
+     * fresh biometric authentication to view them.
+     */
+    fun lockAllBarcodes() {
+        _unlockedBarcodeIds.value = emptySet()
     }
 
     fun updateBarcode(barcode: BarcodeModel) {

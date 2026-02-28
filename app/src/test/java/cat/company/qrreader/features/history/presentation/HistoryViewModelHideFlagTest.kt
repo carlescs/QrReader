@@ -8,6 +8,7 @@ import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
 import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
+import cat.company.qrreader.domain.usecase.history.ToggleLockBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
@@ -59,8 +60,11 @@ class HistoryViewModelHideFlagTest {
 
         override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
 
+        override suspend fun toggleLock(barcodeId: Int, isLocked: Boolean) {}
+
         override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
         override fun getFavoritesCount(): Flow<Int> = flowOf(0)
+        override fun getLockedCount(): Flow<Int> = flowOf(0)
     }
 
     private class FakeGenerateBarcodeAiDataUseCase : GenerateBarcodeAiDataUseCase() {
@@ -106,6 +110,9 @@ class HistoryViewModelHideFlagTest {
             override val aiHumorousDescriptions: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setAiHumorousDescriptions(value: Boolean) {}
+            override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setBiometricLockEnabled(value: Boolean) {}
         }
         val vm = HistoryViewModel(
             getBarcodesWithTagsUseCase,
@@ -115,7 +122,8 @@ class HistoryViewModelHideFlagTest {
             FakeGenerateBarcodeAiDataUseCase(),
             GetAiLanguageUseCase(fakeSettingsRepo),
             GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(fakeRepository)
+            ToggleFavoriteUseCase(fakeRepository),
+            ToggleLockBarcodeUseCase(fakeRepository)
         )
 
         // Collect savedBarcodes to trigger the Flow
