@@ -136,7 +136,21 @@ class HistoryTest {
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
         }
-        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo, FakeGenerateBarcodeAiDataUseCase(), GetAiLanguageUseCase(fakeSettingsRepo), GetAiHumorousDescriptionsUseCase(fakeSettingsRepo), ToggleFavoriteUseCase(fakeRepository), ToggleLockBarcodeUseCase(fakeRepository))
+        val viewModel = HistoryViewModel(
+            HistoryBarcodeUseCases(
+                getBarcodesUseCase,
+                updateBarcodeUseCase,
+                deleteBarcodeUseCase,
+                ToggleFavoriteUseCase(fakeRepository),
+                ToggleLockBarcodeUseCase(fakeRepository)
+            ),
+            fakeSettingsRepo,
+            HistoryAiUseCases(
+                FakeGenerateBarcodeAiDataUseCase(),
+                GetAiLanguageUseCase(fakeSettingsRepo),
+                GetAiHumorousDescriptionsUseCase(fakeSettingsRepo)
+            )
+        )
 
         // Test query change
         viewModel.onQueryChange("test")
@@ -185,7 +199,21 @@ class HistoryTest {
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
         }
-        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo, FakeGenerateBarcodeAiDataUseCase(), GetAiLanguageUseCase(fakeSettingsRepo), GetAiHumorousDescriptionsUseCase(fakeSettingsRepo), ToggleFavoriteUseCase(fakeRepository), ToggleLockBarcodeUseCase(fakeRepository))
+        val viewModel = HistoryViewModel(
+            HistoryBarcodeUseCases(
+                getBarcodesUseCase,
+                updateBarcodeUseCase,
+                deleteBarcodeUseCase,
+                ToggleFavoriteUseCase(fakeRepository),
+                ToggleLockBarcodeUseCase(fakeRepository)
+            ),
+            fakeSettingsRepo,
+            HistoryAiUseCases(
+                FakeGenerateBarcodeAiDataUseCase(),
+                GetAiLanguageUseCase(fakeSettingsRepo),
+                GetAiHumorousDescriptionsUseCase(fakeSettingsRepo)
+            )
+        )
 
         // Initial state should be empty
         assertEquals("", viewModel.searchQuery.value)
@@ -227,7 +255,21 @@ class HistoryTest {
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
         }
-        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo, FakeGenerateBarcodeAiDataUseCase(), GetAiLanguageUseCase(fakeSettingsRepo), GetAiHumorousDescriptionsUseCase(fakeSettingsRepo), ToggleFavoriteUseCase(fakeRepository), ToggleLockBarcodeUseCase(fakeRepository))
+        val viewModel = HistoryViewModel(
+            HistoryBarcodeUseCases(
+                getBarcodesUseCase,
+                updateBarcodeUseCase,
+                deleteBarcodeUseCase,
+                ToggleFavoriteUseCase(fakeRepository),
+                ToggleLockBarcodeUseCase(fakeRepository)
+            ),
+            fakeSettingsRepo,
+            HistoryAiUseCases(
+                FakeGenerateBarcodeAiDataUseCase(),
+                GetAiLanguageUseCase(fakeSettingsRepo),
+                GetAiHumorousDescriptionsUseCase(fakeSettingsRepo)
+            )
+        )
 
         // Initial state should be null
         assertNull(viewModel.selectedTagId.value)
@@ -269,7 +311,21 @@ class HistoryTest {
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
         }
-        val viewModel = HistoryViewModel(getBarcodesUseCase, updateBarcodeUseCase, deleteBarcodeUseCase, fakeSettingsRepo, FakeGenerateBarcodeAiDataUseCase(), GetAiLanguageUseCase(fakeSettingsRepo), GetAiHumorousDescriptionsUseCase(fakeSettingsRepo), ToggleFavoriteUseCase(fakeRepository), ToggleLockBarcodeUseCase(fakeRepository))
+        val viewModel = HistoryViewModel(
+            HistoryBarcodeUseCases(
+                getBarcodesUseCase,
+                updateBarcodeUseCase,
+                deleteBarcodeUseCase,
+                ToggleFavoriteUseCase(fakeRepository),
+                ToggleLockBarcodeUseCase(fakeRepository)
+            ),
+            fakeSettingsRepo,
+            HistoryAiUseCases(
+                FakeGenerateBarcodeAiDataUseCase(),
+                GetAiLanguageUseCase(fakeSettingsRepo),
+                GetAiHumorousDescriptionsUseCase(fakeSettingsRepo)
+            )
+        )
 
         // Enable favorites filter
         viewModel.toggleFavoritesFilter()

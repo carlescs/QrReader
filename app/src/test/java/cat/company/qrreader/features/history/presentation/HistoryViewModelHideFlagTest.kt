@@ -115,15 +115,19 @@ class HistoryViewModelHideFlagTest {
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
         }
         val vm = HistoryViewModel(
-            getBarcodesWithTagsUseCase,
-            updateBarcodeUseCase,
-            deleteBarcodeUseCase,
+            HistoryBarcodeUseCases(
+                getBarcodesWithTagsUseCase,
+                updateBarcodeUseCase,
+                deleteBarcodeUseCase,
+                ToggleFavoriteUseCase(fakeRepository),
+                ToggleLockBarcodeUseCase(fakeRepository)
+            ),
             fakeSettingsRepo,
-            FakeGenerateBarcodeAiDataUseCase(),
-            GetAiLanguageUseCase(fakeSettingsRepo),
-            GetAiHumorousDescriptionsUseCase(fakeSettingsRepo),
-            ToggleFavoriteUseCase(fakeRepository),
-            ToggleLockBarcodeUseCase(fakeRepository)
+            HistoryAiUseCases(
+                FakeGenerateBarcodeAiDataUseCase(),
+                GetAiLanguageUseCase(fakeSettingsRepo),
+                GetAiHumorousDescriptionsUseCase(fakeSettingsRepo)
+            )
         )
 
         // Collect savedBarcodes to trigger the Flow
