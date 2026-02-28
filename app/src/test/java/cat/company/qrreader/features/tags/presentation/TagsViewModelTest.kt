@@ -1,6 +1,9 @@
 package cat.company.qrreader.features.tags.presentation
 
+import cat.company.qrreader.domain.model.BarcodeModel
+import cat.company.qrreader.domain.model.BarcodeWithTagsModel
 import cat.company.qrreader.domain.model.TagModel
+import cat.company.qrreader.domain.repository.BarcodeRepository
 import cat.company.qrreader.domain.repository.TagRepository
 import cat.company.qrreader.domain.usecase.tags.DeleteTagUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
@@ -9,6 +12,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -30,13 +34,13 @@ class TagsViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var fakeTagRepository: FakeTagRepository
+    private lateinit var fakeBarcodeRepository: FakeBarcodeRepository
     private lateinit var getAllTagsUseCase: GetAllTagsUseCase
     private lateinit var deleteTagUseCase: DeleteTagUseCase
     private lateinit var viewModel: TagsViewModel
 
     // Fake TagRepository implementation
-    private class FakeTagRepository : TagRepository {
-        private val tagsFlow = MutableStateFlow<List<TagModel>>(emptyList())
+    private class FakeTagRepository : TagRepository {        private val tagsFlow = MutableStateFlow<List<TagModel>>(emptyList())
         val deletedTags = mutableListOf<TagModel>()
         val insertedTags = mutableListOf<TagModel>()
         val updatedTags = mutableListOf<TagModel>()
@@ -60,13 +64,31 @@ class TagsViewModelTest {
         }
     }
 
+    // Fake BarcodeRepository for testing counts
+    private class FakeBarcodeRepository : BarcodeRepository {
+        override fun getAllBarcodes(): Flow<List<BarcodeModel>> = flowOf(emptyList())
+        override fun getBarcodesWithTags(): Flow<List<BarcodeWithTagsModel>> = flowOf(emptyList())
+        override fun getBarcodesWithTagsByFilter(tagId: Int?, query: String?, hideTaggedWhenNoTagSelected: Boolean, searchAcrossAllTagsWhenFiltering: Boolean, showOnlyFavorites: Boolean): Flow<List<BarcodeWithTagsModel>> = flowOf(emptyList())
+        override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
+        override suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long = 0L
+        override suspend fun updateBarcode(barcode: BarcodeModel): Int = 0
+        override suspend fun deleteBarcode(barcode: BarcodeModel) {}
+        override suspend fun addTagToBarcode(barcodeId: Int, tagId: Int) {}
+        override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
+        override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
+        override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
+        override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
+        override fun getFavoritesCount(): Flow<Int> = flowOf(0)
+    }
+
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         fakeTagRepository = FakeTagRepository()
+        fakeBarcodeRepository = FakeBarcodeRepository()
         getAllTagsUseCase = GetAllTagsUseCase(fakeTagRepository)
         deleteTagUseCase = DeleteTagUseCase(fakeTagRepository)
-        viewModel = TagsViewModel(getAllTagsUseCase, deleteTagUseCase)
+        viewModel = TagsViewModel(getAllTagsUseCase, deleteTagUseCase, fakeBarcodeRepository, fakeTagRepository)
     }
 
     @After

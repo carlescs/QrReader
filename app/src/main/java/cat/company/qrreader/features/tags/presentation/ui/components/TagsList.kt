@@ -38,6 +38,7 @@ fun TagsFilterList(
 ) {
     viewModel.loadTags()
     val items by viewModel.tags.collectAsState(initial = emptyList())
+    val tagCounts by viewModel.tagBarcodeCounts.collectAsState(initial = emptyMap())
     val ioCoroutine = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
@@ -59,7 +60,8 @@ fun TagsFilterList(
                     isSelected = tag.id == selectedTagId,
                     onSelectTag = selectTag,
                     ioCoroutine = ioCoroutine,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    barcodeCount = tagCounts[tag.id] ?: 0
                 )
             }
         }
