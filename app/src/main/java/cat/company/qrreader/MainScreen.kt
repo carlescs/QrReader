@@ -54,6 +54,7 @@ import cat.company.qrreader.events.SharedEvents
 import cat.company.qrreader.features.history.presentation.ui.History
 import cat.company.qrreader.ui.components.navigation.items
 import cat.company.qrreader.features.settings.presentation.ui.AiSettingsScreen
+import cat.company.qrreader.features.settings.presentation.ui.AboutScreen
 import cat.company.qrreader.features.settings.presentation.ui.HistorySettingsScreen
 import cat.company.qrreader.features.settings.presentation.ui.SettingsScreen
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -79,6 +80,7 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
                 "settings" -> "Settings"
                 "settings/history" -> "Settings - History"
                 "settings/ai" -> "Settings - AI"
+                "settings/about" -> "Settings - About"
                 else -> destination.route ?: "Unknown"
             }
             params.putString(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
@@ -199,6 +201,11 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
                                 navController.navigate("settings/ai") {
                                     launchSingleTop = true
                                 }
+                            },
+                            onNavigateToAbout = {
+                                navController.navigate("settings/about") {
+                                    launchSingleTop = true
+                                }
                             }
                         )
                     }
@@ -207,6 +214,9 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
                     }
                     composable("settings/ai") {
                         AiSettingsScreen()
+                    }
+                    composable("settings/about") {
+                        AboutScreen()
                     }
                 }
             }
