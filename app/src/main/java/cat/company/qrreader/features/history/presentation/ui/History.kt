@@ -88,10 +88,9 @@ fun History(
                 selectedTagId = selectedTagId,
                 showOnlyFavorites = showOnlyFavorites,
                 onToggleFavorites = viewModel::toggleFavoritesFilter,
-                onNavigateToSettings = onNavigateToSettings
-            ) {
-                viewModel.onTagSelected(it?.id)
-            }
+                onNavigateToSettings = onNavigateToSettings,
+                selectTag = { viewModel.onTagSelected(it?.id) }
+            )
         }
     ) {
         HistoryContent(
