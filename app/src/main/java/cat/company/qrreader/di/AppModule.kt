@@ -1,6 +1,7 @@
 package cat.company.qrreader.di
 
 import androidx.room.Room
+import cat.company.qrreader.BuildConfig
 import cat.company.qrreader.data.repository.BarcodeRepositoryImpl
 import cat.company.qrreader.data.repository.SettingsRepositoryImpl
 import cat.company.qrreader.data.repository.TagRepositoryImpl
@@ -33,6 +34,7 @@ import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCas
 import cat.company.qrreader.domain.usecase.tags.DeleteTagUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
+import cat.company.qrreader.domain.usecase.update.CheckAppUpdateUseCase
 import cat.company.qrreader.features.camera.presentation.QrCameraViewModel
 import cat.company.qrreader.features.codeCreator.presentation.CodeCreatorViewModel
 import cat.company.qrreader.features.history.presentation.HistoryViewModel
@@ -95,6 +97,7 @@ val useCaseModule = module {
     factory { SetAiHumorousDescriptionsUseCase(get()) }
     factory { GenerateQrCodeUseCase() }
     factory { SaveBitmapToMediaStoreUseCase() }
+    factory { CheckAppUpdateUseCase(BuildConfig.VERSION_NAME) }
 }
 
 val viewModelModule = module {
@@ -102,7 +105,7 @@ val viewModelModule = module {
     viewModel { TagsViewModel(get(), get(), get(), get()) }
     viewModel { QrCameraViewModel(get<GenerateBarcodeAiDataUseCase>(), get<GetAllTagsUseCase>(), get<GetAiGenerationEnabledUseCase>(), get<GetAiLanguageUseCase>(), get<GetAiHumorousDescriptionsUseCase>()) }
     viewModel { CodeCreatorViewModel(get<GenerateQrCodeUseCase>()) }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<GenerateBarcodeAiDataUseCase>()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get<GenerateBarcodeAiDataUseCase>(), get<CheckAppUpdateUseCase>()) }
 }
 
 // Combine all modules

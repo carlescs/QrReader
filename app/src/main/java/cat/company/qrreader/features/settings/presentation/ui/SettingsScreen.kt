@@ -1,5 +1,7 @@
 package cat.company.qrreader.features.settings.presentation.ui
 
+import android.content.Intent
+import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -12,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -28,9 +31,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import cat.company.qrreader.BuildConfig
 import cat.company.qrreader.R
+import cat.company.qrreader.domain.usecase.update.UpdateCheckResult
 import cat.company.qrreader.features.settings.presentation.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -59,6 +67,9 @@ fun SettingsScreen(
     onNavigateToAiSettings: () -> Unit = {}
 ) {
     val isAiAvailableOnDevice by viewModel.isAiAvailableOnDevice.collectAsState()
+    val updateCheckResult by viewModel.updateCheckResult.collectAsState()
+    val isCheckingForUpdates by viewModel.isCheckingForUpdates.collectAsState()
+    val context = LocalContext.current
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         SettingsNavigationItem(
@@ -75,6 +86,21 @@ fun SettingsScreen(
             )
             HorizontalDivider()
         }
+        AppVersionItem(
+            isChecking = isCheckingForUpdates,
+            onCheckForUpdates = { viewModel.checkForUpdates() }
+        )
+    }
+
+    updateCheckResult?.let { result ->
+        UpdateCheckResultDialog(
+            result = result,
+            onOpenRelease = { url ->
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                viewModel.clearUpdateCheckResult()
+            },
+            onDismiss = { viewModel.clearUpdateCheckResult() }
+        )
     }
 }
 
@@ -229,4 +255,88 @@ private fun LanguagePickerDialog(
         },
         onDismissRequest = onDismiss
     )
+}
+
+@Composable
+private fun AppVersionItem(
+    isChecking: Boolean,
+    onCheckForUpdates: () -> Unit
+) {
+    val checkingLabel = stringResource(R.string.checking_for_updates)
+    ListItem(
+        headlineContent = {
+            Text(
+                text = stringResource(R.string.app_version),
+                style = MaterialTheme.typography.titleMedium
+            )
+        },
+        supportingContent = { Text(text = BuildConfig.VERSION_NAME) },
+        trailingContent = {
+            if (isChecking) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .semantics { contentDescription = checkingLabel }
+                )
+            } else {
+                TextButton(onClick = onCheckForUpdates) {
+                    Text(text = stringResource(R.string.check_for_updates))
+                }
+            }
+        },
+        modifier = Modifier.fillMaxWidth(),
+        colors = androidx.compose.material3.ListItemDefaults.colors()
+    )
+}
+
+@Composable
+private fun UpdateCheckResultDialog(
+    result: UpdateCheckResult,
+    onOpenRelease: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    when (result) {
+        is UpdateCheckResult.UpdateAvailable -> AlertDialog(
+            title = { Text(text = stringResource(R.string.update_available)) },
+            text = {
+                Text(
+                    text = stringResource(
+                        R.string.update_available_message,
+                        result.latestVersion
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { onOpenRelease(result.releaseUrl) }) {
+                    Text(text = stringResource(R.string.view_release))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(text = stringResource(R.string.cancel))
+                }
+            },
+            onDismissRequest = onDismiss
+        )
+        is UpdateCheckResult.UpToDate -> AlertDialog(
+            title = { Text(text = stringResource(R.string.already_up_to_date)) },
+            text = { Text(text = BuildConfig.VERSION_NAME) },
+            confirmButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(text = stringResource(R.string.ok))
+                }
+            },
+            onDismissRequest = onDismiss
+        )
+        is UpdateCheckResult.Error -> AlertDialog(
+            title = { Text(text = stringResource(R.string.update_check_failed)) },
+            text = { Text(text = result.message) },
+            confirmButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(text = stringResource(R.string.ok))
+                }
+            },
+            onDismissRequest = onDismiss
+        )
+    }
 }

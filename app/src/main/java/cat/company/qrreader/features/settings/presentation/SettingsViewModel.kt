@@ -3,6 +3,8 @@ package cat.company.qrreader.features.settings.presentation
 import androidx.lifecycle.ViewModel
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.update.CheckAppUpdateUseCase
+import cat.company.qrreader.domain.usecase.update.UpdateCheckResult
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
@@ -34,10 +36,13 @@ class SettingsViewModel(
     private val setAiLanguageUseCase: SetAiLanguageUseCase,
     getAiHumorousDescriptionsUseCase: GetAiHumorousDescriptionsUseCase,
     private val setAiHumorousDescriptionsUseCase: SetAiHumorousDescriptionsUseCase,
-    private val generateBarcodeAiDataUseCase: GenerateBarcodeAiDataUseCase
+    private val generateBarcodeAiDataUseCase: GenerateBarcodeAiDataUseCase,
+    private val checkAppUpdateUseCase: CheckAppUpdateUseCase
 ) : ViewModel() {
 
     private val _isAiAvailableOnDevice = MutableStateFlow(false)
+    private val _updateCheckResult = MutableStateFlow<UpdateCheckResult?>(null)
+    private val _isCheckingForUpdates = MutableStateFlow(false)
 
     init {
         viewModelScope.launch {
@@ -50,6 +55,12 @@ class SettingsViewModel(
      * When `false`, the AI settings section should be hidden entirely.
      */
     val isAiAvailableOnDevice: StateFlow<Boolean> = _isAiAvailableOnDevice.asStateFlow()
+
+    /** The most recent update check result, or `null` if no check has been performed yet. */
+    val updateCheckResult: StateFlow<UpdateCheckResult?> = _updateCheckResult.asStateFlow()
+
+    /** `true` while an update check network request is in progress. */
+    val isCheckingForUpdates: StateFlow<Boolean> = _isCheckingForUpdates.asStateFlow()
 
     /**
      * Flow of the hide tagged when no tag selected setting
@@ -107,5 +118,23 @@ class SettingsViewModel(
         viewModelScope.launch {
             setAiHumorousDescriptionsUseCase(value)
         }
+    }
+
+    /** Triggers a remote update check and updates [updateCheckResult]. */
+    fun checkForUpdates() {
+        if (_isCheckingForUpdates.value) return
+        viewModelScope.launch {
+            _isCheckingForUpdates.value = true
+            try {
+                _updateCheckResult.value = checkAppUpdateUseCase()
+            } finally {
+                _isCheckingForUpdates.value = false
+            }
+        }
+    }
+
+    /** Clears the last update check result (e.g. after the user dismisses the result dialog). */
+    fun clearUpdateCheckResult() {
+        _updateCheckResult.value = null
     }
 }
