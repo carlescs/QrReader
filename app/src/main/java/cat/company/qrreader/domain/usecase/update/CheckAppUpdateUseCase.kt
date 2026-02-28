@@ -7,6 +7,7 @@ import com.google.android.gms.tasks.Task
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import java.util.concurrent.Executor
 
 /**
  * Represents the outcome of an update check.
@@ -50,8 +51,16 @@ class CheckAppUpdateUseCase(private val appUpdateManager: AppUpdateManager) {
     }
 
     private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { cont ->
-        addOnSuccessListener { result -> if (cont.isActive) cont.resume(result) }
-        addOnFailureListener { exception -> if (cont.isActive) cont.resumeWithException(exception) }
+        // Use a direct executor so callbacks run on the completing thread rather than the Android
+        // main looper. This is thread-safe: cont.isActive guards against concurrent resume calls,
+        // and CancellableContinuation.resume() is itself safe to call from any thread.
+        addOnSuccessListener(DIRECT_EXECUTOR) { result -> if (cont.isActive) cont.resume(result) }
+        addOnFailureListener(DIRECT_EXECUTOR) { exception -> if (cont.isActive) cont.resumeWithException(exception) }
         cont.invokeOnCancellation { /* no-op – Task will still complete but the result is discarded */ }
+    }
+
+    companion object {
+        /** Runs each submitted runnable immediately on the calling thread. */
+        private val DIRECT_EXECUTOR = Executor { it.run() }
     }
 }

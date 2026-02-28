@@ -15,14 +15,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
-@RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
 @OptIn(ExperimentalCoroutinesApi::class)
 class CheckAppUpdateUseCaseTest {
 
@@ -37,10 +32,10 @@ class CheckAppUpdateUseCaseTest {
     }
 
     private fun createMockManager(availability: Int): AppUpdateManager {
-        val mockInfo = mock(AppUpdateInfo::class.java)
-        `when`(mockInfo.updateAvailability()).thenReturn(availability)
-        val mockManager = mock(AppUpdateManager::class.java)
-        `when`(mockManager.appUpdateInfo).thenReturn(Tasks.forResult(mockInfo))
+        val mockInfo = mock<AppUpdateInfo>()
+        whenever(mockInfo.updateAvailability()).thenReturn(availability)
+        val mockManager = mock<AppUpdateManager>()
+        whenever(mockManager.appUpdateInfo).thenReturn(Tasks.forResult(mockInfo))
         return mockManager
     }
 
@@ -66,7 +61,11 @@ class CheckAppUpdateUseCaseTest {
 
     @Test
     fun `invoke returns Error when app update info task fails`() = runTest {
-        val result = CheckAppUpdateUseCase(FailingAppUpdateManager())()
+        val mockManager = mock<AppUpdateManager>()
+        whenever(mockManager.appUpdateInfo).thenReturn(
+            Tasks.forException(RuntimeException("Simulated network error"))
+        )
+        val result = CheckAppUpdateUseCase(mockManager)()
         assertTrue(result is UpdateCheckResult.Error)
         assertEquals("Simulated network error", (result as UpdateCheckResult.Error).message)
     }
