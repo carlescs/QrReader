@@ -97,7 +97,9 @@ class HistoryViewModelTest {
             barcodeFormat: String?,
             existingTags: List<String>,
             language: String,
-            humorous: Boolean
+            humorous: Boolean,
+            userTitle: String?,
+            userDescription: String?
         ) = Result.failure<cat.company.qrreader.domain.model.BarcodeAiData>(
             UnsupportedOperationException("AI not available in tests")
         )
@@ -266,7 +268,9 @@ class HistoryViewModelTest {
                 barcodeFormat: String?,
                 existingTags: List<String>,
                 language: String,
-                humorous: Boolean
+                humorous: Boolean,
+                userTitle: String?,
+                userDescription: String?
             ) = Result.success(
                 cat.company.qrreader.domain.model.BarcodeAiData(
                     tags = emptyList(),
@@ -309,7 +313,9 @@ class HistoryViewModelTest {
                 barcodeFormat: String?,
                 existingTags: List<String>,
                 language: String,
-                humorous: Boolean
+                humorous: Boolean,
+                userTitle: String?,
+                userDescription: String?
             ) = Result.failure<cat.company.qrreader.domain.model.BarcodeAiData>(
                 UnsupportedOperationException(errorMessage)
             )
@@ -348,7 +354,9 @@ class HistoryViewModelTest {
                 barcodeFormat: String?,
                 existingTags: List<String>,
                 language: String,
-                humorous: Boolean
+                humorous: Boolean,
+                userTitle: String?,
+                userDescription: String?
             ) = Result.failure<cat.company.qrreader.domain.model.BarcodeAiData>(
                 UnsupportedOperationException(errorMessage)
             )
@@ -686,7 +694,9 @@ class HistoryViewModelTest {
                 barcodeFormat: String?,
                 existingTags: List<String>,
                 language: String,
-                humorous: Boolean
+                humorous: Boolean,
+                userTitle: String?,
+                userDescription: String?
             ) = Result.success(
                 cat.company.qrreader.domain.model.BarcodeAiData(
                     tags = listOf(

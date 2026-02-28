@@ -38,6 +38,8 @@ open class GenerateBarcodeAiDataUseCase {
      * @param barcodeFormat Human-readable format (QR Code, EAN-13, etc.)
      * @param existingTags List of tag names already in the user's library
      * @param language ISO 639-1 language code for the generated text (e.g., "en", "es")
+     * @param userTitle Optional user-defined label for the barcode that helps contextualize the AI analysis
+     * @param userDescription Optional user notes providing additional context about the barcode's purpose or usage
      * @return Result containing [BarcodeAiData] with both tags and description, or an error
      */
     open suspend operator fun invoke(
@@ -46,7 +48,9 @@ open class GenerateBarcodeAiDataUseCase {
         barcodeFormat: String? = null,
         existingTags: List<String>,
         language: String = "en",
-        humorous: Boolean = false
+        humorous: Boolean = false,
+        userTitle: String? = null,
+        userDescription: String? = null
     ): Result<BarcodeAiData> = withContext(Dispatchers.IO) {
         try {
             if (model == null) {
@@ -129,6 +133,16 @@ open class GenerateBarcodeAiDataUseCase {
                 ""
             }
 
+            val userProvidedContext = buildString {
+                if (!userTitle.isNullOrBlank()) appendLine("User-provided title: $userTitle")
+                if (!userDescription.isNullOrBlank()) appendLine("User-provided description: $userDescription")
+            }.trim()
+            val userProvidedContextSection = if (userProvidedContext.isNotEmpty()) {
+                "User-provided context (use this to refine the description):\n$userProvidedContext"
+            } else {
+                ""
+            }
+
             val existingTagsText = if (existingTags.isNotEmpty()) {
                 "Existing tags you can reuse: ${existingTags.joinToString(", ")}"
             } else {
@@ -152,6 +166,7 @@ open class GenerateBarcodeAiDataUseCase {
                 Barcode content: "$barcodeContent"
                 $barcodeContext
                 $extractedContextSection
+                $userProvidedContextSection
                 $existingTagsText
                 
                 Tags rules:
