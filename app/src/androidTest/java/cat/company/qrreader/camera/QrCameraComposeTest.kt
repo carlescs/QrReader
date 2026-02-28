@@ -1,8 +1,12 @@
 package cat.company.qrreader.camera
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import cat.company.qrreader.R
+import cat.company.qrreader.features.camera.presentation.ui.CameraOverlayButtons
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +29,10 @@ class QrCameraComposeTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    private val context by lazy {
+        InstrumentationRegistry.getInstrumentation().targetContext
+    }
+
     /**
      * Test that the composable can be composed without crashing
      * This is a smoke test to ensure basic composition works
@@ -45,9 +53,6 @@ class QrCameraComposeTest {
      */
     @Test
     fun qrCamera_permissionStringsExist() {
-        val context = androidx.test.platform.app.InstrumentationRegistry
-            .getInstrumentation().targetContext
-
         // Verify permission request string exists
         val permissionRequest = context.getString(R.string.camera_permission_request)
         assert(permissionRequest.isNotEmpty())
@@ -59,6 +64,80 @@ class QrCameraComposeTest {
         // Verify upload image string exists
         val uploadImage = context.getString(R.string.upload_image)
         assert(uploadImage.isNotEmpty())
+
+        // Verify torch state-specific strings exist
+        val turnTorchOn = context.getString(R.string.turn_torch_on)
+        assert(turnTorchOn.isNotEmpty())
+        val turnTorchOff = context.getString(R.string.turn_torch_off)
+        assert(turnTorchOff.isNotEmpty())
+    }
+
+    // -------------------------------------------------------------------------
+    // CameraOverlayButtons unit-level Compose tests
+    // -------------------------------------------------------------------------
+
+    /** Torch button is shown when a flash unit is available and torch is off. */
+    @Test
+    fun cameraOverlayButtons_showsTorchButtonWhenFlashAvailable() {
+        composeTestRule.setContent {
+            CameraOverlayButtons(
+                hasFlashUnit = true,
+                isTorchOn = false,
+                onTorchToggle = {},
+                onPickImage = {}
+            )
+        }
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.turn_torch_on))
+            .assertIsDisplayed()
+    }
+
+    /** Torch button is hidden when no flash unit is present. */
+    @Test
+    fun cameraOverlayButtons_hidesTorchButtonWhenNoFlash() {
+        composeTestRule.setContent {
+            CameraOverlayButtons(
+                hasFlashUnit = false,
+                isTorchOn = false,
+                onTorchToggle = {},
+                onPickImage = {}
+            )
+        }
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.turn_torch_on))
+            .assertDoesNotExist()
+    }
+
+    /** When torch is on the button shows the "turn off" description for accessibility. */
+    @Test
+    fun cameraOverlayButtons_showsTurnOffDescriptionWhenTorchOn() {
+        composeTestRule.setContent {
+            CameraOverlayButtons(
+                hasFlashUnit = true,
+                isTorchOn = true,
+                onTorchToggle = {},
+                onPickImage = {}
+            )
+        }
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.turn_torch_off))
+            .assertIsDisplayed()
+    }
+
+    /** Upload image button is always shown regardless of flash availability. */
+    @Test
+    fun cameraOverlayButtons_alwaysShowsUploadButton() {
+        composeTestRule.setContent {
+            CameraOverlayButtons(
+                hasFlashUnit = false,
+                isTorchOn = false,
+                onTorchToggle = {},
+                onPickImage = {}
+            )
+        }
+        composeTestRule
+            .onNodeWithContentDescription(context.getString(R.string.upload_image))
+            .assertIsDisplayed()
     }
 
     /**

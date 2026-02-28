@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FlashlightOff
+import androidx.compose.material.icons.filled.FlashlightOn
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -81,6 +83,11 @@ fun QrCameraScreen(
     val scanImageUseCase: ScanImageUseCase = koinInject()
     val noBarcodes = stringResource(R.string.no_barcodes_found)
     val imageProcessingFailed = stringResource(R.string.image_processing_failed)
+    // isTorchOn is saved across configuration changes (e.g. rotation) so the user's choice
+    // is preserved when the screen is recreated. hasFlashUnit is not saved because it is
+    // re-detected from the hardware after each camera binding.
+    var isTorchOn by rememberSaveable { mutableStateOf(false) }
+    var hasFlashUnit by remember { mutableStateOf(false) }
 
     suspend fun scanUriAndShowResult(uri: Uri) {
         try {
@@ -162,7 +169,10 @@ fun QrCameraScreen(
             )
         } else {
             Box(modifier = Modifier.fillMaxSize()) {
-                CameraPreview {
+                CameraPreview(
+                    isTorchOn = isTorchOn,
+                    onHasFlashUnit = { hasFlashUnit = it }
+                ) {
                     if (it?.isNotEmpty() == true && !openBottomSheet) {
                         openBottomSheet = true
                         viewModel.saveBarcodes(it)
@@ -171,17 +181,13 @@ fun QrCameraScreen(
                         }
                     }
                 }
-                FilledIconButton(
-                    onClick = { imagePickerLauncher.launch("image/*") },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Image,
-                        contentDescription = stringResource(R.string.upload_image)
-                    )
-                }
+                CameraOverlayButtons(
+                    hasFlashUnit = hasFlashUnit,
+                    isTorchOn = isTorchOn,
+                    onTorchToggle = { isTorchOn = !isTorchOn },
+                    onPickImage = { imagePickerLauncher.launch("image/*") },
+                    modifier = Modifier.align(Alignment.BottomEnd)
+                )
             }
         }
         BackHandler(enabled = openBottomSheet) {
@@ -237,6 +243,47 @@ private fun PermissionPrompt(permissionState: PermissionState, onPickImage: () -
                 modifier = Modifier.padding(end = 8.dp)
             )
             Text(stringResource(R.string.upload_image))
+        }
+    }
+}
+
+/**
+ * Overlay buttons shown on the camera preview: an optional torch toggle (only when a flash unit
+ * is present) and an upload-image button.
+ *
+ * @param hasFlashUnit Whether the current device has a hardware flash unit.
+ * @param isTorchOn Whether the torch is currently on.
+ * @param onTorchToggle Called when the user taps the torch button.
+ * @param onPickImage Called when the user taps the image-picker button.
+ * @param modifier Modifier applied to the containing [Column].
+ */
+@Composable
+internal fun CameraOverlayButtons(
+    hasFlashUnit: Boolean,
+    isTorchOn: Boolean,
+    onTorchToggle: () -> Unit,
+    onPickImage: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        if (hasFlashUnit) {
+            FilledIconButton(onClick = onTorchToggle) {
+                Icon(
+                    imageVector = if (isTorchOn) Icons.Filled.FlashlightOn else Icons.Filled.FlashlightOff,
+                    contentDescription = stringResource(
+                        if (isTorchOn) R.string.turn_torch_off else R.string.turn_torch_on
+                    )
+                )
+            }
+        }
+        FilledIconButton(onClick = onPickImage) {
+            Icon(
+                imageVector = Icons.Filled.Image,
+                contentDescription = stringResource(R.string.upload_image)
+            )
         }
     }
 }
