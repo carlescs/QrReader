@@ -39,7 +39,8 @@ interface SettingsRepository {
 
     /**
      * The language code for AI-generated texts and tags (e.g., "en", "es", "fr").
-     * Defaults to "en" (English).
+     * The special value `"device"` (the default) resolves to the current device locale language
+     * at prompt-generation time.
      */
     val aiLanguage: Flow<String>
 

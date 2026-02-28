@@ -37,7 +37,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         context.dataStore.data.map { prefs -> prefs[AI_GENERATION_KEY] ?: true }
 
     override val aiLanguage: Flow<String> =
-        context.dataStore.data.map { prefs -> prefs[AI_LANGUAGE_KEY] ?: "en" }
+        context.dataStore.data.map { prefs -> prefs[AI_LANGUAGE_KEY] ?: "device" }
 
     override val aiHumorousDescriptions: Flow<Boolean> =
         context.dataStore.data.map { prefs -> prefs[AI_HUMOROUS_DESCRIPTIONS_KEY] ?: false }
