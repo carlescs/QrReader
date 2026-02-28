@@ -2,6 +2,7 @@ package cat.company.qrreader.domain.usecase
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.util.Locale
 
 /**
  * Unit tests for [languageNameForPrompt].
@@ -75,6 +76,17 @@ class AiLanguageUtilsTest {
     fun `uppercase code returns English (case sensitive)`() {
         // The function uses exact match, so uppercase should fall through to default
         assertEquals("English", languageNameForPrompt("ES"))
+    }
+
+    @Test
+    fun `device code resolves to current device locale language`() {
+        val savedLocale = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale("es"))
+            assertEquals("Spanish", languageNameForPrompt("device"))
+        } finally {
+            Locale.setDefault(savedLocale)
+        }
     }
 }
 

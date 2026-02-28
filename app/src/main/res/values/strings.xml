@@ -128,6 +128,7 @@
     <string name="ai_humorous_descriptions_description">When enabled, AI will generate funny and witty barcode descriptions instead of factual ones.</string>
 
     <!-- AI language options -->
+    <string name="language_device">Device language</string>
     <string name="language_english">English</string>
     <string name="language_spanish">Spanish</string>
     <string name="language_french">French</string>

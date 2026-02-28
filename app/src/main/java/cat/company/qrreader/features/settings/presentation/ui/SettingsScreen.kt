@@ -51,6 +51,7 @@ import org.koin.compose.koinInject
 private data class LanguageOption(val code: String, @StringRes val nameRes: Int)
 
 private val SUPPORTED_LANGUAGES = listOf(
+    LanguageOption("device", R.string.language_device),
     LanguageOption("en", R.string.language_english),
     LanguageOption("es", R.string.language_spanish),
     LanguageOption("fr", R.string.language_french),
@@ -227,7 +228,7 @@ fun HistorySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
 @Composable
 fun AiSettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val aiGenerationState by viewModel.aiGenerationEnabled.collectAsState(initial = true)
-    val aiLanguageState by viewModel.aiLanguage.collectAsState(initial = "en")
+    val aiLanguageState by viewModel.aiLanguage.collectAsState(initial = "device")
     val aiHumorousState by viewModel.aiHumorousDescriptions.collectAsState(initial = false)
     var showLanguageDialog by remember { mutableStateOf(false) }
 
