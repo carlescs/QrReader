@@ -1,59 +1,61 @@
 package cat.company.qrreader.domain.usecase.update
 
-import org.junit.Assert.assertFalse
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
+import com.google.android.play.core.appupdate.testing.FakeAppUpdateManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(manifest = Config.NONE)
+@OptIn(ExperimentalCoroutinesApi::class)
 class CheckAppUpdateUseCaseTest {
 
-    private fun useCase(current: String = "1.0.0") = CheckAppUpdateUseCase(current)
+    private val context: Context = ApplicationProvider.getApplicationContext()
+    private val testDispatcher = StandardTestDispatcher()
 
-    // isNewerVersion tests
+    @Before
+    fun setup() {
+        Dispatchers.setMain(testDispatcher)
+    }
 
-    @Test
-    fun `isNewerVersion returns true when latest major is higher`() {
-        assertTrue(useCase("1.0.0").isNewerVersion("2.0.0", "1.0.0"))
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test
-    fun `isNewerVersion returns true when latest minor is higher`() {
-        assertTrue(useCase("1.0.0").isNewerVersion("1.1.0", "1.0.0"))
+    fun `invoke returns UpdateAvailable when Play Store has a newer version`() = runTest {
+        val fakeManager = FakeAppUpdateManager(context)
+        fakeManager.setUpdateAvailable(2)
+        val result = CheckAppUpdateUseCase(fakeManager)()
+        assertTrue(result is UpdateCheckResult.UpdateAvailable)
     }
 
     @Test
-    fun `isNewerVersion returns true when latest patch is higher`() {
-        assertTrue(useCase("1.0.0").isNewerVersion("1.0.1", "1.0.0"))
+    fun `invoke returns UpToDate when no update is available`() = runTest {
+        val fakeManager = FakeAppUpdateManager(context)
+        // Default FakeAppUpdateManager state: no update available
+        val result = CheckAppUpdateUseCase(fakeManager)()
+        assertEquals(UpdateCheckResult.UpToDate, result)
     }
 
     @Test
-    fun `isNewerVersion returns false when versions are equal`() {
-        assertFalse(useCase("1.2.3").isNewerVersion("1.2.3", "1.2.3"))
-    }
-
-    @Test
-    fun `isNewerVersion returns false when installed version is newer`() {
-        assertFalse(useCase("2.0.0").isNewerVersion("1.9.9", "2.0.0"))
-    }
-
-    @Test
-    fun `isNewerVersion handles missing patch segment`() {
-        // "1.1" should be treated as "1.1.0", so "1.1.0" == "1.1.0"
-        assertFalse(useCase("1.1.0").isNewerVersion("1.1", "1.1.0"))
-    }
-
-    @Test
-    fun `isNewerVersion handles missing segment in latest`() {
-        // "2.0" vs "1.9.9" - 2 > 1
-        assertTrue(useCase("1.9.9").isNewerVersion("2.0", "1.9.9"))
-    }
-
-    @Test
-    fun `isNewerVersion compares multi-digit segment correctly`() {
-        assertTrue(useCase("1.0.0").isNewerVersion("1.0.10", "1.0.9"))
-    }
-
-    @Test
-    fun `isNewerVersion returns false for equal single segment versions`() {
-        assertFalse(useCase("5.0").isNewerVersion("5", "5"))
+    fun `invoke returns Error when app update info task fails`() = runTest {
+        val result = CheckAppUpdateUseCase(FailingAppUpdateManager())()
+        assertTrue(result is UpdateCheckResult.Error)
+        assertEquals("Simulated network error", (result as UpdateCheckResult.Error).message)
     }
 }

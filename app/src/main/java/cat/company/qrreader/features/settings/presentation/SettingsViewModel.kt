@@ -137,4 +137,9 @@ class SettingsViewModel(
     fun clearUpdateCheckResult() {
         _updateCheckResult.value = null
     }
+
+    /** Records an error that occurred while trying to launch the in-app update flow. */
+    fun onUpdateFlowFailed(message: String) {
+        _updateCheckResult.value = UpdateCheckResult.Error(message)
+    }
 }

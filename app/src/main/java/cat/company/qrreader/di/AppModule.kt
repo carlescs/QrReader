@@ -1,7 +1,6 @@
 package cat.company.qrreader.di
 
 import androidx.room.Room
-import cat.company.qrreader.BuildConfig
 import cat.company.qrreader.data.repository.BarcodeRepositoryImpl
 import cat.company.qrreader.data.repository.SettingsRepositoryImpl
 import cat.company.qrreader.data.repository.TagRepositoryImpl
@@ -35,6 +34,7 @@ import cat.company.qrreader.domain.usecase.tags.DeleteTagUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import cat.company.qrreader.domain.usecase.update.CheckAppUpdateUseCase
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import cat.company.qrreader.features.camera.presentation.QrCameraViewModel
 import cat.company.qrreader.features.codeCreator.presentation.CodeCreatorViewModel
 import cat.company.qrreader.features.history.presentation.HistoryViewModel
@@ -70,6 +70,7 @@ val repositoryModule = module {
     single<BarcodeRepository> { BarcodeRepositoryImpl(get()) }
     single<TagRepository> { TagRepositoryImpl(get()) }
     single<SettingsRepository> { SettingsRepositoryImpl(androidContext()) }
+    single { AppUpdateManagerFactory.create(androidContext()) }
 }
 
 val useCaseModule = module {
@@ -97,7 +98,7 @@ val useCaseModule = module {
     factory { SetAiHumorousDescriptionsUseCase(get()) }
     factory { GenerateQrCodeUseCase() }
     factory { SaveBitmapToMediaStoreUseCase() }
-    factory { CheckAppUpdateUseCase(BuildConfig.VERSION_NAME) }
+    factory { CheckAppUpdateUseCase(get()) }
 }
 
 val viewModelModule = module {

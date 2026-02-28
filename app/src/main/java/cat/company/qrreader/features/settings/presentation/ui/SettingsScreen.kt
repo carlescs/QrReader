@@ -1,7 +1,5 @@
 package cat.company.qrreader.features.settings.presentation.ui
 
-import android.content.Intent
-import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -24,6 +22,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,11 +35,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import cat.company.qrreader.BuildConfig
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.usecase.update.UpdateCheckResult
 import cat.company.qrreader.features.settings.presentation.SettingsViewModel
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.model.ActivityResult as PlayActivityResult
+import com.google.android.play.core.install.model.AppUpdateType
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 private data class LanguageOption(val code: String, @StringRes val nameRes: Int)
 
@@ -63,6 +69,7 @@ private val SUPPORTED_LANGUAGES = listOf(
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = koinViewModel(),
+    appUpdateManager: AppUpdateManager = koinInject(),
     onNavigateToHistorySettings: () -> Unit = {},
     onNavigateToAiSettings: () -> Unit = {}
 ) {
@@ -70,6 +77,35 @@ fun SettingsScreen(
     val updateCheckResult by viewModel.updateCheckResult.collectAsState()
     val isCheckingForUpdates by viewModel.isCheckingForUpdates.collectAsState()
     val context = LocalContext.current
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { activityResult ->
+        if (activityResult.resultCode == PlayActivityResult.RESULT_IN_APP_UPDATE_FAILED) {
+            viewModel.onUpdateFlowFailed(
+                context.getString(R.string.update_check_failed)
+            )
+        }
+    }
+
+    // When an update is available, launch the Play Store in-app update flow immediately.
+    LaunchedEffect(updateCheckResult) {
+        val result = updateCheckResult
+        if (result is UpdateCheckResult.UpdateAvailable) {
+            try {
+                appUpdateManager.startUpdateFlowForResult(
+                    result.appUpdateInfo,
+                    launcher,
+                    AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build()
+                )
+                viewModel.clearUpdateCheckResult()
+            } catch (e: Exception) {
+                viewModel.onUpdateFlowFailed(
+                    e.message ?: context.getString(R.string.update_check_failed)
+                )
+            }
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         SettingsNavigationItem(
@@ -92,15 +128,15 @@ fun SettingsScreen(
         )
     }
 
+    // Only show our own dialog for UpToDate and Error results.
+    // UpdateAvailable is handled above by the Play Store in-app update sheet.
     updateCheckResult?.let { result ->
-        UpdateCheckResultDialog(
-            result = result,
-            onOpenRelease = { url ->
-                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                viewModel.clearUpdateCheckResult()
-            },
-            onDismiss = { viewModel.clearUpdateCheckResult() }
-        )
+        if (result !is UpdateCheckResult.UpdateAvailable) {
+            UpdateCheckResultDialog(
+                result = result,
+                onDismiss = { viewModel.clearUpdateCheckResult() }
+            )
+        }
     }
 }
 
@@ -292,32 +328,10 @@ private fun AppVersionItem(
 @Composable
 private fun UpdateCheckResultDialog(
     result: UpdateCheckResult,
-    onOpenRelease: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     when (result) {
-        is UpdateCheckResult.UpdateAvailable -> AlertDialog(
-            title = { Text(text = stringResource(R.string.update_available)) },
-            text = {
-                Text(
-                    text = stringResource(
-                        R.string.update_available_message,
-                        result.latestVersion
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { onOpenRelease(result.releaseUrl) }) {
-                    Text(text = stringResource(R.string.view_release))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text(text = stringResource(R.string.cancel))
-                }
-            },
-            onDismissRequest = onDismiss
-        )
+        is UpdateCheckResult.UpdateAvailable -> { /* handled by Play Store in-app update sheet */ }
         is UpdateCheckResult.UpToDate -> AlertDialog(
             title = { Text(text = stringResource(R.string.already_up_to_date)) },
             text = { Text(text = BuildConfig.VERSION_NAME) },

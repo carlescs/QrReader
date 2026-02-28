@@ -166,9 +166,6 @@
     <string name="app_version">App version</string>
     <string name="check_for_updates">Check for updates</string>
     <string name="checking_for_updates">Checking for updates\u2026</string>
-    <string name="update_available">Update available</string>
-    <string name="update_available_message">Version %s is available. Would you like to view the release?</string>
-    <string name="view_release">View release</string>
     <string name="already_up_to_date">You\'re up to date!</string>
     <string name="update_check_failed">Could not check for updates</string>
 </resources>
