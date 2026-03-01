@@ -22,8 +22,10 @@ import cat.company.qrreader.utils.canAuthenticate
 import cat.company.qrreader.utils.findFragmentActivity
 import cat.company.qrreader.utils.showBiometricPrompt
 import com.google.firebase.analytics.FirebaseAnalytics
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
@@ -42,6 +44,7 @@ class MainActivity : AppCompatActivity() {
     private val _sharedText = MutableStateFlow<String?>(null)
     private val _sharedContactText = MutableStateFlow<String?>(null)
     private val _sharedRawText = MutableStateFlow<String?>(null)
+    private var lockStateJob: Job? = null
 
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -88,7 +91,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        // Auto-trigger the biometric prompt whenever the app enters the foreground while locked.
+        // Waits for the lock state to be fully determined first (handles first-launch null state).
+        lockStateJob = lifecycleScope.launch {
+            val locked = appLockViewModel.isLocked.first { it != null }
+            if (locked == true) {
+                triggerBiometricUnlock()
+            }
+        }
+    }
+
     override fun onStop() {
+        lockStateJob?.cancel()
+        lockStateJob = null
         super.onStop()
         appLockViewModel.lockIfAutoLockEnabled()
     }
