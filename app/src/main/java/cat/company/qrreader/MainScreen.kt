@@ -66,7 +66,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 @ExperimentalGetImage
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null, onSharedImageConsumed: () -> Unit = {}, sharedText: String? = null, onSharedTextConsumed: () -> Unit = {}, sharedContactText: String? = null, onSharedContactTextConsumed: () -> Unit = {}) {
+fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null, onSharedImageConsumed: () -> Unit = {}, sharedText: String? = null, onSharedTextConsumed: () -> Unit = {}, sharedContactText: String? = null, onSharedContactTextConsumed: () -> Unit = {}, sharedRawText: String? = null, onSharedRawTextConsumed: () -> Unit = {}) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -128,6 +128,15 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
             }
         }
 
+        // Navigate to camera screen when other shared text is received
+        LaunchedEffect(sharedRawText) {
+            if (sharedRawText != null) {
+                navController.navigate("camera") {
+                    launchSingleTop = true
+                }
+            }
+        }
+
         Scaffold(
             snackbarHost = { SnackbarHost(snackBarHostState) },
             topBar = {
@@ -174,7 +183,7 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
                         route = "camera",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://camera" })
                     ) {
-                        QrCameraScreen(snackBarHostState, sharedImageUri = sharedImageUri, onSharedImageConsumed = onSharedImageConsumed, sharedText = sharedText, onSharedTextConsumed = onSharedTextConsumed, sharedContactText = sharedContactText, onSharedContactTextConsumed = onSharedContactTextConsumed, onNavigateToHistory = {
+                        QrCameraScreen(snackBarHostState, sharedImageUri = sharedImageUri, onSharedImageConsumed = onSharedImageConsumed, sharedText = sharedText, onSharedTextConsumed = onSharedTextConsumed, sharedContactText = sharedContactText, onSharedContactTextConsumed = onSharedContactTextConsumed, sharedRawText = sharedRawText, onSharedRawTextConsumed = onSharedRawTextConsumed, onNavigateToHistory = {
                             navController.navigate("history") {
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true

@@ -69,6 +69,8 @@ fun QrCameraScreen(
     onSharedTextConsumed: () -> Unit = {},
     sharedContactText: String? = null,
     onSharedContactTextConsumed: () -> Unit = {},
+    sharedRawText: String? = null,
+    onSharedRawTextConsumed: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     viewModel: QrCameraViewModel = koinViewModel()
 ) {
@@ -124,7 +126,7 @@ fun QrCameraScreen(
     // in LaunchedEffect(sharedText/sharedContactText) sets openBottomSheet = true AFTER
     // our false, ensuring the sheet remains visible.
     LaunchedEffect(Unit) {
-        if (sharedText == null && sharedContactText == null) {
+        if (sharedText == null && sharedContactText == null && sharedRawText == null) {
             openBottomSheet = false
             bottomSheetState.hide()
         }
@@ -155,6 +157,16 @@ fun QrCameraScreen(
             openBottomSheet = true
             bottomSheetState.show()
             onSharedContactTextConsumed()
+        }
+    }
+
+    // Show other shared text as if it was scanned from a barcode
+    LaunchedEffect(sharedRawText) {
+        if (sharedRawText != null) {
+            viewModel.setSharedRawText(sharedRawText)
+            openBottomSheet = true
+            bottomSheetState.show()
+            onSharedRawTextConsumed()
         }
     }
 

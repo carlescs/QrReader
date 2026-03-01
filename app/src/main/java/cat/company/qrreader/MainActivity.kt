@@ -33,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     private val _sharedImageUri = MutableStateFlow<Uri?>(null)
     private val _sharedText = MutableStateFlow<String?>(null)
     private val _sharedContactText = MutableStateFlow<String?>(null)
+    private val _sharedRawText = MutableStateFlow<String?>(null)
 
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -42,6 +43,7 @@ class MainActivity : AppCompatActivity() {
         _sharedImageUri.value = extractSharedImageUri(intent)
         _sharedText.value = extractSharedText(intent)
         lifecycleScope.launch { _sharedContactText.value = extractSharedContactText(intent) }
+        _sharedRawText.value = extractSharedRawText(intent)
 
         enableEdgeToEdge()
         setContent {
@@ -49,6 +51,7 @@ class MainActivity : AppCompatActivity() {
                 val sharedImageUri by _sharedImageUri.collectAsState()
                 val sharedText by _sharedText.collectAsState()
                 val sharedContactText by _sharedContactText.collectAsState()
+                val sharedRawText by _sharedRawText.collectAsState()
                 MainScreen(
                     firebaseAnalytics,
                     sharedImageUri,
@@ -56,7 +59,9 @@ class MainActivity : AppCompatActivity() {
                     sharedText = sharedText,
                     onSharedTextConsumed = { _sharedText.value = null },
                     sharedContactText = sharedContactText,
-                    onSharedContactTextConsumed = { _sharedContactText.value = null }
+                    onSharedContactTextConsumed = { _sharedContactText.value = null },
+                    sharedRawText = sharedRawText,
+                    onSharedRawTextConsumed = { _sharedRawText.value = null }
                 )
             }
         }
@@ -68,6 +73,7 @@ class MainActivity : AppCompatActivity() {
         _sharedImageUri.value = extractSharedImageUri(intent)
         _sharedText.value = extractSharedText(intent)
         lifecycleScope.launch { _sharedContactText.value = extractSharedContactText(intent) }
+        _sharedRawText.value = extractSharedRawText(intent)
     }
 
     private fun extractSharedImageUri(intent: Intent): Uri? {
@@ -129,5 +135,20 @@ class MainActivity : AppCompatActivity() {
         }
 
         return null
+    }
+
+    /**
+     * Extracts text shared via ACTION_SEND (text/plain) that is not a WiFi QR string or
+     * a vCard/MECARD contact string. Such text is treated as generic barcode content.
+     */
+    private fun extractSharedRawText(intent: Intent): String? {
+        if (intent.action != Intent.ACTION_SEND) return null
+        if (intent.type != "text/plain") return null
+        val text = intent.getStringExtra(Intent.EXTRA_TEXT)?.trim()
+        if (text.isNullOrEmpty()) return null
+        if (text.startsWith("WIFI:", ignoreCase = true)) return null
+        if (text.startsWith("BEGIN:VCARD", ignoreCase = true) ||
+            text.startsWith("MECARD:", ignoreCase = true)) return null
+        return text
     }
 }
