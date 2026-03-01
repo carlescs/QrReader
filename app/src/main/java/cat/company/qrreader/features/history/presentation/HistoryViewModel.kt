@@ -190,6 +190,16 @@ class HistoryViewModel(
     }
 
     /**
+     * Re-locks a temporarily unlocked barcode by removing it from the in-memory unlocked set.
+     *
+     * This does NOT change the persistent lock state in the database. The barcode retains
+     * [BarcodeModel.isLocked] = true and will require fresh biometric authentication to view again.
+     */
+    fun relockBarcode(barcodeId: Int) {
+        _unlockedBarcodeIds.update { it - barcodeId }
+    }
+
+    /**
      * Clears all temporarily unlocked barcodes from the in-memory cache.
      *
      * This does NOT modify the persistent lock state in the database. Barcodes that have
