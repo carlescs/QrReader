@@ -82,6 +82,7 @@ class HistoryTest {
         override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
         override fun getFavoritesCount(): Flow<Int> = flowOf(0)
         override fun getLockedCount(): Flow<Int> = flowOf(0)
+        override suspend fun findByContent(content: String): BarcodeModel? = null
     }
 
     private class FakeGenerateBarcodeAiDataUseCase : GenerateBarcodeAiDataUseCase() {
@@ -138,6 +139,9 @@ class HistoryTest {
             override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
+            override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
         }
         val viewModel = HistoryViewModel(
             HistoryBarcodeUseCases(
@@ -204,6 +208,9 @@ class HistoryTest {
             override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
+            override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
         }
         val viewModel = HistoryViewModel(
             HistoryBarcodeUseCases(
@@ -263,6 +270,9 @@ class HistoryTest {
             override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
+            override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
         }
         val viewModel = HistoryViewModel(
             HistoryBarcodeUseCases(
@@ -322,6 +332,9 @@ class HistoryTest {
             override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
+            override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
         }
         val viewModel = HistoryViewModel(
             HistoryBarcodeUseCases(

@@ -99,5 +99,9 @@ class BarcodeRepositoryImpl(database: BarcodesDb) : BarcodeRepository {
     override fun getFavoritesCount(): Flow<Int> {
         return barcodeDao.getFavoritesCount()
     }
+
+    override suspend fun findByContent(content: String): BarcodeModel? {
+        return barcodeDao.findByContent(content)?.toDomainModel()
+    }
 }
 

@@ -91,6 +91,7 @@ class HistoryViewModelTest {
         override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
         override fun getFavoritesCount(): Flow<Int> = flowOf(0)
         override fun getLockedCount(): Flow<Int> = flowOf(0)
+        override suspend fun findByContent(content: String): BarcodeModel? = null
 
         fun emitResult(list: List<BarcodeWithTagsModel>) {
             resultFlow.value = list
@@ -137,6 +138,9 @@ class HistoryViewModelTest {
         override val biometricLockEnabled: Flow<Boolean>
             get() = flowOf(false)
         override suspend fun setBiometricLockEnabled(value: Boolean) {}
+        override val duplicateCheckEnabled: Flow<Boolean>
+            get() = flowOf(true)
+        override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
     }
 
     private fun makeViewModel(repository: FakeBarcodeRepository): HistoryViewModel {
@@ -250,6 +254,9 @@ class HistoryViewModelTest {
             override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
+            override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = flowOf(true)
+            override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
         }
 
         val vm = HistoryViewModel(

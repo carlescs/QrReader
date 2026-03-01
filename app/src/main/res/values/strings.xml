@@ -52,6 +52,12 @@
     <string name="copied">Copied!</string>
     <string name="no_barcode_value">No</string>
 
+    <!-- Duplicate scan -->
+    <string name="duplicate_scan_title">Already scanned</string>
+    <string name="duplicate_scan_message">You\'ve already scanned this code on %s. What would you like to do?</string>
+    <string name="duplicate_open_existing">Open existing</string>
+    <string name="duplicate_save_again">Save again</string>
+
     <!-- Code Creator -->
     <string name="enter_text_to_encode">Enter text to encode</string>
     <string name="qr_code_assistants">QR Code Assistants</string>
@@ -133,6 +139,8 @@
     <string name="show_tag_counters_description">When enabled, displays the number of barcodes for each tag in the history filter.</string>
     <string name="biometric_lock_enabled">Biometric lock</string>
     <string name="biometric_lock_description">When enabled, selected barcodes can be locked and require fingerprint or face authentication to view.</string>
+    <string name="duplicate_check_enabled">Duplicate scan detection</string>
+    <string name="duplicate_check_description">When enabled, you will be prompted before saving a barcode that already exists in your history.</string>
     <string name="ai_features">AI features</string>
     <string name="ai_features_description">When enabled, AI-generated tag suggestions and barcode descriptions will be shown for scanned barcodes on supported devices.</string>
     <string name="ai_language">AI language</string>

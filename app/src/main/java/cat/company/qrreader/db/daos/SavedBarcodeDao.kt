@@ -104,6 +104,9 @@ abstract class SavedBarcodeDao {
     @Query("SELECT COUNT(*) FROM saved_barcodes WHERE is_favorite = 1")
     abstract fun getFavoritesCount(): Flow<Int>
 
+    @Query("SELECT * FROM saved_barcodes WHERE barcode = :content COLLATE NOCASE ORDER BY date DESC LIMIT 1")
+    abstract suspend fun findByContent(content: String): SavedBarcode?
+
     @Transaction
     open suspend fun switchTag(barcode: SavedBarcodeWithTags, tag: Tag){
         if(barcode.tags.contains(tag))

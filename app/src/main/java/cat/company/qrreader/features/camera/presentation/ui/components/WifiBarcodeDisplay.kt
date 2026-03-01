@@ -25,10 +25,13 @@ import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.domain.model.SuggestedTagModel
+import cat.company.qrreader.domain.usecase.camera.CheckDuplicateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
+import cat.company.qrreader.domain.usecase.settings.GetDuplicateCheckEnabledUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import cat.company.qrreader.ui.components.common.WifiConnectButton
 import com.google.mlkit.vision.barcode.common.Barcode
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.util.Date
@@ -51,7 +54,8 @@ fun WifiBarcodeDisplay(
     description: String? = null,
     isLoadingDescription: Boolean = false,
     descriptionError: String? = null,
-    onToggleTag: (String) -> Unit = {}
+    onToggleTag: (String) -> Unit = {},
+    onNavigateToHistory: () -> Unit = {}
 ) {
     val rawContent = barcode.rawValue ?: barcode.displayValue ?: return
     WifiBarcodeDisplayContent(
@@ -70,7 +74,8 @@ fun WifiBarcodeDisplay(
         description = description,
         isLoadingDescription = isLoadingDescription,
         descriptionError = descriptionError,
-        onToggleTag = onToggleTag
+        onToggleTag = onToggleTag,
+        onNavigateToHistory = onNavigateToHistory
     )
 }
 
@@ -100,13 +105,17 @@ internal fun WifiBarcodeDisplayContent(
     description: String? = null,
     isLoadingDescription: Boolean = false,
     descriptionError: String? = null,
-    onToggleTag: (String) -> Unit = {}
+    onToggleTag: (String) -> Unit = {},
+    onNavigateToHistory: () -> Unit = {}
 ) {
     val saveBarcodeWithTagsUseCase: SaveBarcodeWithTagsUseCase = koinInject()
     val getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
+    val checkDuplicateBarcodeUseCase: CheckDuplicateBarcodeUseCase = koinInject()
+    val getDuplicateCheckEnabledUseCase: GetDuplicateCheckEnabledUseCase = koinInject()
     val coroutineScope = rememberCoroutineScope()
     val saved = remember { mutableStateOf(false) }
     val saveDescription = remember(description) { mutableStateOf(true) }
+    val duplicateBarcode = remember { mutableStateOf<BarcodeModel?>(null) }
 
     Title(title = stringResource(R.string.wifi))
 
@@ -172,6 +181,14 @@ internal fun WifiBarcodeDisplayContent(
             onClick = {
                 coroutineScope.launch {
                     try {
+                        val duplicateCheckEnabled = getDuplicateCheckEnabledUseCase().first()
+                        if (duplicateCheckEnabled) {
+                            val existing = checkDuplicateBarcodeUseCase(rawContent)
+                            if (existing != null) {
+                                duplicateBarcode.value = existing
+                                return@launch
+                            }
+                        }
                         val barcodeModel = BarcodeModel(
                             date = Date(),
                             type = Barcode.TYPE_WIFI,
@@ -199,5 +216,39 @@ internal fun WifiBarcodeDisplayContent(
                 tint = if (saved.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+
+    duplicateBarcode.value?.let { duplicate ->
+        DuplicateScanDialog(
+            existingDate = duplicate.date,
+            onOpenExisting = {
+                duplicateBarcode.value = null
+                onNavigateToHistory()
+            },
+            onSaveAgain = {
+                coroutineScope.launch {
+                    try {
+                        val barcodeModel = BarcodeModel(
+                            date = Date(),
+                            type = Barcode.TYPE_WIFI,
+                            barcode = rawContent,
+                            format = barcodeFormat
+                        )
+                        val tags = if (selectedTagNames.isNotEmpty()) {
+                            val tagColors = suggestedTags.associate { it.name to it.color }
+                            getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
+                        } else {
+                            emptyList()
+                        }
+                        saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
+                        saved.value = true
+                        duplicateBarcode.value = null
+                    } catch (_: Exception) {
+                        // Keep dialog open so the user can retry or cancel
+                    }
+                }
+            },
+            onDismiss = { duplicateBarcode.value = null }
+        )
     }
 }

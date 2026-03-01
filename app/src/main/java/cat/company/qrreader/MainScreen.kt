@@ -172,7 +172,15 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
                         route = "camera",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://camera" })
                     ) {
-                        QrCameraScreen(snackBarHostState, sharedImageUri = sharedImageUri, onSharedImageConsumed = onSharedImageConsumed, sharedText = sharedText, onSharedTextConsumed = onSharedTextConsumed, sharedContactText = sharedContactText, onSharedContactTextConsumed = onSharedContactTextConsumed)
+                        QrCameraScreen(snackBarHostState, sharedImageUri = sharedImageUri, onSharedImageConsumed = onSharedImageConsumed, sharedText = sharedText, onSharedTextConsumed = onSharedTextConsumed, sharedContactText = sharedContactText, onSharedContactTextConsumed = onSharedContactTextConsumed, onNavigateToHistory = {
+                            navController.navigate("history") {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        })
                     }
                     composable("history") {
                         History(
