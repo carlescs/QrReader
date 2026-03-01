@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.sp
 private val MIN_CIRCLE_SIZE = 16.dp
 
 /**
- * A perfectly circular count indicator that displays a number beside an icon.
+ * A circular or pill-shaped count indicator that displays a number beside an icon.
  *
  * Stays round for counts 1–99 (fixed [MIN_CIRCLE_SIZE] minimum size). For counts above 99 the
  * display text is capped at "99+" to prevent the indicator from growing unbounded.
