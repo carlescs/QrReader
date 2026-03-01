@@ -30,6 +30,7 @@ import org.junit.Before
 import org.junit.Test
 import java.util.Date
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
@@ -124,6 +125,9 @@ class HistoryViewModelTest {
         override val aiHumorousDescriptions: Flow<Boolean>
             get() = flowOf(false)
         override suspend fun setAiHumorousDescriptions(value: Boolean) {}
+        override val showTagCounters: Flow<Boolean>
+            get() = flowOf(true)
+        override suspend fun setShowTagCounters(value: Boolean) {}
     }
 
     private fun makeViewModel(repository: FakeBarcodeRepository): HistoryViewModel {
@@ -226,6 +230,9 @@ class HistoryViewModelTest {
             override val aiHumorousDescriptions: Flow<Boolean>
                 get() = flowOf(false)
             override suspend fun setAiHumorousDescriptions(value: Boolean) {}
+            override val showTagCounters: Flow<Boolean>
+                get() = flowOf(true)
+            override suspend fun setShowTagCounters(value: Boolean) {}
         }
 
         val vm = HistoryViewModel(

@@ -120,6 +120,8 @@ class QrCameraViewModelTest {
         override suspend fun setAiHumorousDescriptions(value: Boolean) {
             this.aiHumorousDescriptions.value = value
         }
+        override val showTagCounters = MutableStateFlow(true)
+        override suspend fun setShowTagCounters(value: Boolean) {}
     }
     
     // Simple fake Barcode for testing - uses reflection to work around internal BarcodeSource

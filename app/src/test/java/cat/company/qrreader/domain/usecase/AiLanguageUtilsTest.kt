@@ -82,7 +82,7 @@ class AiLanguageUtilsTest {
     fun `device code resolves to current device locale language`() {
         val savedLocale = Locale.getDefault()
         try {
-            Locale.setDefault(Locale("es"))
+            Locale.setDefault(Locale.forLanguageTag("es"))
             assertEquals("Spanish", languageNameForPrompt("device"))
         } finally {
             Locale.setDefault(savedLocale)

@@ -106,6 +106,9 @@ class HistoryViewModelHideFlagTest {
             override val aiHumorousDescriptions: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setAiHumorousDescriptions(value: Boolean) {}
+            override val showTagCounters: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setShowTagCounters(value: Boolean) {}
         }
         val vm = HistoryViewModel(
             getBarcodesWithTagsUseCase,
