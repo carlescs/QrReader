@@ -5,6 +5,8 @@ import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetBiometricLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.SetBiometricLockEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetDuplicateCheckEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetDuplicateCheckEnabledUseCase
 import cat.company.qrreader.domain.usecase.update.CheckAppUpdateUseCase
 import cat.company.qrreader.domain.usecase.update.UpdateCheckResult
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
@@ -38,6 +40,8 @@ import kotlinx.coroutines.launch
  * @property setShowTagCounters Writes the "show tag counters" preference.
  * @property getBiometricLockEnabled Reads the biometric lock enabled preference.
  * @property setBiometricLockEnabled Writes the biometric lock enabled preference.
+ * @property getDuplicateCheckEnabled Reads the duplicate scan check enabled preference.
+ * @property setDuplicateCheckEnabled Writes the duplicate scan check enabled preference.
  */
 data class HistorySettingsUseCases(
     val getHideTaggedSetting: GetHideTaggedSettingUseCase,
@@ -47,7 +51,9 @@ data class HistorySettingsUseCases(
     val getShowTagCounters: GetShowTagCountersUseCase,
     val setShowTagCounters: SetShowTagCountersUseCase,
     val getBiometricLockEnabled: GetBiometricLockEnabledUseCase,
-    val setBiometricLockEnabled: SetBiometricLockEnabledUseCase
+    val setBiometricLockEnabled: SetBiometricLockEnabledUseCase,
+    val getDuplicateCheckEnabled: GetDuplicateCheckEnabledUseCase,
+    val setDuplicateCheckEnabled: SetDuplicateCheckEnabledUseCase
 )
 
 /**
@@ -127,6 +133,11 @@ class SettingsViewModel(
     val biometricLockEnabled: Flow<Boolean> = historySettings.getBiometricLockEnabled()
 
     /**
+     * Flow for the duplicate scan check enabled setting
+     */
+    val duplicateCheckEnabled: Flow<Boolean> = historySettings.getDuplicateCheckEnabled()
+
+    /**
      * Flow for the 'AI generation enabled' setting
      */
     val aiGenerationEnabled: Flow<Boolean> = aiSettings.getAiGenerationEnabled()
@@ -165,6 +176,12 @@ class SettingsViewModel(
     fun setBiometricLockEnabled(value: Boolean) {
         viewModelScope.launch {
             historySettings.setBiometricLockEnabled(value)
+        }
+    }
+
+    fun setDuplicateCheckEnabled(value: Boolean) {
+        viewModelScope.launch {
+            historySettings.setDuplicateCheckEnabled(value)
         }
     }
 

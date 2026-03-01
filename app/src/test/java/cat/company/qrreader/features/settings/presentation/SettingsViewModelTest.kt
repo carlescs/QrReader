@@ -6,6 +6,8 @@ import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetBiometricLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.SetBiometricLockEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetDuplicateCheckEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetDuplicateCheckEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
@@ -69,6 +71,9 @@ class SettingsViewModelTest {
         val biometricLockFlow = MutableStateFlow(false)
         override val biometricLockEnabled: Flow<Boolean> = biometricLockFlow
         override suspend fun setBiometricLockEnabled(value: Boolean) { biometricLockFlow.value = value }
+        val duplicateCheckFlow = MutableStateFlow(true)
+        override val duplicateCheckEnabled: Flow<Boolean> = duplicateCheckFlow
+        override suspend fun setDuplicateCheckEnabled(value: Boolean) { duplicateCheckFlow.value = value }
     }
 
     private class FakeGenerateBarcodeAiDataUseCase(
@@ -107,7 +112,9 @@ class SettingsViewModelTest {
                 getShowTagCounters = GetShowTagCountersUseCase(fakeRepo),
                 setShowTagCounters = SetShowTagCountersUseCase(fakeRepo),
                 getBiometricLockEnabled = GetBiometricLockEnabledUseCase(fakeRepo),
-                setBiometricLockEnabled = SetBiometricLockEnabledUseCase(fakeRepo)
+                setBiometricLockEnabled = SetBiometricLockEnabledUseCase(fakeRepo),
+                getDuplicateCheckEnabled = GetDuplicateCheckEnabledUseCase(fakeRepo),
+                setDuplicateCheckEnabled = SetDuplicateCheckEnabledUseCase(fakeRepo)
             ),
             aiSettings = AiSettingsUseCases(
                 getAiGenerationEnabled = GetAiGenerationEnabledUseCase(fakeRepo),

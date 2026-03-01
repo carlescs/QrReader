@@ -81,4 +81,16 @@ interface SettingsRepository {
      * Enable or disable the biometric lock feature
      */
     suspend fun setBiometricLockEnabled(value: Boolean)
+
+    /**
+     * Whether duplicate scan detection is enabled. When true, the user is prompted before
+     * saving a barcode that already exists in history (case-insensitive match).
+     * Defaults to true.
+     */
+    val duplicateCheckEnabled: Flow<Boolean>
+
+    /**
+     * Enable or disable duplicate scan detection
+     */
+    suspend fun setDuplicateCheckEnabled(value: Boolean)
 }

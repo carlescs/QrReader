@@ -30,9 +30,12 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.BarcodeModel
+import cat.company.qrreader.domain.usecase.camera.CheckDuplicateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.camera.SaveBarcodeWithTagsUseCase
+import cat.company.qrreader.domain.usecase.settings.GetDuplicateCheckEnabledUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import com.google.mlkit.vision.barcode.common.Barcode
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.util.Date
@@ -53,14 +56,18 @@ fun OtherContent(
     description: String? = null,
     isLoadingDescription: Boolean = false,
     descriptionError: String? = null,
-    onToggleTag: (String) -> Unit = {}
+    onToggleTag: (String) -> Unit = {},
+    onNavigateToHistory: () -> Unit = {}
 ){
     val uriHandler = LocalUriHandler.current
     val saveBarcodeWithTagsUseCase: SaveBarcodeWithTagsUseCase = koinInject()
     val getOrCreateTagsByNameUseCase: GetOrCreateTagsByNameUseCase = koinInject()
+    val checkDuplicateBarcodeUseCase: CheckDuplicateBarcodeUseCase = koinInject()
+    val getDuplicateCheckEnabledUseCase: GetDuplicateCheckEnabledUseCase = koinInject()
     val coroutineScope = rememberCoroutineScope()
     val saved = remember { mutableStateOf(false) }
     val saveDescription = remember(description) { mutableStateOf(true) }
+    val duplicateBarcode = remember { mutableStateOf<BarcodeModel?>(null) }
     Title(title = if (barcode.format == Barcode.FORMAT_EAN_13) stringResource(R.string.ean13) else stringResource(R.string.other))
     val noValue = stringResource(R.string.no_barcode_value)
     when (barcode.format) {
@@ -131,6 +138,14 @@ fun OtherContent(
                 coroutineScope.launch {
                     try {
                         val barcodeContent = barcode.rawValue ?: barcode.displayValue ?: return@launch
+                        val duplicateCheckEnabled = getDuplicateCheckEnabledUseCase().first()
+                        if (duplicateCheckEnabled) {
+                            val existing = checkDuplicateBarcodeUseCase(barcodeContent)
+                            if (existing != null) {
+                                duplicateBarcode.value = existing
+                                return@launch
+                            }
+                        }
                         val barcodeModel = BarcodeModel(
                             date = Date(),
                             type = barcode.valueType,
@@ -163,5 +178,38 @@ fun OtherContent(
                 tint = if (saved.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+
+    duplicateBarcode.value?.let { duplicate ->
+        DuplicateScanDialog(
+            existingDate = duplicate.date,
+            onOpenExisting = {
+                duplicateBarcode.value = null
+                onNavigateToHistory()
+            },
+            onSaveAgain = {
+                duplicateBarcode.value = null
+                coroutineScope.launch {
+                    try {
+                        val barcodeContent = barcode.rawValue ?: barcode.displayValue ?: return@launch
+                        val barcodeModel = BarcodeModel(
+                            date = Date(),
+                            type = barcode.valueType,
+                            barcode = barcodeContent,
+                            format = barcode.format
+                        )
+                        val tags = if (selectedTagNames.isNotEmpty()) {
+                            val tagColors = suggestedTags.associate { it.name to it.color }
+                            getOrCreateTagsByNameUseCase(selectedTagNames, tagColors)
+                        } else {
+                            emptyList()
+                        }
+                        saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
+                        saved.value = true
+                    } catch (_: Exception) { }
+                }
+            },
+            onDismiss = { duplicateBarcode.value = null }
+        )
     }
 }

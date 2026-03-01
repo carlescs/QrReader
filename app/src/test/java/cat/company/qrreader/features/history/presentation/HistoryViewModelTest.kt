@@ -91,6 +91,7 @@ class HistoryViewModelTest {
         override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
         override fun getFavoritesCount(): Flow<Int> = flowOf(0)
         override fun getLockedCount(): Flow<Int> = flowOf(0)
+        override suspend fun findByContent(content: String): BarcodeModel? = null
 
         fun emitResult(list: List<BarcodeWithTagsModel>) {
             resultFlow.value = list

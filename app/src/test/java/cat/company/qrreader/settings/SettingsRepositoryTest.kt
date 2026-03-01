@@ -321,4 +321,34 @@ class SettingsRepositoryTest {
         repository.setBiometricLockEnabled(false)
         assertFalse(repository.biometricLockEnabled.first())
     }
+
+    /**
+     * Test that duplicate check is enabled by default
+     */
+    @Test
+    fun duplicateCheckEnabled_defaultIsTrue() = runTest {
+        val result = repository.duplicateCheckEnabled.first()
+        assertTrue(result)
+    }
+
+    /**
+     * Test that duplicate check can be disabled
+     */
+    @Test
+    fun setDuplicateCheckEnabled_false_updatesValue() = runTest {
+        repository.setDuplicateCheckEnabled(false)
+        assertFalse(repository.duplicateCheckEnabled.first())
+    }
+
+    /**
+     * Test that duplicate check can be re-enabled
+     */
+    @Test
+    fun setDuplicateCheckEnabled_toggle_updatesValue() = runTest {
+        repository.setDuplicateCheckEnabled(false)
+        assertFalse(repository.duplicateCheckEnabled.first())
+
+        repository.setDuplicateCheckEnabled(true)
+        assertTrue(repository.duplicateCheckEnabled.first())
+    }
 }
