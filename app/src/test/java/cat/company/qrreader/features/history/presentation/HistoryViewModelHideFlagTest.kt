@@ -117,6 +117,9 @@ class HistoryViewModelHideFlagTest {
             override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
+            override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
         }
         val vm = HistoryViewModel(
             HistoryBarcodeUseCases(

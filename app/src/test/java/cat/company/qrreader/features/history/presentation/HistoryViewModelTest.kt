@@ -138,6 +138,9 @@ class HistoryViewModelTest {
         override val biometricLockEnabled: Flow<Boolean>
             get() = flowOf(false)
         override suspend fun setBiometricLockEnabled(value: Boolean) {}
+        override val duplicateCheckEnabled: Flow<Boolean>
+            get() = flowOf(true)
+        override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
     }
 
     private fun makeViewModel(repository: FakeBarcodeRepository): HistoryViewModel {
@@ -251,6 +254,9 @@ class HistoryViewModelTest {
             override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
+            override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = flowOf(true)
+            override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
         }
 
         val vm = HistoryViewModel(
