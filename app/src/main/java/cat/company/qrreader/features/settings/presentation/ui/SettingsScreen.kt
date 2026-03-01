@@ -146,7 +146,7 @@ fun SettingsScreen(
         }
         SettingsNavigationItem(
             title = stringResource(R.string.about),
-            subtitle = stringResource(R.string.about_description),
+            subtitle = stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
             onClick = onNavigateToAbout
         )
         HorizontalDivider()
