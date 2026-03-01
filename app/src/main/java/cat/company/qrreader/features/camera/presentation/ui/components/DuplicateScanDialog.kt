@@ -1,6 +1,6 @@
 package cat.company.qrreader.features.camera.presentation.ui.components
 
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -14,10 +14,10 @@ import java.util.Date
 /**
  * Dialog shown when a duplicate barcode is detected during scanning.
  *
- * Offers the user three choices via proper dialog button slots:
- * - Cancel (dismiss)
- * - Save again (secondary confirm)
- * - Open existing (primary confirm)
+ * Offers the user three choices:
+ * - Cancel — dismisses the dialog ([dismissButton] slot)
+ * - Save again — saves a new entry regardless ([dismissButton] slot)
+ * - Open existing — navigates to the existing entry ([confirmButton] slot)
  *
  * @param existingDate The date of the previously saved duplicate entry.
  * @param onOpenExisting Called when the user chooses to view the existing entry.
@@ -31,7 +31,7 @@ fun DuplicateScanDialog(
     onSaveAgain: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    val formattedDate = remember(existingDate) {
+    val formattedDate = remember(existingDate.time) {
         DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(existingDate)
     }
 
@@ -44,7 +44,7 @@ fun DuplicateScanDialog(
             }
         },
         dismissButton = {
-            Row {
+            FlowRow {
                 TextButton(onClick = onDismiss) {
                     Text(text = stringResource(R.string.cancel))
                 }
