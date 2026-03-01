@@ -205,6 +205,10 @@ fun HistorySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val hideTaggedState by viewModel.hideTaggedWhenNoTagSelected.collectAsState(initial = false)
     val searchAcrossAllState by viewModel.searchAcrossAllTagsWhenFiltering.collectAsState(initial = false)
     val showTagCountersState by viewModel.showTagCounters.collectAsState(initial = true)
+    val biometricLockState by viewModel.biometricLockEnabled.collectAsState(initial = false)
+    val duplicateCheckState by viewModel.duplicateCheckEnabled.collectAsState(initial = true)
+    val context = LocalContext.current
+    val canUseBiometrics = remember { canAuthenticate(context) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         ListItem(
@@ -268,6 +272,17 @@ fun SecuritySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
                     onCheckedChange = { newValue -> viewModel.setBiometricLockEnabled(newValue) },
                     enabled = canUseBiometrics
                 )
+            },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.duplicate_check_enabled)) },
+            supportingContent = { Text(text = stringResource(R.string.duplicate_check_description)) },
+            trailingContent = {
+                Switch(checked = duplicateCheckState, onCheckedChange = { newValue ->
+                    viewModel.setDuplicateCheckEnabled(newValue)
+                })
             },
             colors = androidx.compose.material3.ListItemDefaults.colors()
         )

@@ -90,4 +90,9 @@ interface BarcodeRepository {
      * Get the count of favorite barcodes
      */
     fun getFavoritesCount(): Flow<Int>
+
+    /**
+     * Find a barcode by its content (case-insensitive). Returns null if not found.
+     */
+    suspend fun findByContent(content: String): BarcodeModel?
 }

@@ -34,7 +34,8 @@ import kotlinx.coroutines.launch
 fun BottomSheetContent(
     state: BarcodeState,
     snackbarHostState: SnackbarHostState,
-    onToggleTag: (barcodeHash: Int, tagName: String) -> Unit
+    onToggleTag: (barcodeHash: Int, tagName: String) -> Unit,
+    onNavigateToHistory: () -> Unit = {}
 ) {
     val lastBarcode = state.lastBarcode
     val sharedWifiInfo = state.sharedWifiInfo
@@ -82,7 +83,8 @@ fun BottomSheetContent(
                                 description = aiDescription,
                                 isLoadingDescription = isLoadingDescription,
                                 descriptionError = descriptionError,
-                                onToggleTag = { tagName -> onToggleTag(contactHash, tagName) }
+                                onToggleTag = { tagName -> onToggleTag(contactHash, tagName) },
+                                onNavigateToHistory = onNavigateToHistory
                             )
                         }
                     }
@@ -128,7 +130,8 @@ fun BottomSheetContent(
                                 description = aiDescription,
                                 isLoadingDescription = isLoadingDescription,
                                 descriptionError = descriptionError,
-                                onToggleTag = { tagName -> onToggleTag(wifiHash, tagName) }
+                                onToggleTag = { tagName -> onToggleTag(wifiHash, tagName) },
+                                onNavigateToHistory = onNavigateToHistory
                             )
                         }
                     }
@@ -192,7 +195,8 @@ fun BottomSheetContent(
                                             descriptionError = descriptionError,
                                             onToggleTag = { tagName ->
                                                 onToggleTag(barcodeHash, tagName)
-                                            }
+                                            },
+                                            onNavigateToHistory = onNavigateToHistory
                                         )
                                     }
                                     Barcode.TYPE_CONTACT_INFO -> {
@@ -209,7 +213,8 @@ fun BottomSheetContent(
                                             descriptionError = descriptionError,
                                             onToggleTag = { tagName ->
                                                 onToggleTag(barcodeHash, tagName)
-                                            }
+                                            },
+                                            onNavigateToHistory = onNavigateToHistory
                                         )
                                     }
                                     Barcode.TYPE_WIFI -> {
@@ -227,7 +232,8 @@ fun BottomSheetContent(
                                             descriptionError = descriptionError,
                                             onToggleTag = { tagName ->
                                                 onToggleTag(barcodeHash, tagName)
-                                            }
+                                            },
+                                            onNavigateToHistory = onNavigateToHistory
                                         )
                                     }
                                     else -> {
@@ -244,7 +250,8 @@ fun BottomSheetContent(
                                             descriptionError = descriptionError,
                                             onToggleTag = { tagName ->
                                                 onToggleTag(barcodeHash, tagName)
-                                            }
+                                            },
+                                            onNavigateToHistory = onNavigateToHistory
                                         )
                                     }
                                 }

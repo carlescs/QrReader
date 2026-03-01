@@ -28,6 +28,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     private val AI_HUMOROUS_DESCRIPTIONS_KEY = booleanPreferencesKey("ai_humorous_descriptions")
     private val SHOW_TAG_COUNTERS_KEY = booleanPreferencesKey("show_tag_counters")
     private val BIOMETRIC_LOCK_KEY = booleanPreferencesKey("biometric_lock_enabled")
+    private val DUPLICATE_CHECK_KEY = booleanPreferencesKey("duplicate_check_enabled")
 
     override val hideTaggedWhenNoTagSelected: Flow<Boolean> =
         context.dataStore.data.map { prefs -> prefs[HIDE_TAGGED_KEY] ?: false }
@@ -49,6 +50,9 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
 
     override val biometricLockEnabled: Flow<Boolean> =
         context.dataStore.data.map { prefs -> prefs[BIOMETRIC_LOCK_KEY] ?: false }
+
+    override val duplicateCheckEnabled: Flow<Boolean> =
+        context.dataStore.data.map { prefs -> prefs[DUPLICATE_CHECK_KEY] ?: true }
 
     override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {
         context.dataStore.edit { prefs ->
@@ -89,6 +93,12 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     override suspend fun setBiometricLockEnabled(value: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[BIOMETRIC_LOCK_KEY] = value
+        }
+    }
+
+    override suspend fun setDuplicateCheckEnabled(value: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[DUPLICATE_CHECK_KEY] = value
         }
     }
 }

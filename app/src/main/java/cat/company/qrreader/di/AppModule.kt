@@ -24,6 +24,9 @@ import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetBiometricLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.SetBiometricLockEnabledUseCase
+import cat.company.qrreader.domain.usecase.camera.CheckDuplicateBarcodeUseCase
+import cat.company.qrreader.domain.usecase.settings.GetDuplicateCheckEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetDuplicateCheckEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
@@ -48,7 +51,8 @@ import cat.company.qrreader.features.history.presentation.HistoryAiUseCases
 import cat.company.qrreader.features.history.presentation.HistoryBarcodeUseCases
 import cat.company.qrreader.features.history.presentation.HistoryViewModel
 import cat.company.qrreader.features.settings.presentation.AiSettingsUseCases
-import cat.company.qrreader.features.settings.presentation.HistorySettingsUseCases
+import cat.company.qrreader.features.settings.presentation.HistoryFilterSettingsUseCases
+import cat.company.qrreader.features.settings.presentation.HistoryPrivacySettingsUseCases
 import cat.company.qrreader.features.settings.presentation.SettingsViewModel
 import cat.company.qrreader.features.tags.presentation.TagsViewModel
 import org.koin.android.ext.koin.androidContext
@@ -90,6 +94,7 @@ val useCaseModule = module {
     factory { SaveBarcodeUseCase(get()) }
     factory { SaveBarcodeWithTagsUseCase(get()) }
     factory { ScanImageUseCase() }
+    factory { CheckDuplicateBarcodeUseCase(get()) }
     factory { UpdateBarcodeUseCase(get()) }
     factory { DeleteBarcodeUseCase(get()) }
     factory { SwitchBarcodeTagUseCase(get()) }
@@ -97,6 +102,8 @@ val useCaseModule = module {
     factory { ToggleLockBarcodeUseCase(get()) }
     factory { GetBiometricLockEnabledUseCase(get()) }
     factory { SetBiometricLockEnabledUseCase(get()) }
+    factory { GetDuplicateCheckEnabledUseCase(get()) }
+    factory { SetDuplicateCheckEnabledUseCase(get()) }
     factory { GetAllTagsUseCase(get()) }
     factory { GetOrCreateTagsByNameUseCase(get()) }
     factory { GenerateBarcodeAiDataUseCase() }
@@ -132,7 +139,8 @@ val viewModelModule = module {
     viewModel { CodeCreatorViewModel(get<GenerateQrCodeUseCase>()) }
     viewModel {
         SettingsViewModel(
-            historySettings = HistorySettingsUseCases(get(), get(), get(), get(), get(), get(), get(), get()),
+            filterSettings = HistoryFilterSettingsUseCases(get(), get(), get(), get(), get(), get()),
+            privacySettings = HistoryPrivacySettingsUseCases(get(), get(), get(), get()),
             aiSettings = AiSettingsUseCases(get(), get(), get(), get(), get(), get(), get<GenerateBarcodeAiDataUseCase>()),
             checkAppUpdateUseCase = get()
         )

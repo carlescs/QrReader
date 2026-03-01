@@ -42,6 +42,9 @@ class SettingsUseCasesTest {
             override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
+            override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
         }
 
         val getHide = GetHideTaggedSettingUseCase(settingsRepo)
@@ -78,6 +81,9 @@ class SettingsUseCasesTest {
             override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
+            override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
         }
 
         val getAi = GetAiGenerationEnabledUseCase(settingsRepo)
@@ -111,6 +117,9 @@ class SettingsUseCasesTest {
             override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
+            override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
         }
 
         val getLanguage = GetAiLanguageUseCase(settingsRepo)
@@ -144,6 +153,9 @@ class SettingsUseCasesTest {
             override val biometricLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
+            override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
         }
 
         val getHumorous = GetAiHumorousDescriptionsUseCase(settingsRepo)
@@ -176,6 +188,9 @@ class SettingsUseCasesTest {
             override suspend fun setShowTagCounters(value: Boolean) { showTagCountersFlow.value = value }
             override val biometricLockEnabled: Flow<Boolean> = MutableStateFlow(false)
             override suspend fun setBiometricLockEnabled(value: Boolean) {}
+            override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(true)
+            override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
         }
 
         val getShowTagCounters = GetShowTagCountersUseCase(settingsRepo)

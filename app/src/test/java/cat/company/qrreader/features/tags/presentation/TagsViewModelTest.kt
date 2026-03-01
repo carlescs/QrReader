@@ -84,6 +84,7 @@ class TagsViewModelTest {
         override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = tagBarcodeCountsFlow
         override fun getFavoritesCount(): Flow<Int> = favoritesCountFlow
         override fun getLockedCount(): Flow<Int> = flowOf(0)
+        override suspend fun findByContent(content: String): BarcodeModel? = null
 
         fun emitTagBarcodeCounts(counts: Map<Int, Int>) { tagBarcodeCountsFlow.value = counts }
         fun emitFavoritesCount(count: Int) { favoritesCountFlow.value = count }
