@@ -58,7 +58,7 @@ class AppLockViewModel(
     }
 
     /**
-     * Called from [MainActivity.onStop] when the app is going to the background.
+     * Called when the app process moves to the background (via [ProcessLifecycleOwner]).
      * Locks the app if both app-lock and auto-lock-on-focus-loss settings are enabled.
      */
     fun lockIfAutoLockEnabled() {

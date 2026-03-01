@@ -12,6 +12,9 @@ import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.features.lock.presentation.AppLockViewModel
@@ -44,7 +47,36 @@ class MainActivity : AppCompatActivity() {
     private val _sharedText = MutableStateFlow<String?>(null)
     private val _sharedContactText = MutableStateFlow<String?>(null)
     private val _sharedRawText = MutableStateFlow<String?>(null)
-    private var lockStateJob: Job? = null
+
+    /**
+     * Observes the process-level lifecycle (not the activity lifecycle) to lock/unlock the app
+     * when the entire app moves to/from the background.
+     *
+     * Using [ProcessLifecycleOwner] instead of the activity's own [onStop]/[onStart] prevents
+     * spurious lock cycles caused by [BiometricPrompt], which can momentarily stop the activity
+     * on certain devices.
+     */
+    private val appLifecycleObserver = object : DefaultLifecycleObserver {
+        private var unlockJob: Job? = null
+
+        override fun onStart(owner: LifecycleOwner) {
+            // Auto-trigger the biometric prompt whenever the app enters the foreground while
+            // locked. Waits for the lock state to be determined first (handles the first-launch
+            // null state where checkInitialLockState() is still running).
+            unlockJob = lifecycleScope.launch {
+                val locked = appLockViewModel.isLocked.first { it != null }
+                if (locked == true) {
+                    triggerBiometricUnlock()
+                }
+            }
+        }
+
+        override fun onStop(owner: LifecycleOwner) {
+            unlockJob?.cancel()
+            unlockJob = null
+            appLockViewModel.lockIfAutoLockEnabled()
+        }
+    }
 
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -57,6 +89,7 @@ class MainActivity : AppCompatActivity() {
         _sharedRawText.value = extractSharedRawText(intent)
 
         appLockViewModel.checkInitialLockState(isRestoredInstance = savedInstanceState != null)
+        ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleObserver)
 
         enableEdgeToEdge()
         setContent {
@@ -91,23 +124,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        // Auto-trigger the biometric prompt whenever the app enters the foreground while locked.
-        // Waits for the lock state to be fully determined first (handles first-launch null state).
-        lockStateJob = lifecycleScope.launch {
-            val locked = appLockViewModel.isLocked.first { it != null }
-            if (locked == true) {
-                triggerBiometricUnlock()
-            }
-        }
-    }
-
-    override fun onStop() {
-        lockStateJob?.cancel()
-        lockStateJob = null
-        super.onStop()
-        appLockViewModel.lockIfAutoLockEnabled()
+    override fun onDestroy() {
+        ProcessLifecycleOwner.get().lifecycle.removeObserver(appLifecycleObserver)
+        super.onDestroy()
     }
 
     override fun onNewIntent(intent: Intent) {
