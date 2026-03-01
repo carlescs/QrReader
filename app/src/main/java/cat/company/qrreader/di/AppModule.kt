@@ -39,6 +39,7 @@ import cat.company.qrreader.domain.usecase.tags.DeleteTagUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import cat.company.qrreader.domain.usecase.update.CheckAppUpdateUseCase
+import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import cat.company.qrreader.features.camera.presentation.QrCameraViewModel
 import cat.company.qrreader.features.codeCreator.presentation.CodeCreatorViewModel
@@ -80,7 +81,7 @@ val repositoryModule = module {
     single<BarcodeRepository> { BarcodeRepositoryImpl(get()) }
     single<TagRepository> { TagRepositoryImpl(get()) }
     single<SettingsRepository> { SettingsRepositoryImpl(androidContext()) }
-    single { AppUpdateManagerFactory.create(androidContext()) }
+    single<AppUpdateManager> { AppUpdateManagerFactory.create(androidContext()) }
 }
 
 val useCaseModule = module {
@@ -113,7 +114,7 @@ val useCaseModule = module {
     factory { SetAiHumorousDescriptionsUseCase(get()) }
     factory { GenerateQrCodeUseCase() }
     factory { SaveBitmapToMediaStoreUseCase() }
-    factory { CheckAppUpdateUseCase(get()) }
+    factory { CheckAppUpdateUseCase(get<AppUpdateManager>()) }
 }
 
 val viewModelModule = module {
@@ -129,7 +130,7 @@ val viewModelModule = module {
     viewModel { CodeCreatorViewModel(get<GenerateQrCodeUseCase>()) }
     viewModel {
         SettingsViewModel(
-            historySettings = HistorySettingsUseCases(get(), get(), get(), get(), get(), get()),
+            historySettings = HistorySettingsUseCases(get(), get(), get(), get(), get(), get(), get(), get()),
             aiSettings = AiSettingsUseCases(get(), get(), get(), get(), get(), get(), get<GenerateBarcodeAiDataUseCase>()),
             checkAppUpdateUseCase = get()
         )

@@ -45,8 +45,7 @@ data class HistorySettingsUseCases(
     val getSearchAcrossAllTags: GetSearchAcrossAllTagsUseCase,
     val setSearchAcrossAllTags: SetSearchAcrossAllTagsUseCase,
     val getShowTagCounters: GetShowTagCountersUseCase,
-    val setShowTagCounters: SetShowTagCountersUseCase
-    val setSearchAcrossAllTags: SetSearchAcrossAllTagsUseCase,
+    val setShowTagCounters: SetShowTagCountersUseCase,
     val getBiometricLockEnabled: GetBiometricLockEnabledUseCase,
     val setBiometricLockEnabled: SetBiometricLockEnabledUseCase
 )
