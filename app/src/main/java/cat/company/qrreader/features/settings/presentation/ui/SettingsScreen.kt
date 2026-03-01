@@ -252,6 +252,7 @@ fun HistorySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
 @Composable
 fun SecuritySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val biometricLockState by viewModel.biometricLockEnabled.collectAsState(initial = false)
+    val duplicateCheckState by viewModel.duplicateCheckEnabled.collectAsState(initial = false)
     val context = LocalContext.current
     val canUseBiometrics = remember { canAuthenticate(context) }
 
