@@ -50,7 +50,8 @@ import cat.company.qrreader.features.history.presentation.HistoryAiUseCases
 import cat.company.qrreader.features.history.presentation.HistoryBarcodeUseCases
 import cat.company.qrreader.features.history.presentation.HistoryViewModel
 import cat.company.qrreader.features.settings.presentation.AiSettingsUseCases
-import cat.company.qrreader.features.settings.presentation.HistorySettingsUseCases
+import cat.company.qrreader.features.settings.presentation.HistoryFilterSettingsUseCases
+import cat.company.qrreader.features.settings.presentation.HistoryPrivacySettingsUseCases
 import cat.company.qrreader.features.settings.presentation.SettingsViewModel
 import cat.company.qrreader.features.tags.presentation.TagsViewModel
 import org.koin.android.ext.koin.androidContext
@@ -136,7 +137,8 @@ val viewModelModule = module {
     viewModel { CodeCreatorViewModel(get<GenerateQrCodeUseCase>()) }
     viewModel {
         SettingsViewModel(
-            historySettings = HistorySettingsUseCases(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()),
+            filterSettings = HistoryFilterSettingsUseCases(get(), get(), get(), get(), get(), get()),
+            privacySettings = HistoryPrivacySettingsUseCases(get(), get(), get(), get()),
             aiSettings = AiSettingsUseCases(get(), get(), get(), get(), get(), get(), get<GenerateBarcodeAiDataUseCase>()),
             checkAppUpdateUseCase = get()
         )

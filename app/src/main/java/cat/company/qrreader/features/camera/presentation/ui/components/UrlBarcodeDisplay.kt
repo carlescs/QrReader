@@ -178,7 +178,6 @@ fun UrlBarcodeDisplay(
                 onNavigateToHistory()
             },
             onSaveAgain = {
-                duplicateBarcode.value = null
                 coroutineScope.launch {
                     try {
                         val barcodeContent = barcode.rawValue ?: barcode.displayValue ?: return@launch
@@ -196,7 +195,10 @@ fun UrlBarcodeDisplay(
                         }
                         saveBarcodeWithTagsUseCase(barcodeModel, tags, if (saveDescription.value) aiGeneratedDescription else null)
                         saved.value = true
-                    } catch (_: Exception) { }
+                        duplicateBarcode.value = null
+                    } catch (_: Exception) {
+                        // Keep dialog open so the user can retry or cancel
+                    }
                 }
             },
             onDismiss = { duplicateBarcode.value = null }

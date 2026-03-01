@@ -104,13 +104,15 @@ class SettingsViewModelTest {
     private fun createViewModel(aiSupported: Boolean = false): SettingsViewModel {
         fakeRepo = FakeSettingsRepository()
         return SettingsViewModel(
-            historySettings = HistorySettingsUseCases(
+            filterSettings = HistoryFilterSettingsUseCases(
                 getHideTaggedSetting = GetHideTaggedSettingUseCase(fakeRepo),
                 setHideTaggedSetting = SetHideTaggedSettingUseCase(fakeRepo),
                 getSearchAcrossAllTags = GetSearchAcrossAllTagsUseCase(fakeRepo),
                 setSearchAcrossAllTags = SetSearchAcrossAllTagsUseCase(fakeRepo),
                 getShowTagCounters = GetShowTagCountersUseCase(fakeRepo),
-                setShowTagCounters = SetShowTagCountersUseCase(fakeRepo),
+                setShowTagCounters = SetShowTagCountersUseCase(fakeRepo)
+            ),
+            privacySettings = HistoryPrivacySettingsUseCases(
                 getBiometricLockEnabled = GetBiometricLockEnabledUseCase(fakeRepo),
                 setBiometricLockEnabled = SetBiometricLockEnabledUseCase(fakeRepo),
                 getDuplicateCheckEnabled = GetDuplicateCheckEnabledUseCase(fakeRepo),
