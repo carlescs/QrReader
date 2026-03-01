@@ -383,7 +383,7 @@ private fun UpdateCheckResultDialog(
         is UpdateCheckResult.UpdateAvailable -> { /* handled by Play Store in-app update sheet */ }
         is UpdateCheckResult.UpToDate -> AlertDialog(
             title = { Text(text = stringResource(R.string.already_up_to_date)) },
-            text = { Text(text = BuildConfig.VERSION_NAME) },
+            text = { Text(text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME)) },
             confirmButton = {
                 TextButton(onClick = onDismiss) {
                     Text(text = stringResource(R.string.ok))
