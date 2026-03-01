@@ -151,6 +151,11 @@ fun BarcodeCard(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
+                        text = getTitle(barcode.barcode),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
                         text = stringResource(R.string.locked_barcode),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
