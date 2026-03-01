@@ -1,6 +1,5 @@
 package cat.company.qrreader
 
-import android.net.Uri
 import android.os.Bundle
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.Box
@@ -49,6 +48,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import cat.company.qrreader.features.camera.presentation.ui.QrCameraScreen
+import cat.company.qrreader.features.camera.presentation.ui.SharedContent
 import cat.company.qrreader.features.codeCreator.presentation.ui.CodeCreatorScreen
 import cat.company.qrreader.events.SharedEvents
 import cat.company.qrreader.features.history.presentation.ui.History
@@ -66,7 +66,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 @ExperimentalGetImage
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null, onSharedImageConsumed: () -> Unit = {}, sharedText: String? = null, onSharedTextConsumed: () -> Unit = {}, sharedContactText: String? = null, onSharedContactTextConsumed: () -> Unit = {}) {
+fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedContent: SharedContent = SharedContent()) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -102,8 +102,8 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
         }
 
         // Navigate to camera screen when a shared image is received
-        LaunchedEffect(sharedImageUri) {
-            if (sharedImageUri != null) {
+        LaunchedEffect(sharedContent.imageUri) {
+            if (sharedContent.imageUri != null) {
                 navController.navigate("camera") {
                     launchSingleTop = true
                 }
@@ -111,8 +111,8 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
         }
 
         // Navigate to camera screen when shared text is received
-        LaunchedEffect(sharedText) {
-            if (sharedText != null) {
+        LaunchedEffect(sharedContent.wifiText) {
+            if (sharedContent.wifiText != null) {
                 navController.navigate("camera") {
                     launchSingleTop = true
                 }
@@ -120,8 +120,17 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
         }
 
         // Navigate to camera screen when a shared contact is received
-        LaunchedEffect(sharedContactText) {
-            if (sharedContactText != null) {
+        LaunchedEffect(sharedContent.contactText) {
+            if (sharedContent.contactText != null) {
+                navController.navigate("camera") {
+                    launchSingleTop = true
+                }
+            }
+        }
+
+        // Navigate to camera screen when other shared text is received
+        LaunchedEffect(sharedContent.rawText) {
+            if (sharedContent.rawText != null) {
                 navController.navigate("camera") {
                     launchSingleTop = true
                 }
@@ -174,7 +183,7 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
                         route = "camera",
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://camera" })
                     ) {
-                        QrCameraScreen(snackBarHostState, sharedImageUri = sharedImageUri, onSharedImageConsumed = onSharedImageConsumed, sharedText = sharedText, onSharedTextConsumed = onSharedTextConsumed, sharedContactText = sharedContactText, onSharedContactTextConsumed = onSharedContactTextConsumed, onNavigateToHistory = {
+                        QrCameraScreen(snackBarHostState, sharedContent = sharedContent, onNavigateToHistory = {
                             navController.navigate("history") {
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true

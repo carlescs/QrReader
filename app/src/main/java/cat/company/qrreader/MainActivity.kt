@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.features.lock.presentation.AppLockViewModel
 import cat.company.qrreader.features.lock.presentation.ui.LockScreen
+import cat.company.qrreader.features.camera.presentation.ui.SharedContent
 import cat.company.qrreader.ui.theme.QrReaderTheme
 import cat.company.qrreader.utils.canAuthenticate
 import cat.company.qrreader.utils.findFragmentActivity
@@ -40,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     private val _sharedImageUri = MutableStateFlow<Uri?>(null)
     private val _sharedText = MutableStateFlow<String?>(null)
     private val _sharedContactText = MutableStateFlow<String?>(null)
+    private val _sharedRawText = MutableStateFlow<String?>(null)
 
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -49,6 +51,7 @@ class MainActivity : AppCompatActivity() {
         _sharedImageUri.value = extractSharedImageUri(intent)
         _sharedText.value = extractSharedText(intent)
         lifecycleScope.launch { _sharedContactText.value = extractSharedContactText(intent) }
+        _sharedRawText.value = extractSharedRawText(intent)
 
         appLockViewModel.checkInitialLockState(isRestoredInstance = savedInstanceState != null)
 
@@ -58,6 +61,20 @@ class MainActivity : AppCompatActivity() {
                 val sharedImageUri by _sharedImageUri.collectAsState()
                 val sharedText by _sharedText.collectAsState()
                 val sharedContactText by _sharedContactText.collectAsState()
+                val sharedRawText by _sharedRawText.collectAsState()
+                MainScreen(
+                    firebaseAnalytics,
+                    SharedContent(
+                        imageUri = sharedImageUri,
+                        onImageConsumed = { _sharedImageUri.value = null },
+                        wifiText = sharedText,
+                        onWifiTextConsumed = { _sharedText.value = null },
+                        contactText = sharedContactText,
+                        onContactTextConsumed = { _sharedContactText.value = null },
+                        rawText = sharedRawText,
+                        onRawTextConsumed = { _sharedRawText.value = null }
+                    )
+                )
                 val isLocked by appLockViewModel.isLocked.collectAsState()
 
                 if (isLocked != false) {
@@ -91,6 +108,7 @@ class MainActivity : AppCompatActivity() {
         _sharedImageUri.value = extractSharedImageUri(intent)
         _sharedText.value = extractSharedText(intent)
         lifecycleScope.launch { _sharedContactText.value = extractSharedContactText(intent) }
+        _sharedRawText.value = extractSharedRawText(intent)
     }
 
     private fun triggerBiometricUnlock() {
@@ -170,5 +188,20 @@ class MainActivity : AppCompatActivity() {
         }
 
         return null
+    }
+
+    /**
+     * Extracts text shared via ACTION_SEND (text/plain) that is not a WiFi QR string or
+     * a vCard/MECARD contact string. Such text is treated as generic barcode content.
+     */
+    private fun extractSharedRawText(intent: Intent): String? {
+        if (intent.action != Intent.ACTION_SEND) return null
+        if (intent.type != "text/plain") return null
+        val text = intent.getStringExtra(Intent.EXTRA_TEXT)?.trim()
+        if (text.isNullOrEmpty()) return null
+        if (text.startsWith("WIFI:", ignoreCase = true)) return null
+        if (text.startsWith("BEGIN:VCARD", ignoreCase = true) ||
+            text.startsWith("MECARD:", ignoreCase = true)) return null
+        return text
     }
 }

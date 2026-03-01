@@ -851,4 +851,106 @@ class QrCameraViewModelTest {
         assertEquals(null, state.sharedContactInfo)
         assertEquals(null, state.sharedContactRawText)
     }
+
+    // ==================== Tests for setSharedRawText ====================
+
+    @Test
+    fun setSharedRawText_storesTextInState() {
+        val text = "https://example.com"
+
+        viewModel.setSharedRawText(text)
+
+        val state = viewModel.uiState.value
+        assertEquals(text, state.sharedRawText)
+        assertEquals(null, state.lastBarcode)
+        assertEquals(null, state.sharedWifiInfo)
+        assertEquals(null, state.sharedContactInfo)
+    }
+
+    @Test
+    fun setSharedRawText_clearsOtherSharedState() {
+        viewModel.setSharedWifiText("WIFI:T:WPA;S:Net;P:pass;;")
+        assertNotNull(viewModel.uiState.value.sharedWifiInfo)
+
+        viewModel.setSharedRawText("some text")
+
+        assertEquals(null, viewModel.uiState.value.sharedWifiInfo)
+        assertEquals(null, viewModel.uiState.value.sharedWifiRawText)
+        assertEquals(null, viewModel.uiState.value.sharedContactInfo)
+        assertEquals(null, viewModel.uiState.value.sharedContactRawText)
+        assertEquals(null, viewModel.uiState.value.lastBarcode)
+    }
+
+    @Test
+    fun saveBarcodes_afterSetSharedRawText_clearsRawTextState() {
+        viewModel.setSharedRawText("some text")
+        assertNotNull(viewModel.uiState.value.sharedRawText)
+
+        viewModel.saveBarcodes(emptyList())
+
+        assertEquals(null, viewModel.uiState.value.sharedRawText)
+    }
+
+    @Test
+    fun setSharedWifiText_clearsRawTextState() {
+        viewModel.setSharedRawText("some text")
+        assertNotNull(viewModel.uiState.value.sharedRawText)
+
+        viewModel.setSharedWifiText("WIFI:T:WPA;S:Net;P:pass;;")
+
+        assertEquals(null, viewModel.uiState.value.sharedRawText)
+    }
+
+    @Test
+    fun setSharedContactText_clearsRawTextState() {
+        viewModel.setSharedRawText("some text")
+        assertNotNull(viewModel.uiState.value.sharedRawText)
+
+        viewModel.setSharedContactText("BEGIN:VCARD\nFN:Alice\nEND:VCARD")
+
+        assertEquals(null, viewModel.uiState.value.sharedRawText)
+    }
+
+    @Test
+    fun setSharedRawText_triggersAiTagAndDescriptionGeneration() = runTest {
+        val text = "https://example.com"
+        val textHash = text.hashCode()
+
+        fakeGenerateBarcodeAiDataUseCase.suggestionsToReturn = listOf(SuggestedTagModel("Web", true))
+        fakeGenerateBarcodeAiDataUseCase.descriptionToReturn = "A website URL"
+
+        viewModel.setSharedRawText(text)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(1, state.barcodeTags[textHash]?.size)
+        assertEquals("Web", state.barcodeTags[textHash]?.first()?.name)
+        assertEquals("A website URL", state.barcodeDescriptions[textHash])
+        assertFalse(state.isLoadingTags.contains(textHash))
+        assertFalse(state.isLoadingDescriptions.contains(textHash))
+    }
+
+    @Test
+    fun setSharedRawText_onAiFailure_storesError() = runTest {
+        val text = "some plain text"
+        val textHash = text.hashCode()
+
+        fakeGenerateBarcodeAiDataUseCase.shouldSucceed = false
+
+        viewModel.setSharedRawText(text)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state.tagSuggestionErrors[textHash])
+        assertNotNull(state.descriptionErrors[textHash])
+        assertFalse(state.isLoadingTags.contains(textHash))
+        assertFalse(state.isLoadingDescriptions.contains(textHash))
+    }
+
+    @Test
+    fun barcodeState_sharedRawTextField_defaultsToNull() {
+        val state = viewModel.uiState.value
+
+        assertEquals(null, state.sharedRawText)
+    }
 }

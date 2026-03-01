@@ -83,7 +83,7 @@ class QrCameraViewModel(
     val uiState: StateFlow<BarcodeState> = _uiState.asStateFlow()
 
     fun saveBarcodes(barcodes: List<Barcode>?) {
-        _uiState.update { it.copy(lastBarcode = barcodes, sharedWifiInfo = null, sharedWifiRawText = null, sharedContactInfo = null, sharedContactRawText = null) }
+        _uiState.update { it.copy(lastBarcode = barcodes, sharedWifiInfo = null, sharedWifiRawText = null, sharedContactInfo = null, sharedContactRawText = null, sharedRawText = null) }
         
         // Generate tag suggestions and descriptions for ALL barcodes
         if (!barcodes.isNullOrEmpty()) {
@@ -178,7 +178,7 @@ class QrCameraViewModel(
     fun setSharedWifiText(text: String) {
         val wifiInfo = parseWifiContent(text)
         val wifiHash = text.hashCode()
-        _uiState.update { it.copy(lastBarcode = null, sharedWifiInfo = wifiInfo, sharedWifiRawText = text, sharedContactInfo = null, sharedContactRawText = null) }
+        _uiState.update { it.copy(lastBarcode = null, sharedWifiInfo = wifiInfo, sharedWifiRawText = text, sharedContactInfo = null, sharedContactRawText = null, sharedRawText = null) }
 
         viewModelScope.launch {
             _aiSupportCheckComplete.await()
@@ -250,7 +250,7 @@ class QrCameraViewModel(
     fun setSharedContactText(text: String) {
         val contactInfo = parseContactVCard(text)
         val contactHash = text.hashCode()
-        _uiState.update { it.copy(lastBarcode = null, sharedWifiInfo = null, sharedWifiRawText = null, sharedContactInfo = contactInfo, sharedContactRawText = text) }
+        _uiState.update { it.copy(lastBarcode = null, sharedWifiInfo = null, sharedWifiRawText = null, sharedContactInfo = contactInfo, sharedContactRawText = text, sharedRawText = null) }
 
         viewModelScope.launch {
             _aiSupportCheckComplete.await()
@@ -309,6 +309,78 @@ class QrCameraViewModel(
                         tagSuggestionErrors = state.tagSuggestionErrors + (contactHash to (e.message ?: "Unknown error")),
                         isLoadingDescriptions = state.isLoadingDescriptions - contactHash,
                         descriptionErrors = state.descriptionErrors + (contactHash to (e.message ?: "Unknown error"))
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Stores text shared via ACTION_SEND (text/plain) that is not a WiFi or contact string,
+     * so it can be displayed in the bottom sheet as if it had been scanned by the camera.
+     */
+    fun setSharedRawText(text: String) {
+        val textHash = text.hashCode()
+        _uiState.update { it.copy(lastBarcode = null, sharedWifiInfo = null, sharedWifiRawText = null, sharedContactInfo = null, sharedContactRawText = null, sharedRawText = text) }
+
+        viewModelScope.launch {
+            _aiSupportCheckComplete.await()
+            if (!_uiState.value.aiGenerationEnabled) return@launch
+
+            _uiState.update { state ->
+                state.copy(
+                    isLoadingTags = state.isLoadingTags + textHash,
+                    isLoadingDescriptions = state.isLoadingDescriptions + textHash
+                )
+            }
+
+            try {
+                val existingTags = getAllTagsUseCase().first()
+                val language = getAiLanguageUseCase().first()
+                val humorous = getAiHumorousDescriptionsUseCase().first()
+
+                val isUrl = text.startsWith("http://", ignoreCase = true) ||
+                    text.startsWith("https://", ignoreCase = true)
+                val result = generateBarcodeAiDataUseCase(
+                    barcodeContent = text,
+                    barcodeType = getBarcodeTypeName(if (isUrl) Barcode.TYPE_URL else Barcode.TYPE_TEXT),
+                    barcodeFormat = getBarcodeFormatName(Barcode.FORMAT_UNKNOWN),
+                    existingTags = existingTags.map { it.name },
+                    language = language,
+                    humorous = humorous
+                )
+
+                result.onSuccess { aiData ->
+                    _uiState.update { state ->
+                        state.copy(
+                            barcodeTags = state.barcodeTags + (textHash to aiData.tags),
+                            isLoadingTags = state.isLoadingTags - textHash,
+                            tagSuggestionErrors = state.tagSuggestionErrors - textHash,
+                            barcodeDescriptions = state.barcodeDescriptions + (textHash to aiData.description),
+                            isLoadingDescriptions = state.isLoadingDescriptions - textHash,
+                            descriptionErrors = state.descriptionErrors - textHash
+                        )
+                    }
+                }.onFailure { error ->
+                    _uiState.update { state ->
+                        state.copy(
+                            barcodeTags = state.barcodeTags + (textHash to emptyList()),
+                            isLoadingTags = state.isLoadingTags - textHash,
+                            tagSuggestionErrors = state.tagSuggestionErrors + (textHash to (error.message ?: "Unknown error")),
+                            isLoadingDescriptions = state.isLoadingDescriptions - textHash,
+                            descriptionErrors = state.descriptionErrors + (textHash to (error.message ?: "Unknown error"))
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception generating AI data for shared text", e)
+                _uiState.update { state ->
+                    state.copy(
+                        barcodeTags = state.barcodeTags + (textHash to emptyList()),
+                        isLoadingTags = state.isLoadingTags - textHash,
+                        tagSuggestionErrors = state.tagSuggestionErrors + (textHash to (e.message ?: "Unknown error")),
+                        isLoadingDescriptions = state.isLoadingDescriptions - textHash,
+                        descriptionErrors = state.descriptionErrors + (textHash to (e.message ?: "Unknown error"))
                     )
                 }
             }
@@ -394,6 +466,7 @@ class QrCameraViewModel(
  * State for the barcode
  * 
  * @property lastBarcode List of scanned barcodes
+ * @property sharedRawText Raw text shared via ACTION_SEND that is not a WiFi or contact string.
  * @property sharedWifiInfo Parsed WiFi credentials from a directly-shared WiFi QR string, or null.
  * @property sharedWifiRawText The raw `WIFI:` string that was shared, used as the save content.
  * @property sharedContactInfo Parsed contact info from a directly-shared vCard/MECARD string, or null.
@@ -408,6 +481,7 @@ class QrCameraViewModel(
  */
 data class BarcodeState(
     var lastBarcode: List<Barcode>? = null,
+    val sharedRawText: String? = null,
     val sharedWifiInfo: WifiInfo? = null,
     val sharedWifiRawText: String? = null,
     val sharedContactInfo: ContactInfo? = null,
