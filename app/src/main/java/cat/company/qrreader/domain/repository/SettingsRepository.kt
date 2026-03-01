@@ -93,4 +93,28 @@ interface SettingsRepository {
      * Enable or disable duplicate scan detection
      */
     suspend fun setDuplicateCheckEnabled(value: Boolean)
+
+    /**
+     * Whether the app-level lock screen with biometric authentication is enabled.
+     * When true, the app shows a lock screen on launch that requires biometric auth to unlock.
+     * Defaults to false.
+     */
+    val appLockEnabled: Flow<Boolean>
+
+    /**
+     * Enable or disable the app-level biometric lock screen
+     */
+    suspend fun setAppLockEnabled(value: Boolean)
+
+    /**
+     * Whether the app should automatically lock itself when it loses focus (e.g. user switches
+     * to another app). Only meaningful when [appLockEnabled] is true.
+     * Defaults to false.
+     */
+    val autoLockOnFocusLoss: Flow<Boolean>
+
+    /**
+     * Enable or disable auto-lock on focus loss
+     */
+    suspend fun setAutoLockOnFocusLoss(value: Boolean)
 }

@@ -144,6 +144,13 @@
     <string name="biometric_lock_description">When enabled, selected barcodes can be locked and require fingerprint or face authentication to view.</string>
     <string name="duplicate_check_enabled">Duplicate scan detection</string>
     <string name="duplicate_check_description">When enabled, you will be prompted before saving a barcode that already exists in your history.</string>
+    <string name="app_lock_enabled">Lock app with biometrics</string>
+    <string name="app_lock_description">When enabled, the app will require biometric authentication to open.</string>
+    <string name="auto_lock_on_focus_loss">Auto-lock when leaving app</string>
+    <string name="auto_lock_description">When enabled, the app will automatically lock when you switch to another app.</string>
+    <string name="app_locked_title">App Locked</string>
+    <string name="unlock_app">Unlock</string>
+    <string name="unlock_app_subtitle">Authenticate to unlock the app</string>
     <string name="ai_features">AI features</string>
     <string name="ai_features_description">When enabled, AI-generated tag suggestions and barcode descriptions will be shown for scanned barcodes on supported devices.</string>
     <string name="ai_language">AI language</string>

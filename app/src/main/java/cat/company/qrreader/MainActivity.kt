@@ -14,13 +14,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
 import cat.company.qrreader.db.BarcodesDb
+import cat.company.qrreader.features.lock.presentation.AppLockViewModel
 import cat.company.qrreader.ui.theme.QrReaderTheme
+import cat.company.qrreader.utils.canAuthenticate
+import cat.company.qrreader.utils.findFragmentActivity
+import cat.company.qrreader.utils.showBiometricPrompt
 import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * Main activity
@@ -29,6 +34,7 @@ import org.koin.android.ext.android.inject
 class MainActivity : AppCompatActivity() {
     private lateinit var firebaseAnalytics: FirebaseAnalytics
     private val db: BarcodesDb by inject()
+    private val appLockViewModel: AppLockViewModel by viewModel()
 
     private val _sharedImageUri = MutableStateFlow<Uri?>(null)
     private val _sharedText = MutableStateFlow<String?>(null)
@@ -43,23 +49,39 @@ class MainActivity : AppCompatActivity() {
         _sharedText.value = extractSharedText(intent)
         lifecycleScope.launch { _sharedContactText.value = extractSharedContactText(intent) }
 
+        appLockViewModel.checkInitialLockState(isRestoredInstance = savedInstanceState != null)
+
         enableEdgeToEdge()
         setContent {
             QrReaderTheme {
                 val sharedImageUri by _sharedImageUri.collectAsState()
                 val sharedText by _sharedText.collectAsState()
                 val sharedContactText by _sharedContactText.collectAsState()
-                MainScreen(
-                    firebaseAnalytics,
-                    sharedImageUri,
-                    onSharedImageConsumed = { _sharedImageUri.value = null },
-                    sharedText = sharedText,
-                    onSharedTextConsumed = { _sharedText.value = null },
-                    sharedContactText = sharedContactText,
-                    onSharedContactTextConsumed = { _sharedContactText.value = null }
-                )
+                val isLocked by appLockViewModel.isLocked.collectAsState()
+
+                if (isLocked != false) {
+                    cat.company.qrreader.features.lock.presentation.ui.LockScreen(
+                        isLocked = isLocked,
+                        onUnlockClick = { triggerBiometricUnlock() }
+                    )
+                } else {
+                    MainScreen(
+                        firebaseAnalytics,
+                        sharedImageUri,
+                        onSharedImageConsumed = { _sharedImageUri.value = null },
+                        sharedText = sharedText,
+                        onSharedTextConsumed = { _sharedText.value = null },
+                        sharedContactText = sharedContactText,
+                        onSharedContactTextConsumed = { _sharedContactText.value = null }
+                    )
+                }
             }
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        appLockViewModel.lockIfAutoLockEnabled()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -68,6 +90,19 @@ class MainActivity : AppCompatActivity() {
         _sharedImageUri.value = extractSharedImageUri(intent)
         _sharedText.value = extractSharedText(intent)
         lifecycleScope.launch { _sharedContactText.value = extractSharedContactText(intent) }
+    }
+
+    private fun triggerBiometricUnlock() {
+        val activity = findFragmentActivity() ?: return
+        if (!canAuthenticate(this)) return
+        showBiometricPrompt(
+            activity = activity,
+            title = getString(R.string.app_locked_title),
+            subtitle = getString(R.string.unlock_app_subtitle),
+            negativeButtonText = getString(R.string.cancel),
+            onSuccess = { appLockViewModel.unlock() },
+            onError = { /* prompt dismissed – remain locked */ }
+        )
     }
 
     private fun extractSharedImageUri(intent: Intent): Uri? {

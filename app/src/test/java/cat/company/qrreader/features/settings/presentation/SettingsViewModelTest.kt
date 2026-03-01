@@ -5,6 +5,10 @@ import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetBiometricLockEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAppLockEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAppLockEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAutoLockOnFocusLossUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAutoLockOnFocusLossUseCase
 import cat.company.qrreader.domain.usecase.settings.SetBiometricLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetDuplicateCheckEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.SetDuplicateCheckEnabledUseCase
@@ -74,6 +78,12 @@ class SettingsViewModelTest {
         val duplicateCheckFlow = MutableStateFlow(true)
         override val duplicateCheckEnabled: Flow<Boolean> = duplicateCheckFlow
         override suspend fun setDuplicateCheckEnabled(value: Boolean) { duplicateCheckFlow.value = value }
+        val appLockFlow = MutableStateFlow(false)
+        override val appLockEnabled: Flow<Boolean> = appLockFlow
+        override suspend fun setAppLockEnabled(value: Boolean) { appLockFlow.value = value }
+        val autoLockFlow = MutableStateFlow(false)
+        override val autoLockOnFocusLoss: Flow<Boolean> = autoLockFlow
+        override suspend fun setAutoLockOnFocusLoss(value: Boolean) { autoLockFlow.value = value }
     }
 
     private class FakeGenerateBarcodeAiDataUseCase(
@@ -117,6 +127,12 @@ class SettingsViewModelTest {
                 setBiometricLockEnabled = SetBiometricLockEnabledUseCase(fakeRepo),
                 getDuplicateCheckEnabled = GetDuplicateCheckEnabledUseCase(fakeRepo),
                 setDuplicateCheckEnabled = SetDuplicateCheckEnabledUseCase(fakeRepo)
+            ),
+            appLockSettings = AppLockSettingsUseCases(
+                getAppLockEnabled = GetAppLockEnabledUseCase(fakeRepo),
+                setAppLockEnabled = SetAppLockEnabledUseCase(fakeRepo),
+                getAutoLockOnFocusLoss = GetAutoLockOnFocusLossUseCase(fakeRepo),
+                setAutoLockOnFocusLoss = SetAutoLockOnFocusLossUseCase(fakeRepo)
             ),
             aiSettings = AiSettingsUseCases(
                 getAiGenerationEnabled = GetAiGenerationEnabledUseCase(fakeRepo),
@@ -349,6 +365,74 @@ class SettingsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(true, viewModel.showTagCounters.first())
+    }
+
+    // ── App lock setting ──────────────────────────────────────────────────────
+
+    @Test
+    fun `appLockEnabled emits initial value false`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(false, viewModel.appLockEnabled.first())
+    }
+
+    @Test
+    fun `setAppLockEnabled updates flow to true`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.setAppLockEnabled(true)
+        advanceUntilIdle()
+
+        assertEquals(true, viewModel.appLockEnabled.first())
+    }
+
+    @Test
+    fun `setAppLockEnabled toggle back to false`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.setAppLockEnabled(true)
+        advanceUntilIdle()
+        viewModel.setAppLockEnabled(false)
+        advanceUntilIdle()
+
+        assertEquals(false, viewModel.appLockEnabled.first())
+    }
+
+    // ── Auto-lock on focus loss setting ───────────────────────────────────────
+
+    @Test
+    fun `autoLockOnFocusLoss emits initial value false`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(false, viewModel.autoLockOnFocusLoss.first())
+    }
+
+    @Test
+    fun `setAutoLockOnFocusLoss updates flow to true`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.setAutoLockOnFocusLoss(true)
+        advanceUntilIdle()
+
+        assertEquals(true, viewModel.autoLockOnFocusLoss.first())
+    }
+
+    @Test
+    fun `setAutoLockOnFocusLoss toggle back to false`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.setAutoLockOnFocusLoss(true)
+        advanceUntilIdle()
+        viewModel.setAutoLockOnFocusLoss(false)
+        advanceUntilIdle()
+
+        assertEquals(false, viewModel.autoLockOnFocusLoss.first())
     }
 }
 

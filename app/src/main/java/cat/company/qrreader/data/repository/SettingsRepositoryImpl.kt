@@ -29,6 +29,8 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     private val SHOW_TAG_COUNTERS_KEY = booleanPreferencesKey("show_tag_counters")
     private val BIOMETRIC_LOCK_KEY = booleanPreferencesKey("biometric_lock_enabled")
     private val DUPLICATE_CHECK_KEY = booleanPreferencesKey("duplicate_check_enabled")
+    private val APP_LOCK_KEY = booleanPreferencesKey("app_lock_enabled")
+    private val AUTO_LOCK_ON_FOCUS_LOSS_KEY = booleanPreferencesKey("auto_lock_on_focus_loss")
 
     override val hideTaggedWhenNoTagSelected: Flow<Boolean> =
         context.dataStore.data.map { prefs -> prefs[HIDE_TAGGED_KEY] ?: false }
@@ -53,6 +55,12 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
 
     override val duplicateCheckEnabled: Flow<Boolean> =
         context.dataStore.data.map { prefs -> prefs[DUPLICATE_CHECK_KEY] ?: true }
+
+    override val appLockEnabled: Flow<Boolean> =
+        context.dataStore.data.map { prefs -> prefs[APP_LOCK_KEY] ?: false }
+
+    override val autoLockOnFocusLoss: Flow<Boolean> =
+        context.dataStore.data.map { prefs -> prefs[AUTO_LOCK_ON_FOCUS_LOSS_KEY] ?: false }
 
     override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {
         context.dataStore.edit { prefs ->
@@ -99,6 +107,18 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     override suspend fun setDuplicateCheckEnabled(value: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[DUPLICATE_CHECK_KEY] = value
+        }
+    }
+
+    override suspend fun setAppLockEnabled(value: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[APP_LOCK_KEY] = value
+        }
+    }
+
+    override suspend fun setAutoLockOnFocusLoss(value: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[AUTO_LOCK_ON_FOCUS_LOSS_KEY] = value
         }
     }
 }

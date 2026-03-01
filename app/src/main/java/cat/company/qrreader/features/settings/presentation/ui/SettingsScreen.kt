@@ -205,10 +205,6 @@ fun HistorySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val hideTaggedState by viewModel.hideTaggedWhenNoTagSelected.collectAsState(initial = false)
     val searchAcrossAllState by viewModel.searchAcrossAllTagsWhenFiltering.collectAsState(initial = false)
     val showTagCountersState by viewModel.showTagCounters.collectAsState(initial = true)
-    val biometricLockState by viewModel.biometricLockEnabled.collectAsState(initial = false)
-    val duplicateCheckState by viewModel.duplicateCheckEnabled.collectAsState(initial = true)
-    val context = LocalContext.current
-    val canUseBiometrics = remember { canAuthenticate(context) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         ListItem(
@@ -253,10 +249,45 @@ fun HistorySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
 fun SecuritySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val biometricLockState by viewModel.biometricLockEnabled.collectAsState(initial = false)
     val duplicateCheckState by viewModel.duplicateCheckEnabled.collectAsState(initial = false)
+    val appLockState by viewModel.appLockEnabled.collectAsState(initial = false)
+    val autoLockState by viewModel.autoLockOnFocusLoss.collectAsState(initial = false)
     val context = LocalContext.current
     val canUseBiometrics = remember { canAuthenticate(context) }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.app_lock_enabled)) },
+            supportingContent = {
+                Text(
+                    text = stringResource(
+                        if (canUseBiometrics) R.string.app_lock_description
+                        else R.string.biometric_not_available
+                    )
+                )
+            },
+            trailingContent = {
+                Switch(
+                    checked = appLockState && canUseBiometrics,
+                    onCheckedChange = { newValue -> viewModel.setAppLockEnabled(newValue) },
+                    enabled = canUseBiometrics
+                )
+            },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.auto_lock_on_focus_loss)) },
+            supportingContent = { Text(text = stringResource(R.string.auto_lock_description)) },
+            trailingContent = {
+                Switch(
+                    checked = autoLockState,
+                    onCheckedChange = { newValue -> viewModel.setAutoLockOnFocusLoss(newValue) },
+                    enabled = appLockState && canUseBiometrics
+                )
+            },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         ListItem(
             headlineContent = { Text(text = stringResource(R.string.biometric_lock_enabled)) },
             supportingContent = {

@@ -45,6 +45,12 @@ class SettingsUseCasesTest {
             override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(true)
             override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
+            override val appLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setAppLockEnabled(value: Boolean) {}
+            override val autoLockOnFocusLoss: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setAutoLockOnFocusLoss(value: Boolean) {}
         }
 
         val getHide = GetHideTaggedSettingUseCase(settingsRepo)
@@ -84,6 +90,12 @@ class SettingsUseCasesTest {
             override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(true)
             override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
+            override val appLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setAppLockEnabled(value: Boolean) {}
+            override val autoLockOnFocusLoss: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setAutoLockOnFocusLoss(value: Boolean) {}
         }
 
         val getAi = GetAiGenerationEnabledUseCase(settingsRepo)
@@ -120,6 +132,12 @@ class SettingsUseCasesTest {
             override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(true)
             override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
+            override val appLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setAppLockEnabled(value: Boolean) {}
+            override val autoLockOnFocusLoss: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setAutoLockOnFocusLoss(value: Boolean) {}
         }
 
         val getLanguage = GetAiLanguageUseCase(settingsRepo)
@@ -156,6 +174,12 @@ class SettingsUseCasesTest {
             override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(true)
             override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
+            override val appLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setAppLockEnabled(value: Boolean) {}
+            override val autoLockOnFocusLoss: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setAutoLockOnFocusLoss(value: Boolean) {}
         }
 
         val getHumorous = GetAiHumorousDescriptionsUseCase(settingsRepo)
@@ -191,6 +215,12 @@ class SettingsUseCasesTest {
             override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(true)
             override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
+            override val appLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setAppLockEnabled(value: Boolean) {}
+            override val autoLockOnFocusLoss: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setAutoLockOnFocusLoss(value: Boolean) {}
         }
 
         val getShowTagCounters = GetShowTagCountersUseCase(settingsRepo)
