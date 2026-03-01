@@ -63,14 +63,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun QrCameraScreen(
     snackbarHostState: SnackbarHostState,
-    sharedImageUri: Uri? = null,
-    onSharedImageConsumed: () -> Unit = {},
-    sharedText: String? = null,
-    onSharedTextConsumed: () -> Unit = {},
-    sharedContactText: String? = null,
-    onSharedContactTextConsumed: () -> Unit = {},
-    sharedRawText: String? = null,
-    onSharedRawTextConsumed: () -> Unit = {},
+    sharedContent: SharedContent = SharedContent(),
     onNavigateToHistory: () -> Unit = {},
     viewModel: QrCameraViewModel = koinViewModel()
 ) {
@@ -126,47 +119,47 @@ fun QrCameraScreen(
     // in LaunchedEffect(sharedText/sharedContactText) sets openBottomSheet = true AFTER
     // our false, ensuring the sheet remains visible.
     LaunchedEffect(Unit) {
-        if (sharedText == null && sharedContactText == null && sharedRawText == null) {
+        if (sharedContent.wifiText == null && sharedContent.contactText == null && sharedContent.rawText == null) {
             openBottomSheet = false
             bottomSheetState.hide()
         }
     }
 
     // Scan the shared image when a URI is provided
-    LaunchedEffect(sharedImageUri) {
-        if (sharedImageUri != null) {
-            scanUriAndShowResult(sharedImageUri)
-            onSharedImageConsumed()
+    LaunchedEffect(sharedContent.imageUri) {
+        if (sharedContent.imageUri != null) {
+            scanUriAndShowResult(sharedContent.imageUri)
+            sharedContent.onImageConsumed()
         }
     }
 
     // Show shared text (e.g. WiFi QR string) as if it was scanned from a barcode
-    LaunchedEffect(sharedText) {
-        if (sharedText != null) {
-            viewModel.setSharedWifiText(sharedText)
+    LaunchedEffect(sharedContent.wifiText) {
+        if (sharedContent.wifiText != null) {
+            viewModel.setSharedWifiText(sharedContent.wifiText)
             openBottomSheet = true
             bottomSheetState.show()
-            onSharedTextConsumed()
+            sharedContent.onWifiTextConsumed()
         }
     }
 
     // Show shared contact (vCard) as if it was scanned from a barcode
-    LaunchedEffect(sharedContactText) {
-        if (sharedContactText != null) {
-            viewModel.setSharedContactText(sharedContactText)
+    LaunchedEffect(sharedContent.contactText) {
+        if (sharedContent.contactText != null) {
+            viewModel.setSharedContactText(sharedContent.contactText)
             openBottomSheet = true
             bottomSheetState.show()
-            onSharedContactTextConsumed()
+            sharedContent.onContactTextConsumed()
         }
     }
 
     // Show other shared text as if it was scanned from a barcode
-    LaunchedEffect(sharedRawText) {
-        if (sharedRawText != null) {
-            viewModel.setSharedRawText(sharedRawText)
+    LaunchedEffect(sharedContent.rawText) {
+        if (sharedContent.rawText != null) {
+            viewModel.setSharedRawText(sharedContent.rawText)
             openBottomSheet = true
             bottomSheetState.show()
-            onSharedRawTextConsumed()
+            sharedContent.onRawTextConsumed()
         }
     }
 

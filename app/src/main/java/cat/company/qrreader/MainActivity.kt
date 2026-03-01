@@ -14,6 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
 import cat.company.qrreader.db.BarcodesDb
+import cat.company.qrreader.features.camera.presentation.ui.SharedContent
 import cat.company.qrreader.ui.theme.QrReaderTheme
 import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.coroutines.Dispatchers
@@ -54,14 +55,16 @@ class MainActivity : AppCompatActivity() {
                 val sharedRawText by _sharedRawText.collectAsState()
                 MainScreen(
                     firebaseAnalytics,
-                    sharedImageUri,
-                    onSharedImageConsumed = { _sharedImageUri.value = null },
-                    sharedText = sharedText,
-                    onSharedTextConsumed = { _sharedText.value = null },
-                    sharedContactText = sharedContactText,
-                    onSharedContactTextConsumed = { _sharedContactText.value = null },
-                    sharedRawText = sharedRawText,
-                    onSharedRawTextConsumed = { _sharedRawText.value = null }
+                    SharedContent(
+                        imageUri = sharedImageUri,
+                        onImageConsumed = { _sharedImageUri.value = null },
+                        wifiText = sharedText,
+                        onWifiTextConsumed = { _sharedText.value = null },
+                        contactText = sharedContactText,
+                        onContactTextConsumed = { _sharedContactText.value = null },
+                        rawText = sharedRawText,
+                        onRawTextConsumed = { _sharedRawText.value = null }
+                    )
                 )
             }
         }

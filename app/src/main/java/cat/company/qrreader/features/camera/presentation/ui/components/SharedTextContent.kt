@@ -66,9 +66,9 @@ fun SharedTextContent(
     val checkDuplicateBarcodeUseCase: CheckDuplicateBarcodeUseCase = koinInject()
     val getDuplicateCheckEnabledUseCase: GetDuplicateCheckEnabledUseCase = koinInject()
     val coroutineScope = rememberCoroutineScope()
-    val saved = remember { mutableStateOf(false) }
+    val saved = remember(rawText) { mutableStateOf(false) }
     val saveDescription = remember(description) { mutableStateOf(true) }
-    val duplicateBarcode = remember { mutableStateOf<BarcodeModel?>(null) }
+    val duplicateBarcode = remember(rawText) { mutableStateOf<BarcodeModel?>(null) }
     val isUrl = rawText.startsWith("http://", ignoreCase = true) ||
             rawText.startsWith("https://", ignoreCase = true)
 
