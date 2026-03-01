@@ -105,8 +105,7 @@ class SettingsViewModelTest {
                 getSearchAcrossAllTags = GetSearchAcrossAllTagsUseCase(fakeRepo),
                 setSearchAcrossAllTags = SetSearchAcrossAllTagsUseCase(fakeRepo),
                 getShowTagCounters = GetShowTagCountersUseCase(fakeRepo),
-                setShowTagCounters = SetShowTagCountersUseCase(fakeRepo)
-                setSearchAcrossAllTags = SetSearchAcrossAllTagsUseCase(fakeRepo),
+                setShowTagCounters = SetShowTagCountersUseCase(fakeRepo),
                 getBiometricLockEnabled = GetBiometricLockEnabledUseCase(fakeRepo),
                 setBiometricLockEnabled = SetBiometricLockEnabledUseCase(fakeRepo)
             ),
