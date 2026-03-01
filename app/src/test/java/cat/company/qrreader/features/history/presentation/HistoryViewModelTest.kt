@@ -124,6 +124,9 @@ class HistoryViewModelTest {
         override val aiHumorousDescriptions: Flow<Boolean>
             get() = flowOf(false)
         override suspend fun setAiHumorousDescriptions(value: Boolean) {}
+        override val showTagCounters: Flow<Boolean>
+            get() = flowOf(true)
+        override suspend fun setShowTagCounters(value: Boolean) {}
     }
 
     private fun makeViewModel(repository: FakeBarcodeRepository): HistoryViewModel {
@@ -226,6 +229,9 @@ class HistoryViewModelTest {
             override val aiHumorousDescriptions: Flow<Boolean>
                 get() = flowOf(false)
             override suspend fun setAiHumorousDescriptions(value: Boolean) {}
+            override val showTagCounters: Flow<Boolean>
+                get() = flowOf(true)
+            override suspend fun setShowTagCounters(value: Boolean) {}
         }
 
         val vm = HistoryViewModel(
