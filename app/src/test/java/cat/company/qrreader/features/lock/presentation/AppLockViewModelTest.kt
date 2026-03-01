@@ -3,6 +3,7 @@ package cat.company.qrreader.features.lock.presentation
 import cat.company.qrreader.domain.repository.SettingsRepository
 import cat.company.qrreader.domain.usecase.settings.GetAppLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAutoLockOnFocusLossUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAppLockEnabledUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -62,12 +63,19 @@ class AppLockViewModelTest {
     private fun createViewModel(
         appLock: Boolean = false,
         autoLock: Boolean = false
-    ): AppLockViewModel {
+    ): AppLockViewModel = createViewModelWithRepo(appLock, autoLock).first
+
+    private fun createViewModelWithRepo(
+        appLock: Boolean = false,
+        autoLock: Boolean = false
+    ): Pair<AppLockViewModel, FakeSettingsRepository> {
         val repo = FakeSettingsRepository(appLock, autoLock)
-        return AppLockViewModel(
+        val vm = AppLockViewModel(
             getAppLockEnabled = GetAppLockEnabledUseCase(repo),
-            getAutoLockOnFocusLoss = GetAutoLockOnFocusLossUseCase(repo)
+            getAutoLockOnFocusLoss = GetAutoLockOnFocusLossUseCase(repo),
+            setAppLockEnabled = SetAppLockEnabledUseCase(repo)
         )
+        return vm to repo
     }
 
     @Before
@@ -189,5 +197,21 @@ class AppLockViewModelTest {
             advanceUntilIdle()
 
             assertFalse(viewModel.isLocked.value!!)
+        }
+
+    // ── disableAndUnlock ─────────────────────────────────────────────────────
+
+    @Test
+    fun `disableAndUnlock unlocks and disables appLockEnabled setting`() =
+        runTest(testDispatcher) {
+            val (viewModel, repo) = createViewModelWithRepo(appLock = true)
+            viewModel.checkInitialLockState(isRestoredInstance = false)
+            advanceUntilIdle()
+
+            viewModel.disableAndUnlock()
+            advanceUntilIdle()
+
+            assertFalse(viewModel.isLocked.value!!)
+            assertFalse(repo.appLockFlow.value)
         }
 }

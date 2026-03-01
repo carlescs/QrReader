@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.usecase.settings.GetAppLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAutoLockOnFocusLossUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAppLockEnabledUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +22,8 @@ import kotlinx.coroutines.launch
  */
 class AppLockViewModel(
     private val getAppLockEnabled: GetAppLockEnabledUseCase,
-    private val getAutoLockOnFocusLoss: GetAutoLockOnFocusLossUseCase
+    private val getAutoLockOnFocusLoss: GetAutoLockOnFocusLossUseCase,
+    private val setAppLockEnabled: SetAppLockEnabledUseCase
 ) : ViewModel() {
 
     private val _isLocked = MutableStateFlow<Boolean?>(null)
@@ -74,5 +76,19 @@ class AppLockViewModel(
      */
     fun unlock() {
         _isLocked.value = false
+    }
+
+    /**
+     * Disables the app-lock setting and unlocks immediately.
+     *
+     * Called when biometric authentication is no longer available on the device (e.g. the user
+     * removed all enrolled biometrics after enabling the lock). Without this recovery path the
+     * user would be permanently locked out.
+     */
+    fun disableAndUnlock() {
+        viewModelScope.launch {
+            setAppLockEnabled(false)
+            _isLocked.value = false
+        }
     }
 }

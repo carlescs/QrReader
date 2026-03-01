@@ -241,6 +241,11 @@ class SettingsViewModel(
     fun setAppLockEnabled(value: Boolean) {
         viewModelScope.launch {
             appLockSettings.setAppLockEnabled(value)
+            // Turning off app lock implicitly disables auto-lock to avoid an invalid configuration
+            // where auto-lock is on but the lock screen itself is disabled.
+            if (!value) {
+                appLockSettings.setAutoLockOnFocusLoss(false)
+            }
         }
     }
 

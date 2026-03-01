@@ -252,7 +252,7 @@ fun SecuritySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val appLockState by viewModel.appLockEnabled.collectAsState(initial = false)
     val autoLockState by viewModel.autoLockOnFocusLoss.collectAsState(initial = false)
     val context = LocalContext.current
-    val canUseBiometrics = remember { canAuthenticate(context) }
+    val canUseBiometrics = canAuthenticate(context)
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         ListItem(
@@ -267,9 +267,9 @@ fun SecuritySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
             },
             trailingContent = {
                 Switch(
-                    checked = appLockState && canUseBiometrics,
+                    checked = appLockState,
                     onCheckedChange = { newValue -> viewModel.setAppLockEnabled(newValue) },
-                    enabled = canUseBiometrics
+                    enabled = canUseBiometrics || appLockState
                 )
             },
             colors = androidx.compose.material3.ListItemDefaults.colors()
@@ -282,7 +282,7 @@ fun SecuritySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
                 Switch(
                     checked = autoLockState,
                     onCheckedChange = { newValue -> viewModel.setAutoLockOnFocusLoss(newValue) },
-                    enabled = appLockState && canUseBiometrics
+                    enabled = appLockState
                 )
             },
             colors = androidx.compose.material3.ListItemDefaults.colors()

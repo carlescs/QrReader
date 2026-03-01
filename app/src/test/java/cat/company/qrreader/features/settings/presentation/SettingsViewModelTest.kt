@@ -401,6 +401,21 @@ class SettingsViewModelTest {
         assertEquals(false, viewModel.appLockEnabled.first())
     }
 
+    @Test
+    fun `setAppLockEnabled false also clears autoLockOnFocusLoss`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.setAppLockEnabled(true)
+        viewModel.setAutoLockOnFocusLoss(true)
+        advanceUntilIdle()
+
+        viewModel.setAppLockEnabled(false)
+        advanceUntilIdle()
+
+        assertEquals(false, viewModel.autoLockOnFocusLoss.first())
+    }
+
     // ── Auto-lock on focus loss setting ───────────────────────────────────────
 
     @Test

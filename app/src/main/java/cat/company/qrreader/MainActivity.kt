@@ -95,7 +95,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun triggerBiometricUnlock() {
         val activity = findFragmentActivity() ?: return
-        if (!canAuthenticate(this)) return
+        if (!canAuthenticate(this)) {
+            // Biometrics are no longer available (e.g. user removed fingerprints after enabling
+            // app lock). Disable the setting and unlock automatically to avoid a permanent lockout.
+            appLockViewModel.disableAndUnlock()
+            return
+        }
         showBiometricPrompt(
             activity = activity,
             title = getString(R.string.app_locked_title),

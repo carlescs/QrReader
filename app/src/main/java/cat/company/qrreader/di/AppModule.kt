@@ -156,7 +156,7 @@ val viewModelModule = module {
             checkAppUpdateUseCase = get()
         )
     }
-    viewModel { AppLockViewModel(get<GetAppLockEnabledUseCase>(), get<GetAutoLockOnFocusLossUseCase>()) }
+    viewModel { AppLockViewModel(get<GetAppLockEnabledUseCase>(), get<GetAutoLockOnFocusLossUseCase>(), get<SetAppLockEnabledUseCase>()) }
 }
 
 // Combine all modules
