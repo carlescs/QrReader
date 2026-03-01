@@ -1,6 +1,8 @@
 package cat.company.qrreader.features.history.presentation
 
 import android.util.Log
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.model.BarcodeModel
@@ -27,6 +29,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -76,7 +79,8 @@ data class HistoryAiUseCases(
 class HistoryViewModel(
     private val barcodeUseCases: HistoryBarcodeUseCases,
     settingsRepository: SettingsRepository,
-    private val aiUseCases: HistoryAiUseCases
+    private val aiUseCases: HistoryAiUseCases,
+    private val processLifecycleOwner: LifecycleOwner? = null
 ) : ViewModel() {
 
     private val _selectedTagId = MutableStateFlow<Int?>(null)
@@ -90,7 +94,19 @@ class HistoryViewModel(
 
     private val _isAiSupportedOnDevice = MutableStateFlow(false)
 
+    private val appLifecycleObserver = object : DefaultLifecycleObserver {
+        override fun onStop(owner: LifecycleOwner) {
+            lockAllBarcodes()
+        }
+    }
+
     init {
+        processLifecycleOwner?.lifecycle?.addObserver(appLifecycleObserver)
+        viewModelScope.launch {
+            // Clear the in-memory unlocked set whenever biometric lock is toggled.
+            // This prevents stale unlocks if the user disables the feature and then re-enables it.
+            settingsRepository.biometricLockEnabled.drop(1).collect { lockAllBarcodes() }
+        }
         viewModelScope.launch {
             _isAiSupportedOnDevice.value = aiUseCases.generateBarcodeAiData.isAiSupportedOnDevice()
         }
@@ -175,6 +191,16 @@ class HistoryViewModel(
 
     fun markBarcodeUnlocked(barcodeId: Int) {
         _unlockedBarcodeIds.update { it + barcodeId }
+    }
+
+    /**
+     * Re-locks a temporarily unlocked barcode by removing it from the in-memory unlocked set.
+     *
+     * This does NOT change the persistent lock state in the database. The barcode retains
+     * [BarcodeModel.isLocked] = true and will require fresh biometric authentication to view again.
+     */
+    fun relockBarcode(barcodeId: Int) {
+        _unlockedBarcodeIds.update { it - barcodeId }
     }
 
     /**
@@ -322,6 +348,7 @@ class HistoryViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        processLifecycleOwner?.lifecycle?.removeObserver(appLifecycleObserver)
         aiUseCases.generateBarcodeAiData.cleanup()
     }
 

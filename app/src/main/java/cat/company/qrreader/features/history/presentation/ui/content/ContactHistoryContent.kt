@@ -31,9 +31,9 @@ fun ContactHistoryContent(sdf: SimpleDateFormat, barcode: BarcodeModel, contactI
     Text(text = sdf.format(barcode.date))
 
     if (hasContactFields) {
-        contactInfo?.name?.let { Text(text = it) }
-        contactInfo?.phone?.let { Text(text = it) }
-        contactInfo?.email?.let { Text(text = it) }
+        contactInfo.name?.let { Text(text = it) }
+        contactInfo.phone?.let { Text(text = it) }
+        contactInfo.email?.let { Text(text = it) }
     } else {
         Text(text = barcode.barcode)
     }

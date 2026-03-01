@@ -413,6 +413,21 @@ fun BarcodeCard(
                                 historyViewModel.toggleLockBarcode(barcode.barcode.id, !barcode.barcode.isLocked)
                             }
                         )
+                        if (barcode.barcode.isLocked && barcode.barcode.id in unlockedBarcodeIds) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.relock_barcode)) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Filled.Lock,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    moreMenuExpanded.value = false
+                                    historyViewModel.relockBarcode(barcode.barcode.id)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -455,7 +470,7 @@ fun BarcodeCard(
             if (barcode.barcode.type == Barcode.TYPE_WIFI && wifiSsid != null && !isWifiWep) {
                 WifiConnectButton(
                     ssid = wifiSsid,
-                    password = wifiInfo?.password,
+                    password = wifiInfo.password,
                     snackbarHostState = snackBarHostState
                 )
             }

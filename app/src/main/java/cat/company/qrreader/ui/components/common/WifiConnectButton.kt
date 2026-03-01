@@ -74,7 +74,7 @@ fun WifiConnectButton(
         // WPA2 / transition-mode request
         try {
             val specifierBuilder = WifiNetworkSpecifier.Builder().setSsid(ssid)
-            if (hasPassword) specifierBuilder.setWpa2Passphrase(password!!)
+            if (hasPassword) specifierBuilder.setWpa2Passphrase(password ?: "")
             val request = NetworkRequest.Builder()
                 .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
                 .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
@@ -106,7 +106,7 @@ fun WifiConnectButton(
             try {
                 val wpa3Specifier = WifiNetworkSpecifier.Builder()
                     .setSsid(ssid)
-                    .setWpa3Passphrase(password!!)
+                    .setWpa3Passphrase(password ?: "")
                     .build()
                 val wpa3Request = NetworkRequest.Builder()
                     .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
