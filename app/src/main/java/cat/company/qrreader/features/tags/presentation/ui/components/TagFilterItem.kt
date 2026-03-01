@@ -47,7 +47,8 @@ fun TagFilterItem(
     onSelectTag: (TagModel?) -> Unit,
     ioCoroutine: CoroutineScope,
     viewModel: TagsViewModel,
-    barcodeCount: Int = 0
+    barcodeCount: Int = 0,
+    showCounter: Boolean = true
 ) {
     val tagColor = Utils.parseColor(tag.color) ?: MaterialTheme.colorScheme.primary
     val deleteDialogOpen = remember { mutableStateOf(false) }
@@ -61,11 +62,13 @@ fun TagFilterItem(
                     contentDescription = null,
                     tint = tagColor
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                CountCircle(
-                    count = barcodeCount,
-                    countDescription = stringResource(R.string.barcode_count_description, barcodeCount)
-                )
+                if (showCounter) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    CountCircle(
+                        count = barcodeCount,
+                        countDescription = stringResource(R.string.barcode_count_description, barcodeCount)
+                    )
+                }
             }
         },
         label = { Text(tag.name) },

@@ -34,6 +34,7 @@ import org.koin.androidx.compose.koinViewModel
 fun TagsFilterList(
     viewModel: TagsViewModel = koinViewModel(),
     selectedTagId: Int?,
+    showTagCounters: Boolean = true,
     selectTag: (TagModel?) -> Unit
 ) {
     viewModel.loadTags()
@@ -61,7 +62,8 @@ fun TagsFilterList(
                     onSelectTag = selectTag,
                     ioCoroutine = ioCoroutine,
                     viewModel = viewModel,
-                    barcodeCount = tagCounts[tag.id] ?: 0
+                    barcodeCount = tagCounts[tag.id] ?: 0,
+                    showCounter = showTagCounters
                 )
             }
         }
