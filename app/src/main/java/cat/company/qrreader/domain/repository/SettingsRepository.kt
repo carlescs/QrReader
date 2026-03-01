@@ -71,4 +71,14 @@ interface SettingsRepository {
      * Enable or disable tag counter badges in the history filter
      */
     suspend fun setShowTagCounters(value: Boolean)
+
+    /**
+     * Whether biometric lock for sensitive barcodes is enabled
+     */
+    val biometricLockEnabled: Flow<Boolean>
+
+    /**
+     * Enable or disable the biometric lock feature
+     */
+    suspend fun setBiometricLockEnabled(value: Boolean)
 }

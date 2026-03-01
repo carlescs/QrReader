@@ -3,6 +3,8 @@ package cat.company.qrreader.features.settings.presentation
 import androidx.lifecycle.ViewModel
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetBiometricLockEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetBiometricLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.update.CheckAppUpdateUseCase
 import cat.company.qrreader.domain.usecase.update.UpdateCheckResult
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
@@ -34,6 +36,8 @@ import kotlinx.coroutines.launch
  * @property setSearchAcrossAllTags Writes the "search across all tags when filtering" preference.
  * @property getShowTagCounters Reads the "show tag counters" preference.
  * @property setShowTagCounters Writes the "show tag counters" preference.
+ * @property getBiometricLockEnabled Reads the biometric lock enabled preference.
+ * @property setBiometricLockEnabled Writes the biometric lock enabled preference.
  */
 data class HistorySettingsUseCases(
     val getHideTaggedSetting: GetHideTaggedSettingUseCase,
@@ -41,7 +45,9 @@ data class HistorySettingsUseCases(
     val getSearchAcrossAllTags: GetSearchAcrossAllTagsUseCase,
     val setSearchAcrossAllTags: SetSearchAcrossAllTagsUseCase,
     val getShowTagCounters: GetShowTagCountersUseCase,
-    val setShowTagCounters: SetShowTagCountersUseCase
+    val setShowTagCounters: SetShowTagCountersUseCase,
+    val getBiometricLockEnabled: GetBiometricLockEnabledUseCase,
+    val setBiometricLockEnabled: SetBiometricLockEnabledUseCase
 )
 
 /**
@@ -116,6 +122,11 @@ class SettingsViewModel(
     val showTagCounters: Flow<Boolean> = historySettings.getShowTagCounters()
 
     /**
+     * Flow for the biometric lock enabled setting
+     */
+    val biometricLockEnabled: Flow<Boolean> = historySettings.getBiometricLockEnabled()
+
+    /**
      * Flow for the 'AI generation enabled' setting
      */
     val aiGenerationEnabled: Flow<Boolean> = aiSettings.getAiGenerationEnabled()
@@ -148,6 +159,12 @@ class SettingsViewModel(
     fun setShowTagCounters(value: Boolean) {
         viewModelScope.launch {
             historySettings.setShowTagCounters(value)
+        }
+    }
+
+    fun setBiometricLockEnabled(value: Boolean) {
+        viewModelScope.launch {
+            historySettings.setBiometricLockEnabled(value)
         }
     }
 

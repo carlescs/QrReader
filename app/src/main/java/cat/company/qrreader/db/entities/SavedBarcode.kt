@@ -19,4 +19,5 @@ data class SavedBarcode(
     val barcode: String,
     var aiGeneratedDescription: String?=null,
     @ColumnInfo(name = "is_favorite") var isFavorite: Boolean = false,
+    @ColumnInfo(name = "is_locked") var isLocked: Boolean = false,
 )

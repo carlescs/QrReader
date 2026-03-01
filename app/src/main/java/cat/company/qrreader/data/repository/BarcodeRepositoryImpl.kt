@@ -84,6 +84,12 @@ class BarcodeRepositoryImpl(database: BarcodesDb) : BarcodeRepository {
         barcodeDao.setFavorite(barcodeId, isFavorite)
     }
 
+    override suspend fun toggleLock(barcodeId: Int, isLocked: Boolean) {
+        barcodeDao.setLocked(barcodeId, isLocked)
+    }
+
+    override fun getLockedCount(): Flow<Int> = barcodeDao.getLockedCount()
+
     override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> {
         return barcodeDao.getTagBarcodeCounts().map { list ->
             list.associate { it.tagId to it.count }

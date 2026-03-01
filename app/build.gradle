@@ -72,6 +72,7 @@ dependencies {
     implementation libs.google.mlkit.genai.prompt
 
     // Google Play In-App Updates
+    implementation libs.play.app.update
     implementation libs.play.app.update.ktx
 
     implementation libs.qrcode.kotlin
@@ -94,6 +95,10 @@ dependencies {
 
     // Jetpack DataStore (Preferences)
     implementation libs.androidx.datastore.preferences
+
+    // Biometric authentication
+    implementation libs.androidx.biometric
+    implementation libs.androidx.appcompat
 
     // Koin for dependency injection
     implementation libs.koin.android

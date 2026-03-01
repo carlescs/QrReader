@@ -18,7 +18,8 @@ fun SavedBarcode.toDomainModel(): BarcodeModel {
         description = this.description,
         barcode = this.barcode,
         aiGeneratedDescription = this.aiGeneratedDescription,
-        isFavorite = this.isFavorite
+        isFavorite = this.isFavorite,
+        isLocked = this.isLocked
     )
 }
 
@@ -33,7 +34,8 @@ fun BarcodeModel.toEntity(): SavedBarcode {
         description = this.description,
         barcode = this.barcode,
         aiGeneratedDescription = this.aiGeneratedDescription,
-        isFavorite = this.isFavorite
+        isFavorite = this.isFavorite,
+        isLocked = this.isLocked
     )
 }
 

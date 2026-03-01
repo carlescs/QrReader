@@ -298,4 +298,27 @@ class SettingsRepositoryTest {
         repository.setAiHumorousDescriptions(false)
         assertFalse(repository.aiHumorousDescriptions.first())
     }
+
+    /**
+     * Test that biometric lock can be enabled
+     */
+    @Test
+    fun biometricLockEnabled_canBeSetToTrue() = runTest {
+        repository.setBiometricLockEnabled(true)
+
+        val result = repository.biometricLockEnabled.first()
+        assertTrue(result)
+    }
+
+    /**
+     * Test that biometric lock can be disabled
+     */
+    @Test
+    fun setBiometricLockEnabled_false_updatesValue() = runTest {
+        repository.setBiometricLockEnabled(true)
+        assertTrue(repository.biometricLockEnabled.first())
+
+        repository.setBiometricLockEnabled(false)
+        assertFalse(repository.biometricLockEnabled.first())
+    }
 }

@@ -11,6 +11,7 @@ import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.history.DeleteBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.GetBarcodesWithTagsUseCase
 import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
+import cat.company.qrreader.domain.usecase.history.ToggleLockBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
@@ -34,18 +35,48 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
+ * Barcode manipulation use cases grouped for constructor injection.
+ *
+ * Encapsulates all use cases that read and modify barcode data in the history feature.
+ *
+ * @property getBarcodes Fetches barcodes with their associated tags, applying filters.
+ * @property update Persists changes to an existing barcode.
+ * @property delete Permanently removes a barcode from the database.
+ * @property toggleFavorite Toggles the favorite (starred) state for a barcode.
+ * @property toggleLock Toggles the locked (hidden) state for a barcode.
+ */
+data class HistoryBarcodeUseCases(
+    val getBarcodes: GetBarcodesWithTagsUseCase,
+    val update: UpdateBarcodeUseCase,
+    val delete: DeleteBarcodeUseCase,
+    val toggleFavorite: ToggleFavoriteUseCase,
+    val toggleLock: ToggleLockBarcodeUseCase
+)
+
+/**
+ * AI generation use cases grouped for constructor injection.
+ *
+ * Encapsulates the use cases and settings required to generate AI-powered descriptions
+ * and tag suggestions for barcodes in the history feature.
+ *
+ * @property generateBarcodeAiData Generates AI descriptions and tag suggestions on-device.
+ * @property getLanguage Reads the AI response language preference.
+ * @property getHumorousDescriptions Reads the humorous descriptions toggle.
+ */
+data class HistoryAiUseCases(
+    val generateBarcodeAiData: GenerateBarcodeAiDataUseCase,
+    val getLanguage: GetAiLanguageUseCase,
+    val getHumorousDescriptions: GetAiHumorousDescriptionsUseCase
+)
+
+/**
  * ViewModel for the history
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModel(
-    private val getBarcodesWithTagsUseCase: GetBarcodesWithTagsUseCase,
-    private val updateBarcodeUseCase: UpdateBarcodeUseCase,
-    private val deleteBarcodeUseCase: DeleteBarcodeUseCase,
+    private val barcodeUseCases: HistoryBarcodeUseCases,
     settingsRepository: SettingsRepository,
-    private val generateBarcodeAiDataUseCase: GenerateBarcodeAiDataUseCase,
-    private val getAiLanguageUseCase: GetAiLanguageUseCase,
-    private val getAiHumorousDescriptionsUseCase: GetAiHumorousDescriptionsUseCase,
-    private val toggleFavoriteUseCase: ToggleFavoriteUseCase
+    private val aiUseCases: HistoryAiUseCases
 ) : ViewModel() {
 
     private val _selectedTagId = MutableStateFlow<Int?>(null)
@@ -61,7 +92,7 @@ class HistoryViewModel(
 
     init {
         viewModelScope.launch {
-            _isAiSupportedOnDevice.value = generateBarcodeAiDataUseCase.isAiSupportedOnDevice()
+            _isAiSupportedOnDevice.value = aiUseCases.generateBarcodeAiData.isAiSupportedOnDevice()
         }
     }
 
@@ -70,6 +101,14 @@ class HistoryViewModel(
         combine(settingsRepository.aiGenerationEnabled, _isAiSupportedOnDevice) { enabled, supported ->
             enabled && supported
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    /** Whether biometric lock feature is enabled. */
+    val biometricLockEnabled: StateFlow<Boolean> =
+        settingsRepository.biometricLockEnabled
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    private val _unlockedBarcodeIds = MutableStateFlow<Set<Int>>(emptySet())
+    val unlockedBarcodeIds: StateFlow<Set<Int>> = _unlockedBarcodeIds.asStateFlow()
 
     // Debounce input to avoid querying DB on every keystroke
     @OptIn(FlowPreview::class)
@@ -91,11 +130,11 @@ class HistoryViewModel(
             .flatMapLatest { (tagId, query, hideTagged, searchAcrossAll, showFavorites) ->
                 if (showFavorites) {
                     // Favorites filter takes precedence: ignore tag, search, and hide-tagged filters
-                    getBarcodesWithTagsUseCase(null, null, false, false, true)
+                    barcodeUseCases.getBarcodes(null, null, false, false, true)
                 } else {
                     val q = query.takeIf { it.isNotBlank() }
                     val effectiveTagId = if (searchAcrossAll && q != null) null else tagId
-                    getBarcodesWithTagsUseCase(effectiveTagId, q, hideTagged, searchAcrossAll, false)
+                    barcodeUseCases.getBarcodes(effectiveTagId, q, hideTagged, searchAcrossAll, false)
                 }
             }
 
@@ -118,20 +157,47 @@ class HistoryViewModel(
 
     fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {
         viewModelScope.launch {
-            toggleFavoriteUseCase(barcodeId, isFavorite)
+            barcodeUseCases.toggleFavorite(barcodeId, isFavorite)
         }
+    }
+
+    fun toggleLockBarcode(barcodeId: Int, isLocked: Boolean) {
+        viewModelScope.launch {
+            barcodeUseCases.toggleLock(barcodeId, isLocked)
+            // Always remove from in-memory unlock set when changing the persistent lock state.
+            // If locking (isLocked=true): the barcode may currently be in the unlocked set
+            //   (user was viewing it before deciding to lock it), so we must evict it.
+            // If unlocking persistently (isLocked=false): cleanup is safe; the DB state (false)
+            //   already makes the barcode visible, so the set entry is redundant.
+            _unlockedBarcodeIds.update { it - barcodeId }
+        }
+    }
+
+    fun markBarcodeUnlocked(barcodeId: Int) {
+        _unlockedBarcodeIds.update { it + barcodeId }
+    }
+
+    /**
+     * Clears all temporarily unlocked barcodes from the in-memory cache.
+     *
+     * This does NOT modify the persistent lock state in the database. Barcodes that have
+     * [BarcodeModel.isLocked] = true will appear locked again after this call, requiring
+     * fresh biometric authentication to view them.
+     */
+    fun lockAllBarcodes() {
+        _unlockedBarcodeIds.value = emptySet()
     }
 
     fun updateBarcode(barcode: BarcodeModel) {
         viewModelScope.launch {
-            val rows = updateBarcodeUseCase(barcode)
+            val rows = barcodeUseCases.update(barcode)
             Log.d("HistoryViewModel", "updateBarcode id=${barcode.id} rows=$rows")
         }
     }
 
     fun deleteBarcode(barcode: BarcodeModel) {
         viewModelScope.launch {
-            deleteBarcodeUseCase(barcode)
+            barcodeUseCases.delete(barcode)
         }
     }
 
@@ -157,9 +223,9 @@ class HistoryViewModel(
     fun regenerateAiDescription(barcode: BarcodeModel) {
         viewModelScope.launch {
             _regenerateDescriptionState.value = RegenerateDescriptionState(isLoading = true)
-            val language = getAiLanguageUseCase().first()
-            val humorous = getAiHumorousDescriptionsUseCase().first()
-            val result = generateBarcodeAiDataUseCase(
+            val language = aiUseCases.getLanguage().first()
+            val humorous = aiUseCases.getHumorousDescriptions().first()
+            val result = aiUseCases.generateBarcodeAiData(
                 barcodeContent = barcode.barcode,
                 barcodeType = getBarcodeTypeName(barcode.type),
                 barcodeFormat = getBarcodeFormatName(barcode.format),
@@ -213,9 +279,9 @@ class HistoryViewModel(
         val barcodeId = barcode.barcode.id
         _tagSuggestionStates.update { it + (barcodeId to TagSuggestionState(isLoading = true)) }
         viewModelScope.launch {
-            val language = getAiLanguageUseCase().first()
-            val humorous = getAiHumorousDescriptionsUseCase().first()
-            val result = generateBarcodeAiDataUseCase(
+            val language = aiUseCases.getLanguage().first()
+            val humorous = aiUseCases.getHumorousDescriptions().first()
+            val result = aiUseCases.generateBarcodeAiData(
                 barcodeContent = barcode.barcode.barcode,
                 barcodeType = getBarcodeTypeName(barcode.barcode.type),
                 barcodeFormat = getBarcodeFormatName(barcode.barcode.format),
@@ -256,7 +322,7 @@ class HistoryViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        generateBarcodeAiDataUseCase.cleanup()
+        aiUseCases.generateBarcodeAiData.cleanup()
     }
 
     // small data holder for combine result

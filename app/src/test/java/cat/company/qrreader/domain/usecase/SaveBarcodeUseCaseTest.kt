@@ -29,8 +29,10 @@ class SaveBarcodeUseCaseTest {
             override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
             override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
             override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
+            override suspend fun toggleLock(barcodeId: Int, isLocked: Boolean) {}
             override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
             override fun getFavoritesCount(): Flow<Int> = flowOf(0)
+            override fun getLockedCount(): Flow<Int> = flowOf(0)
         }
 
         val uc = SaveBarcodeUseCase(repo)

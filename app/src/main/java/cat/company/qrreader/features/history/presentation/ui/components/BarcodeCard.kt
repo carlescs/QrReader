@@ -3,6 +3,7 @@ package cat.company.qrreader.features.history.presentation.ui.components
 import android.content.Intent
 import android.provider.ContactsContract
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -17,6 +18,8 @@ import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.QrCode
@@ -58,8 +61,11 @@ import cat.company.qrreader.ui.components.common.Tag
 import cat.company.qrreader.ui.components.common.WifiConnectButton
 import cat.company.qrreader.domain.usecase.history.SwitchBarcodeTagUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
+import cat.company.qrreader.utils.canAuthenticate
+import cat.company.qrreader.utils.findFragmentActivity
 import cat.company.qrreader.utils.parseContactVCard
 import cat.company.qrreader.utils.parseWifiContent
+import cat.company.qrreader.utils.showBiometricPrompt
 import com.google.mlkit.vision.barcode.common.Barcode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -92,6 +98,10 @@ fun BarcodeCard(
     val allTags by tagsViewModel.tags.collectAsState(initial = emptyList())
     val tagSuggestionStates by historyViewModel.tagSuggestionStates.collectAsState()
     val tagSuggestionState = tagSuggestionStates[barcode.barcode.id]
+    val biometricLockEnabled by historyViewModel.biometricLockEnabled.collectAsState()
+    val unlockedBarcodeIds by historyViewModel.unlockedBarcodeIds.collectAsState()
+    val isActuallyLocked = biometricLockEnabled && barcode.barcode.isLocked && barcode.barcode.id !in unlockedBarcodeIds
+    val biometricError = remember { mutableStateOf<String?>(null) }
     val contactInfo = remember(barcode.barcode.barcode) {
         if (barcode.barcode.type == Barcode.TYPE_CONTACT_INFO) parseContactVCard(barcode.barcode.barcode)
         else null
@@ -123,6 +133,69 @@ fun BarcodeCard(
         shape = RoundedCornerShape(10.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
     ) {
+        if (isActuallyLocked) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Lock,
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = stringResource(R.string.locked_barcode),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    val canAuth = canAuthenticate(context)
+                    TextButton(
+                        onClick = {
+                            val activity = context.findFragmentActivity()
+                            if (activity != null && canAuth) {
+                                biometricError.value = null
+                                showBiometricPrompt(
+                                    activity = activity,
+                                    title = context.getString(R.string.unlock_barcode),
+                                    subtitle = context.getString(R.string.unlock_barcode_subtitle),
+                                    negativeButtonText = context.getString(R.string.cancel),
+                                    onSuccess = {
+                                        historyViewModel.markBarcodeUnlocked(barcode.barcode.id)
+                                    },
+                                    onError = { err ->
+                                        biometricError.value = err
+                                    }
+                                )
+                            } else {
+                                biometricError.value = context.getString(R.string.biometric_not_available)
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.LockOpen,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.tap_to_unlock))
+                    }
+                    biometricError.value?.let { err ->
+                        Text(
+                            text = err,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+        } else {
         Column(modifier = Modifier.padding(10.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 Icon(
@@ -316,6 +389,26 @@ fun BarcodeCard(
                             confirmDeleteOpen.value = true
                         }
                     )
+                    if (biometricLockEnabled && canAuthenticate(context)) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    if (barcode.barcode.isLocked) stringResource(R.string.remove_lock)
+                                    else stringResource(R.string.lock_barcode)
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = if (barcode.barcode.isLocked) Icons.Filled.LockOpen else Icons.Filled.Lock,
+                                    contentDescription = null
+                                )
+                            },
+                            onClick = {
+                                moreMenuExpanded.value = false
+                                historyViewModel.toggleLockBarcode(barcode.barcode.id, !barcode.barcode.isLocked)
+                            }
+                        )
+                    }
                 }
             }
             if (aiGenerationEnabled) {
@@ -436,5 +529,6 @@ fun BarcodeCard(
                 onDismiss = { showContactQrCodeDialog.value = false }
             )
         }
+        } // end else (not locked)
     }
 }
