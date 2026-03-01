@@ -22,6 +22,10 @@ import cat.company.qrreader.domain.usecase.history.ToggleFavoriteUseCase
 import cat.company.qrreader.domain.usecase.history.ToggleLockBarcodeUseCase
 import cat.company.qrreader.domain.usecase.history.UpdateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAppLockEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAppLockEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAutoLockOnFocusLossUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAutoLockOnFocusLossUseCase
 import cat.company.qrreader.domain.usecase.settings.GetBiometricLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.SetBiometricLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.camera.CheckDuplicateBarcodeUseCase
@@ -50,7 +54,9 @@ import cat.company.qrreader.features.codeCreator.presentation.CodeCreatorViewMod
 import cat.company.qrreader.features.history.presentation.HistoryAiUseCases
 import cat.company.qrreader.features.history.presentation.HistoryBarcodeUseCases
 import cat.company.qrreader.features.history.presentation.HistoryViewModel
+import cat.company.qrreader.features.lock.presentation.AppLockViewModel
 import cat.company.qrreader.features.settings.presentation.AiSettingsUseCases
+import cat.company.qrreader.features.settings.presentation.AppLockSettingsUseCases
 import cat.company.qrreader.features.settings.presentation.HistoryFilterSettingsUseCases
 import cat.company.qrreader.features.settings.presentation.HistoryPrivacySettingsUseCases
 import cat.company.qrreader.features.settings.presentation.SettingsViewModel
@@ -120,6 +126,10 @@ val useCaseModule = module {
     factory { SetAiLanguageUseCase(get()) }
     factory { GetAiHumorousDescriptionsUseCase(get()) }
     factory { SetAiHumorousDescriptionsUseCase(get()) }
+    factory { GetAppLockEnabledUseCase(get()) }
+    factory { SetAppLockEnabledUseCase(get()) }
+    factory { GetAutoLockOnFocusLossUseCase(get()) }
+    factory { SetAutoLockOnFocusLossUseCase(get()) }
     factory { GenerateQrCodeUseCase() }
     factory { SaveBitmapToMediaStoreUseCase() }
     factory { CheckAppUpdateUseCase(get<AppUpdateManager>()) }
@@ -141,10 +151,12 @@ val viewModelModule = module {
         SettingsViewModel(
             filterSettings = HistoryFilterSettingsUseCases(get(), get(), get(), get(), get(), get()),
             privacySettings = HistoryPrivacySettingsUseCases(get(), get(), get(), get()),
+            appLockSettings = AppLockSettingsUseCases(get(), get(), get(), get()),
             aiSettings = AiSettingsUseCases(get(), get(), get(), get(), get(), get(), get<GenerateBarcodeAiDataUseCase>()),
             checkAppUpdateUseCase = get()
         )
     }
+    viewModel { AppLockViewModel(get<GetAppLockEnabledUseCase>(), get<GetAutoLockOnFocusLossUseCase>(), get<SetAppLockEnabledUseCase>()) }
 }
 
 // Combine all modules

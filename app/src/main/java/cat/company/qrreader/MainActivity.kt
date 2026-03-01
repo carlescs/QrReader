@@ -12,16 +12,27 @@ import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import cat.company.qrreader.db.BarcodesDb
+import cat.company.qrreader.features.lock.presentation.AppLockViewModel
+import cat.company.qrreader.features.lock.presentation.ui.LockScreen
 import cat.company.qrreader.features.camera.presentation.ui.SharedContent
 import cat.company.qrreader.ui.theme.QrReaderTheme
+import cat.company.qrreader.utils.canAuthenticate
+import cat.company.qrreader.utils.findFragmentActivity
+import cat.company.qrreader.utils.showBiometricPrompt
 import com.google.firebase.analytics.FirebaseAnalytics
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * Main activity
@@ -30,11 +41,42 @@ import org.koin.android.ext.android.inject
 class MainActivity : AppCompatActivity() {
     private lateinit var firebaseAnalytics: FirebaseAnalytics
     private val db: BarcodesDb by inject()
+    private val appLockViewModel: AppLockViewModel by viewModel()
 
     private val _sharedImageUri = MutableStateFlow<Uri?>(null)
     private val _sharedText = MutableStateFlow<String?>(null)
     private val _sharedContactText = MutableStateFlow<String?>(null)
     private val _sharedRawText = MutableStateFlow<String?>(null)
+
+    /**
+     * Observes the process-level lifecycle (not the activity lifecycle) to lock/unlock the app
+     * when the entire app moves to/from the background.
+     *
+     * Using [ProcessLifecycleOwner] instead of the activity's own [onStop]/[onStart] prevents
+     * spurious lock cycles caused by [BiometricPrompt], which can momentarily stop the activity
+     * on certain devices.
+     */
+    private val appLifecycleObserver = object : DefaultLifecycleObserver {
+        private var unlockJob: Job? = null
+
+        override fun onStart(owner: LifecycleOwner) {
+            // Auto-trigger the biometric prompt whenever the app enters the foreground while
+            // locked. Waits for the lock state to be determined first (handles the first-launch
+            // null state where checkInitialLockState() is still running).
+            unlockJob = lifecycleScope.launch {
+                val locked = appLockViewModel.isLocked.first { it != null }
+                if (locked == true) {
+                    triggerBiometricUnlock()
+                }
+            }
+        }
+
+        override fun onStop(owner: LifecycleOwner) {
+            unlockJob?.cancel()
+            unlockJob = null
+            appLockViewModel.lockIfAutoLockEnabled()
+        }
+    }
 
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -46,6 +88,9 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch { _sharedContactText.value = extractSharedContactText(intent) }
         _sharedRawText.value = extractSharedRawText(intent)
 
+        appLockViewModel.checkInitialLockState(isRestoredInstance = savedInstanceState != null)
+        ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleObserver)
+
         enableEdgeToEdge()
         setContent {
             QrReaderTheme {
@@ -53,21 +98,35 @@ class MainActivity : AppCompatActivity() {
                 val sharedText by _sharedText.collectAsState()
                 val sharedContactText by _sharedContactText.collectAsState()
                 val sharedRawText by _sharedRawText.collectAsState()
-                MainScreen(
-                    firebaseAnalytics,
-                    SharedContent(
-                        imageUri = sharedImageUri,
-                        onImageConsumed = { _sharedImageUri.value = null },
-                        wifiText = sharedText,
-                        onWifiTextConsumed = { _sharedText.value = null },
-                        contactText = sharedContactText,
-                        onContactTextConsumed = { _sharedContactText.value = null },
-                        rawText = sharedRawText,
-                        onRawTextConsumed = { _sharedRawText.value = null }
+                val isLocked by appLockViewModel.isLocked.collectAsState()
+
+                if (isLocked != false) {
+                    LockScreen(
+                        isLocked = isLocked,
+                        onUnlockClick = { triggerBiometricUnlock() }
                     )
-                )
+                } else {
+                    MainScreen(
+                        firebaseAnalytics,
+                        SharedContent(
+                            imageUri = sharedImageUri,
+                            onImageConsumed = { _sharedImageUri.value = null },
+                            wifiText = sharedText,
+                            onWifiTextConsumed = { _sharedText.value = null },
+                            contactText = sharedContactText,
+                            onContactTextConsumed = { _sharedContactText.value = null },
+                            rawText = sharedRawText,
+                            onRawTextConsumed = { _sharedRawText.value = null }
+                        )
+                    )
+                }
             }
         }
+    }
+
+    override fun onDestroy() {
+        ProcessLifecycleOwner.get().lifecycle.removeObserver(appLifecycleObserver)
+        super.onDestroy()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -77,6 +136,24 @@ class MainActivity : AppCompatActivity() {
         _sharedText.value = extractSharedText(intent)
         lifecycleScope.launch { _sharedContactText.value = extractSharedContactText(intent) }
         _sharedRawText.value = extractSharedRawText(intent)
+    }
+
+    private fun triggerBiometricUnlock() {
+        val activity = findFragmentActivity() ?: return
+        if (!canAuthenticate(this)) {
+            // Biometrics are no longer available (e.g. user removed fingerprints after enabling
+            // app lock). Disable the setting and unlock automatically to avoid a permanent lockout.
+            appLockViewModel.disableAndUnlock()
+            return
+        }
+        showBiometricPrompt(
+            activity = activity,
+            title = getString(R.string.app_locked_title),
+            subtitle = getString(R.string.unlock_app_subtitle),
+            negativeButtonText = getString(R.string.cancel),
+            onSuccess = { appLockViewModel.unlock() },
+            onError = { /* prompt dismissed – remain locked */ }
+        )
     }
 
     private fun extractSharedImageUri(intent: Intent): Uri? {

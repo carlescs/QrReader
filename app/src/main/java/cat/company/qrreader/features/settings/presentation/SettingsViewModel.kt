@@ -3,6 +3,10 @@ package cat.company.qrreader.features.settings.presentation
 import androidx.lifecycle.ViewModel
 import cat.company.qrreader.domain.usecase.barcode.GenerateBarcodeAiDataUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiGenerationEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAppLockEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAppLockEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetAutoLockOnFocusLossUseCase
+import cat.company.qrreader.domain.usecase.settings.SetAutoLockOnFocusLossUseCase
 import cat.company.qrreader.domain.usecase.settings.GetBiometricLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.SetBiometricLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetDuplicateCheckEnabledUseCase
@@ -66,6 +70,34 @@ data class HistoryPrivacySettingsUseCases(
 )
 
 /**
+ * App-level lock screen settings use cases grouped for constructor injection.
+ *
+ * Encapsulates the use cases that read and write app-level lock screen settings,
+ * addressing the **app-launch security** concern. These are distinct from the per-barcode
+ * biometric lock ([HistoryPrivacySettingsUseCases]) in that they protect the entire app
+ * rather than individual records.
+ *
+ * When [getAppLockEnabled] returns `true`, [AppLockViewModel] will show a lock screen on
+ * app launch and trigger biometric authentication before content is revealed.
+ * When [getAutoLockOnFocusLoss] returns `true` as well, the app also re-locks each time
+ * it transitions to the background.
+ *
+ * @property getAppLockEnabled Reads whether the app-level lock screen is enabled.
+ * @property setAppLockEnabled Writes the app-level lock screen enabled preference.
+ * @property getAutoLockOnFocusLoss Reads whether the app should auto-lock when losing focus.
+ * @property setAutoLockOnFocusLoss Writes the auto-lock on focus loss preference.
+ *
+ * @see AppLockViewModel
+ * @see HistoryPrivacySettingsUseCases
+ */
+data class AppLockSettingsUseCases(
+    val getAppLockEnabled: GetAppLockEnabledUseCase,
+    val setAppLockEnabled: SetAppLockEnabledUseCase,
+    val getAutoLockOnFocusLoss: GetAutoLockOnFocusLossUseCase,
+    val setAutoLockOnFocusLoss: SetAutoLockOnFocusLossUseCase
+)
+
+/**
  * AI-related settings use cases grouped for constructor injection.
  *
  * Encapsulates all use cases for reading/writing AI feature preferences and checking device
@@ -96,6 +128,7 @@ data class AiSettingsUseCases(
 class SettingsViewModel(
     private val filterSettings: HistoryFilterSettingsUseCases,
     private val privacySettings: HistoryPrivacySettingsUseCases,
+    private val appLockSettings: AppLockSettingsUseCases,
     private val aiSettings: AiSettingsUseCases,
     private val checkAppUpdateUseCase: CheckAppUpdateUseCase
 ) : ViewModel() {
@@ -148,6 +181,16 @@ class SettingsViewModel(
     val duplicateCheckEnabled: Flow<Boolean> = privacySettings.getDuplicateCheckEnabled()
 
     /**
+     * Flow for the app-level lock screen enabled setting
+     */
+    val appLockEnabled: Flow<Boolean> = appLockSettings.getAppLockEnabled()
+
+    /**
+     * Flow for the auto-lock on focus loss setting
+     */
+    val autoLockOnFocusLoss: Flow<Boolean> = appLockSettings.getAutoLockOnFocusLoss()
+
+    /**
      * Flow for the 'AI generation enabled' setting
      */
     val aiGenerationEnabled: Flow<Boolean> = aiSettings.getAiGenerationEnabled()
@@ -192,6 +235,23 @@ class SettingsViewModel(
     fun setDuplicateCheckEnabled(value: Boolean) {
         viewModelScope.launch {
             privacySettings.setDuplicateCheckEnabled(value)
+        }
+    }
+
+    fun setAppLockEnabled(value: Boolean) {
+        viewModelScope.launch {
+            appLockSettings.setAppLockEnabled(value)
+            // Turning off app lock implicitly disables auto-lock to avoid an invalid configuration
+            // where auto-lock is on but the lock screen itself is disabled.
+            if (!value) {
+                appLockSettings.setAutoLockOnFocusLoss(false)
+            }
+        }
+    }
+
+    fun setAutoLockOnFocusLoss(value: Boolean) {
+        viewModelScope.launch {
+            appLockSettings.setAutoLockOnFocusLoss(value)
         }
     }
 

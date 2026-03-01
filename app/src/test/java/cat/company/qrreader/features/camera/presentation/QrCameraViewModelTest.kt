@@ -126,6 +126,10 @@ class QrCameraViewModelTest {
         override suspend fun setBiometricLockEnabled(value: Boolean) {}
         override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(true)
         override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
+        override val appLockEnabled: kotlinx.coroutines.flow.Flow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(false)
+        override suspend fun setAppLockEnabled(value: Boolean) {}
+        override val autoLockOnFocusLoss: kotlinx.coroutines.flow.Flow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(false)
+        override suspend fun setAutoLockOnFocusLoss(value: Boolean) {}
     }
     
     // Simple fake Barcode for testing - uses reflection to work around internal BarcodeSource

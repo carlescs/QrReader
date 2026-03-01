@@ -351,4 +351,64 @@ class SettingsRepositoryTest {
         repository.setDuplicateCheckEnabled(true)
         assertTrue(repository.duplicateCheckEnabled.first())
     }
+
+    /**
+     * Test that app lock is disabled by default
+     */
+    @Test
+    fun appLockEnabled_defaultIsFalse() = runTest {
+        val result = repository.appLockEnabled.first()
+        assertFalse(result)
+    }
+
+    /**
+     * Test that app lock can be enabled
+     */
+    @Test
+    fun setAppLockEnabled_true_updatesValue() = runTest {
+        repository.setAppLockEnabled(true)
+        assertTrue(repository.appLockEnabled.first())
+    }
+
+    /**
+     * Test that app lock can be toggled off again
+     */
+    @Test
+    fun setAppLockEnabled_toggle_updatesValue() = runTest {
+        repository.setAppLockEnabled(true)
+        assertTrue(repository.appLockEnabled.first())
+
+        repository.setAppLockEnabled(false)
+        assertFalse(repository.appLockEnabled.first())
+    }
+
+    /**
+     * Test that auto-lock on focus loss is disabled by default
+     */
+    @Test
+    fun autoLockOnFocusLoss_defaultIsFalse() = runTest {
+        val result = repository.autoLockOnFocusLoss.first()
+        assertFalse(result)
+    }
+
+    /**
+     * Test that auto-lock on focus loss can be enabled
+     */
+    @Test
+    fun setAutoLockOnFocusLoss_true_updatesValue() = runTest {
+        repository.setAutoLockOnFocusLoss(true)
+        assertTrue(repository.autoLockOnFocusLoss.first())
+    }
+
+    /**
+     * Test that auto-lock on focus loss can be toggled off again
+     */
+    @Test
+    fun setAutoLockOnFocusLoss_toggle_updatesValue() = runTest {
+        repository.setAutoLockOnFocusLoss(true)
+        assertTrue(repository.autoLockOnFocusLoss.first())
+
+        repository.setAutoLockOnFocusLoss(false)
+        assertFalse(repository.autoLockOnFocusLoss.first())
+    }
 }
