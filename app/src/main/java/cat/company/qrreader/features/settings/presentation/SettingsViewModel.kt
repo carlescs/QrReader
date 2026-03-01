@@ -72,14 +72,23 @@ data class HistoryPrivacySettingsUseCases(
 /**
  * App-level lock screen settings use cases grouped for constructor injection.
  *
- * Encapsulates the use cases that read and write app-level lock screen settings.
- * These control whether the whole app requires biometric auth to open and whether
- * it auto-locks when losing focus.
+ * Encapsulates the use cases that read and write app-level lock screen settings,
+ * addressing the **app-launch security** concern. These are distinct from the per-barcode
+ * biometric lock ([HistoryPrivacySettingsUseCases]) in that they protect the entire app
+ * rather than individual records.
  *
- * @property getAppLockEnabled Reads the app-level lock screen enabled preference.
+ * When [getAppLockEnabled] returns `true`, [AppLockViewModel] will show a lock screen on
+ * app launch and trigger biometric authentication before content is revealed.
+ * When [getAutoLockOnFocusLoss] returns `true` as well, the app also re-locks each time
+ * it transitions to the background.
+ *
+ * @property getAppLockEnabled Reads whether the app-level lock screen is enabled.
  * @property setAppLockEnabled Writes the app-level lock screen enabled preference.
- * @property getAutoLockOnFocusLoss Reads the auto-lock on focus loss preference.
+ * @property getAutoLockOnFocusLoss Reads whether the app should auto-lock when losing focus.
  * @property setAutoLockOnFocusLoss Writes the auto-lock on focus loss preference.
+ *
+ * @see AppLockViewModel
+ * @see HistoryPrivacySettingsUseCases
  */
 data class AppLockSettingsUseCases(
     val getAppLockEnabled: GetAppLockEnabledUseCase,

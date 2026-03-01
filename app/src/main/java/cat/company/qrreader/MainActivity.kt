@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
 import cat.company.qrreader.db.BarcodesDb
 import cat.company.qrreader.features.lock.presentation.AppLockViewModel
+import cat.company.qrreader.features.lock.presentation.ui.LockScreen
 import cat.company.qrreader.ui.theme.QrReaderTheme
 import cat.company.qrreader.utils.canAuthenticate
 import cat.company.qrreader.utils.findFragmentActivity
@@ -60,7 +61,7 @@ class MainActivity : AppCompatActivity() {
                 val isLocked by appLockViewModel.isLocked.collectAsState()
 
                 if (isLocked != false) {
-                    cat.company.qrreader.features.lock.presentation.ui.LockScreen(
+                    LockScreen(
                         isLocked = isLocked,
                         onUnlockClick = { triggerBiometricUnlock() }
                     )
