@@ -470,7 +470,7 @@ fun BarcodeCard(
             if (barcode.barcode.type == Barcode.TYPE_WIFI && wifiSsid != null && !isWifiWep) {
                 WifiConnectButton(
                     ssid = wifiSsid,
-                    password = wifiInfo?.password,
+                    password = wifiInfo.password,
                     snackbarHostState = snackBarHostState
                 )
             }

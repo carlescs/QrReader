@@ -14,7 +14,7 @@ import cat.company.qrreader.R
  */
 class BottomIcon(
     val icon: @Composable () -> Unit,
-    @StringRes val labelRes: Int,
+    @param:StringRes val labelRes: Int,
     val route: String
 )
 

@@ -49,7 +49,7 @@ import com.google.android.play.core.install.model.AppUpdateType
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
-private data class LanguageOption(val code: String, @StringRes val nameRes: Int)
+private data class LanguageOption(val code: String, @param:StringRes val nameRes: Int)
 
 private val SUPPORTED_LANGUAGES = listOf(
     LanguageOption("device", R.string.language_device),
