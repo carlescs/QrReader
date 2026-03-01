@@ -16,7 +16,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val MIN_CIRCLE_SIZE = 20.dp
+private val MIN_CIRCLE_SIZE = 16.dp
 
 /**
  * A perfectly circular count indicator that displays a number beside an icon.
