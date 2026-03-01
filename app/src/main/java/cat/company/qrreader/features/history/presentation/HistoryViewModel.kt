@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -95,14 +96,17 @@ class HistoryViewModel(
 
     private val appLifecycleObserver = object : DefaultLifecycleObserver {
         override fun onStop(owner: LifecycleOwner) {
-            if (biometricLockEnabled.value) {
-                lockAllBarcodes()
-            }
+            lockAllBarcodes()
         }
     }
 
     init {
         processLifecycleOwner?.lifecycle?.addObserver(appLifecycleObserver)
+        viewModelScope.launch {
+            // Clear the in-memory unlocked set whenever biometric lock is toggled.
+            // This prevents stale unlocks if the user disables the feature and then re-enables it.
+            settingsRepository.biometricLockEnabled.drop(1).collect { lockAllBarcodes() }
+        }
         viewModelScope.launch {
             _isAiSupportedOnDevice.value = aiUseCases.generateBarcodeAiData.isAiSupportedOnDevice()
         }
