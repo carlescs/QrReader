@@ -30,6 +30,7 @@ import org.junit.Before
 import org.junit.Test
 import java.util.Date
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
