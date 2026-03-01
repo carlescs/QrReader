@@ -41,6 +41,7 @@ import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
 import cat.company.qrreader.domain.usecase.update.CheckAppUpdateUseCase
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import androidx.lifecycle.ProcessLifecycleOwner
 import cat.company.qrreader.features.camera.presentation.QrCameraViewModel
 import cat.company.qrreader.features.codeCreator.presentation.CodeCreatorViewModel
 import cat.company.qrreader.features.history.presentation.HistoryAiUseCases
@@ -122,7 +123,8 @@ val viewModelModule = module {
         HistoryViewModel(
             barcodeUseCases = HistoryBarcodeUseCases(get(), get(), get(), get(), get()),
             settingsRepository = get(),
-            aiUseCases = HistoryAiUseCases(get(), get(), get())
+            aiUseCases = HistoryAiUseCases(get(), get(), get()),
+            processLifecycleOwner = ProcessLifecycleOwner.get()
         )
     }
     viewModel { TagsViewModel(get(), get(), get(), get()) }

@@ -3,7 +3,6 @@ package cat.company.qrreader.features.history.presentation
 import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.model.BarcodeModel
@@ -79,7 +78,8 @@ data class HistoryAiUseCases(
 class HistoryViewModel(
     private val barcodeUseCases: HistoryBarcodeUseCases,
     settingsRepository: SettingsRepository,
-    private val aiUseCases: HistoryAiUseCases
+    private val aiUseCases: HistoryAiUseCases,
+    private val processLifecycleOwner: LifecycleOwner? = null
 ) : ViewModel() {
 
     private val _selectedTagId = MutableStateFlow<Int?>(null)
@@ -102,7 +102,7 @@ class HistoryViewModel(
     }
 
     init {
-        ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleObserver)
+        processLifecycleOwner?.lifecycle?.addObserver(appLifecycleObserver)
         viewModelScope.launch {
             _isAiSupportedOnDevice.value = aiUseCases.generateBarcodeAiData.isAiSupportedOnDevice()
         }
@@ -334,7 +334,7 @@ class HistoryViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        ProcessLifecycleOwner.get().lifecycle.removeObserver(appLifecycleObserver)
+        processLifecycleOwner?.lifecycle?.removeObserver(appLifecycleObserver)
         aiUseCases.generateBarcodeAiData.cleanup()
     }
 
