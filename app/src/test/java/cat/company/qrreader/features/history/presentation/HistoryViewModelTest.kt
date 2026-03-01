@@ -1,5 +1,8 @@
 package cat.company.qrreader.features.history.presentation
 
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.domain.model.BarcodeWithTagsModel
 import cat.company.qrreader.domain.model.TagModel
@@ -14,7 +17,6 @@ import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUse
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.features.history.presentation.HistoryAiUseCases
 import cat.company.qrreader.features.history.presentation.HistoryBarcodeUseCases
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -116,7 +118,9 @@ class HistoryViewModelTest {
         override fun cleanup() {}
     }
 
-    private fun makeFakeSettingsRepo() = object : cat.company.qrreader.domain.repository.SettingsRepository {
+    private fun makeFakeSettingsRepo(
+        biometricFlow: Flow<Boolean> = flowOf(false)
+    ) = object : cat.company.qrreader.domain.repository.SettingsRepository {
         override val hideTaggedWhenNoTagSelected: Flow<Boolean>
             get() = flowOf(false)
         override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {}
@@ -136,11 +140,16 @@ class HistoryViewModelTest {
             get() = flowOf(true)
         override suspend fun setShowTagCounters(value: Boolean) {}
         override val biometricLockEnabled: Flow<Boolean>
-            get() = flowOf(false)
+            get() = biometricFlow
         override suspend fun setBiometricLockEnabled(value: Boolean) {}
         override val duplicateCheckEnabled: Flow<Boolean>
             get() = flowOf(true)
         override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
+    }
+
+    private class TestLifecycleOwner : LifecycleOwner {
+        val registry = LifecycleRegistry(this)
+        override val lifecycle: Lifecycle get() = registry
     }
 
     private fun makeViewModel(repository: FakeBarcodeRepository): HistoryViewModel {
@@ -1028,6 +1037,94 @@ class HistoryViewModelTest {
 
         assertEquals(42, lastBarcodeId)
         assertEquals(false, lastIsLocked)
+        assertEquals(emptySet<Int>(), vm.unlockedBarcodeIds.value)
+    }
+
+    @Test
+    fun relockBarcode_removesIdFromUnlockedSet() {
+        val vm = makeViewModel(FakeBarcodeRepository())
+
+        vm.markBarcodeUnlocked(1)
+        vm.markBarcodeUnlocked(2)
+        vm.markBarcodeUnlocked(3)
+        assertEquals(setOf(1, 2, 3), vm.unlockedBarcodeIds.value)
+
+        // Re-lock one barcode; the others should remain unlocked
+        vm.relockBarcode(2)
+        assertEquals(setOf(1, 3), vm.unlockedBarcodeIds.value)
+
+        // Re-locking a barcode that is not in the set is a no-op
+        vm.relockBarcode(99)
+        assertEquals(setOf(1, 3), vm.unlockedBarcodeIds.value)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun onStop_lifecycle_clearsUnlockedBarcodes() = runTest {
+        val lifecycleOwner = TestLifecycleOwner()
+        lifecycleOwner.registry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        lifecycleOwner.registry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+
+        val fakeSettingsRepo = makeFakeSettingsRepo()
+        val vm = HistoryViewModel(
+            HistoryBarcodeUseCases(
+                GetBarcodesWithTagsUseCase(FakeBarcodeRepository()),
+                UpdateBarcodeUseCase(FakeBarcodeRepository()),
+                DeleteBarcodeUseCase(FakeBarcodeRepository()),
+                ToggleFavoriteUseCase(FakeBarcodeRepository()),
+                ToggleLockBarcodeUseCase(FakeBarcodeRepository())
+            ),
+            fakeSettingsRepo,
+            HistoryAiUseCases(
+                FakeGenerateBarcodeAiDataUseCase(),
+                GetAiLanguageUseCase(fakeSettingsRepo),
+                GetAiHumorousDescriptionsUseCase(fakeSettingsRepo)
+            ),
+            processLifecycleOwner = lifecycleOwner
+        )
+
+        vm.markBarcodeUnlocked(1)
+        vm.markBarcodeUnlocked(2)
+        assertEquals(setOf(1, 2), vm.unlockedBarcodeIds.value)
+
+        // Simulate app going to background
+        lifecycleOwner.registry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+
+        assertEquals(emptySet<Int>(), vm.unlockedBarcodeIds.value)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun biometricLockEnabled_transitionClearsUnlockedSet() = runTest {
+        val biometricFlow = MutableStateFlow(true)
+        val fakeSettingsRepo = makeFakeSettingsRepo(biometricFlow = biometricFlow)
+
+        val vm = HistoryViewModel(
+            HistoryBarcodeUseCases(
+                GetBarcodesWithTagsUseCase(FakeBarcodeRepository()),
+                UpdateBarcodeUseCase(FakeBarcodeRepository()),
+                DeleteBarcodeUseCase(FakeBarcodeRepository()),
+                ToggleFavoriteUseCase(FakeBarcodeRepository()),
+                ToggleLockBarcodeUseCase(FakeBarcodeRepository())
+            ),
+            fakeSettingsRepo,
+            HistoryAiUseCases(
+                FakeGenerateBarcodeAiDataUseCase(),
+                GetAiLanguageUseCase(fakeSettingsRepo),
+                GetAiHumorousDescriptionsUseCase(fakeSettingsRepo)
+            )
+        )
+
+        advanceUntilIdle()
+        vm.markBarcodeUnlocked(1)
+        vm.markBarcodeUnlocked(2)
+        assertEquals(setOf(1, 2), vm.unlockedBarcodeIds.value)
+
+        // Disabling biometric lock should clear the in-memory unlocked set so that
+        // re-enabling it later does not leave stale unlocks
+        biometricFlow.value = false
+        advanceUntilIdle()
+
         assertEquals(emptySet<Int>(), vm.unlockedBarcodeIds.value)
     }
 }

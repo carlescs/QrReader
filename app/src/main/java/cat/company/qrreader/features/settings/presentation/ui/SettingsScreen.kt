@@ -74,6 +74,7 @@ fun SettingsScreen(
     appUpdateManager: AppUpdateManager = koinInject(),
     onNavigateToHistorySettings: () -> Unit = {},
     onNavigateToAiSettings: () -> Unit = {},
+    onNavigateToSecuritySettings: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {}
 ) {
     val isAiAvailableOnDevice by viewModel.isAiAvailableOnDevice.collectAsState()
@@ -127,6 +128,12 @@ fun SettingsScreen(
             title = stringResource(R.string.history),
             subtitle = stringResource(R.string.history_settings_description),
             onClick = onNavigateToHistorySettings
+        )
+        HorizontalDivider()
+        SettingsNavigationItem(
+            title = stringResource(R.string.settings_section_security),
+            subtitle = stringResource(R.string.security_settings_description),
+            onClick = onNavigateToSecuritySettings
         )
         HorizontalDivider()
         if (isAiAvailableOnDevice) {
@@ -236,7 +243,20 @@ fun HistorySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
             },
             colors = androidx.compose.material3.ListItemDefaults.colors()
         )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+    }
+}
+
+/**
+ * Security settings sub-screen showing security preferences including biometric lock.
+ */
+@Composable
+fun SecuritySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
+    val biometricLockState by viewModel.biometricLockEnabled.collectAsState(initial = false)
+    val duplicateCheckState by viewModel.duplicateCheckEnabled.collectAsState(initial = false)
+    val context = LocalContext.current
+    val canUseBiometrics = remember { canAuthenticate(context) }
+
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         ListItem(
             headlineContent = { Text(text = stringResource(R.string.biometric_lock_enabled)) },
             supportingContent = {

@@ -56,6 +56,7 @@ import cat.company.qrreader.ui.components.navigation.items
 import cat.company.qrreader.features.settings.presentation.ui.AiSettingsScreen
 import cat.company.qrreader.features.settings.presentation.ui.AboutScreen
 import cat.company.qrreader.features.settings.presentation.ui.HistorySettingsScreen
+import cat.company.qrreader.features.settings.presentation.ui.SecuritySettingsScreen
 import cat.company.qrreader.features.settings.presentation.ui.SettingsScreen
 import com.google.firebase.analytics.FirebaseAnalytics
 
@@ -79,6 +80,7 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
                 "codeCreator" -> "Code Creator"
                 "settings" -> "Settings"
                 "settings/history" -> "Settings - History"
+                "settings/security" -> "Settings - Security"
                 "settings/ai" -> "Settings - AI"
                 "settings/about" -> "Settings - About"
                 else -> destination.route ?: "Unknown"
@@ -210,6 +212,11 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
                                     launchSingleTop = true
                                 }
                             },
+                            onNavigateToSecuritySettings = {
+                                navController.navigate("settings/security") {
+                                    launchSingleTop = true
+                                }
+                            },
                             onNavigateToAbout = {
                                 navController.navigate("settings/about") {
                                     launchSingleTop = true
@@ -219,6 +226,9 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedImageUri: Uri? = null
                     }
                     composable("settings/history") {
                         HistorySettingsScreen()
+                    }
+                    composable("settings/security") {
+                        SecuritySettingsScreen()
                     }
                     composable("settings/ai") {
                         AiSettingsScreen()
