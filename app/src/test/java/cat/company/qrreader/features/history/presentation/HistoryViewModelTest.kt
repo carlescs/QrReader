@@ -273,6 +273,12 @@ class HistoryViewModelTest {
             override val duplicateCheckEnabled: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = flowOf(true)
             override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
+            override val appLockEnabled: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = flowOf(false)
+            override suspend fun setAppLockEnabled(value: Boolean) {}
+            override val autoLockOnFocusLoss: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = flowOf(false)
+            override suspend fun setAutoLockOnFocusLoss(value: Boolean) {}
         }
 
         val vm = HistoryViewModel(
