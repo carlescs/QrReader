@@ -149,7 +149,7 @@ class HistoryViewModelTest {
     }
 
     private class TestLifecycleOwner : LifecycleOwner {
-        val registry = LifecycleRegistry(this)
+        val registry = LifecycleRegistry.createUnsafe(this)
         override val lifecycle: Lifecycle get() = registry
     }
 
