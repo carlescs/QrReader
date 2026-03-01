@@ -38,6 +38,7 @@ fun BottomSheetContent(
     onNavigateToHistory: () -> Unit = {}
 ) {
     val lastBarcode = state.lastBarcode
+    val sharedRawText = state.sharedRawText
     val sharedWifiInfo = state.sharedWifiInfo
     val sharedWifiRawText = state.sharedWifiRawText
     val sharedContactInfo = state.sharedContactInfo
@@ -131,6 +132,44 @@ fun BottomSheetContent(
                                 isLoadingDescription = isLoadingDescription,
                                 descriptionError = descriptionError,
                                 onToggleTag = { tagName -> onToggleTag(wifiHash, tagName) },
+                                onNavigateToHistory = onNavigateToHistory
+                            )
+                        }
+                    }
+                }
+            }
+        } else if (sharedRawText != null) {
+            val textHash = sharedRawText.hashCode()
+            val suggestedTags = state.barcodeTags[textHash] ?: emptyList()
+            val isLoading = state.isLoadingTags.contains(textHash)
+            val error = state.tagSuggestionErrors[textHash]
+            val selectedTagNames = suggestedTags.filter { it.isSelected }.map { it.name }
+            val aiDescription = state.barcodeDescriptions[textHash]
+            val isLoadingDescription = state.isLoadingDescriptions.contains(textHash)
+            val descriptionError = state.descriptionErrors[textHash]
+
+            LazyColumn(modifier = Modifier.fillMaxHeight().padding(horizontal = 16.dp)) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(15.dp)) {
+                            SharedTextContent(
+                                rawText = sharedRawText,
+                                selectedTagNames = selectedTagNames,
+                                aiGeneratedDescription = aiDescription,
+                                aiGenerationEnabled = state.aiGenerationEnabled,
+                                suggestedTags = suggestedTags,
+                                isLoadingTags = isLoading,
+                                tagError = error,
+                                description = aiDescription,
+                                isLoadingDescription = isLoadingDescription,
+                                descriptionError = descriptionError,
+                                onToggleTag = { tagName -> onToggleTag(textHash, tagName) },
                                 onNavigateToHistory = onNavigateToHistory
                             )
                         }

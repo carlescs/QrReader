@@ -41,6 +41,7 @@
     <string name="add_to_contacts">Add to contacts</string>
     <string name="ean13">EAN13</string>
     <string name="other">Other</string>
+    <string name="text">Text</string>
     <string name="wifi">Wi-Fi</string>
     <string name="wifi_ssid">Network: %s</string>
     <string name="wifi_security">Security: %s</string>
