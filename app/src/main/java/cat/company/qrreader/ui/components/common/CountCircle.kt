@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -46,7 +48,11 @@ fun CountCircle(count: Int, countDescription: String? = null) {
         Text(
             text = displayText,
             color = MaterialTheme.colorScheme.onPrimary,
-            fontSize = 9.sp
+            style = TextStyle(
+                fontSize = 9.sp,
+                lineHeight = 9.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false)
+            )
         )
     }
 }
