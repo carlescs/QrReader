@@ -196,6 +196,7 @@ fun AboutScreen() {
 fun HistorySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val hideTaggedState by viewModel.hideTaggedWhenNoTagSelected.collectAsState(initial = false)
     val searchAcrossAllState by viewModel.searchAcrossAllTagsWhenFiltering.collectAsState(initial = false)
+    val showTagCountersState by viewModel.showTagCounters.collectAsState(initial = true)
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         ListItem(
@@ -215,6 +216,17 @@ fun HistorySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
             trailingContent = {
                 Switch(checked = searchAcrossAllState, onCheckedChange = { newValue ->
                     viewModel.setSearchAcrossAllTagsWhenFiltering(newValue)
+                })
+            },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.show_tag_counters)) },
+            supportingContent = { Text(text = stringResource(R.string.show_tag_counters_description)) },
+            trailingContent = {
+                Switch(checked = showTagCountersState, onCheckedChange = { newValue ->
+                    viewModel.setShowTagCounters(newValue)
                 })
             },
             colors = androidx.compose.material3.ListItemDefaults.colors()

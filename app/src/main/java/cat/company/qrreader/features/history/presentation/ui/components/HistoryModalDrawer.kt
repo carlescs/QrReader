@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
 import cat.company.qrreader.domain.model.TagModel
+import cat.company.qrreader.features.settings.presentation.SettingsViewModel
 import cat.company.qrreader.features.tags.presentation.TagsViewModel
 import cat.company.qrreader.features.tags.presentation.ui.components.AddTagDialog
 import cat.company.qrreader.features.tags.presentation.ui.components.TagsFilterList
@@ -61,9 +62,11 @@ fun HistoryModalDrawerContent(
     onToggleFavorites: () -> Unit,
     onNavigateToSettings: () -> Unit,
     selectTag: (TagModel?) -> Unit,
-    tagsViewModel: TagsViewModel = koinViewModel()
+    tagsViewModel: TagsViewModel = koinViewModel(),
+    settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
     val favoritesCount by tagsViewModel.favoritesCount.collectAsState(initial = 0)
+    val showTagCounters by settingsViewModel.showTagCounters.collectAsState(initial = true)
     ModalDrawerSheet {
         Column(
             modifier = Modifier
@@ -89,7 +92,7 @@ fun HistoryModalDrawerContent(
                             imageVector = Icons.Filled.Star,
                             contentDescription = null
                         )
-                        if (favoritesCount > 0) {
+                        if (showTagCounters && favoritesCount > 0) {
                             Spacer(modifier = Modifier.width(4.dp))
                             CountCircle(
                                 count = favoritesCount,
@@ -104,7 +107,7 @@ fun HistoryModalDrawerContent(
             )
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             Box(modifier = Modifier.weight(1f)) {
-                TagsFilterList(viewModel = tagsViewModel, selectedTagId = selectedTagId) {
+                TagsFilterList(viewModel = tagsViewModel, selectedTagId = selectedTagId, showTagCounters = showTagCounters) {
                     selectTag(it)
                 }
             }

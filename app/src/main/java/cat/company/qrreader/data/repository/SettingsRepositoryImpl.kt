@@ -26,6 +26,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     private val AI_GENERATION_KEY = booleanPreferencesKey("ai_generation_enabled")
     private val AI_LANGUAGE_KEY = stringPreferencesKey("ai_language")
     private val AI_HUMOROUS_DESCRIPTIONS_KEY = booleanPreferencesKey("ai_humorous_descriptions")
+    private val SHOW_TAG_COUNTERS_KEY = booleanPreferencesKey("show_tag_counters")
 
     override val hideTaggedWhenNoTagSelected: Flow<Boolean> =
         context.dataStore.data.map { prefs -> prefs[HIDE_TAGGED_KEY] ?: false }
@@ -41,6 +42,9 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
 
     override val aiHumorousDescriptions: Flow<Boolean> =
         context.dataStore.data.map { prefs -> prefs[AI_HUMOROUS_DESCRIPTIONS_KEY] ?: false }
+
+    override val showTagCounters: Flow<Boolean> =
+        context.dataStore.data.map { prefs -> prefs[SHOW_TAG_COUNTERS_KEY] ?: true }
 
     override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {
         context.dataStore.edit { prefs ->
@@ -69,6 +73,12 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     override suspend fun setAiHumorousDescriptions(value: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[AI_HUMOROUS_DESCRIPTIONS_KEY] = value
+        }
+    }
+
+    override suspend fun setShowTagCounters(value: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[SHOW_TAG_COUNTERS_KEY] = value
         }
     }
 }
