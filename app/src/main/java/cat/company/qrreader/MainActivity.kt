@@ -62,19 +62,6 @@ class MainActivity : AppCompatActivity() {
                 val sharedText by _sharedText.collectAsState()
                 val sharedContactText by _sharedContactText.collectAsState()
                 val sharedRawText by _sharedRawText.collectAsState()
-                MainScreen(
-                    firebaseAnalytics,
-                    SharedContent(
-                        imageUri = sharedImageUri,
-                        onImageConsumed = { _sharedImageUri.value = null },
-                        wifiText = sharedText,
-                        onWifiTextConsumed = { _sharedText.value = null },
-                        contactText = sharedContactText,
-                        onContactTextConsumed = { _sharedContactText.value = null },
-                        rawText = sharedRawText,
-                        onRawTextConsumed = { _sharedRawText.value = null }
-                    )
-                )
                 val isLocked by appLockViewModel.isLocked.collectAsState()
 
                 if (isLocked != false) {
@@ -85,12 +72,16 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     MainScreen(
                         firebaseAnalytics,
-                        sharedImageUri,
-                        onSharedImageConsumed = { _sharedImageUri.value = null },
-                        sharedText = sharedText,
-                        onSharedTextConsumed = { _sharedText.value = null },
-                        sharedContactText = sharedContactText,
-                        onSharedContactTextConsumed = { _sharedContactText.value = null }
+                        SharedContent(
+                            imageUri = sharedImageUri,
+                            onImageConsumed = { _sharedImageUri.value = null },
+                            wifiText = sharedText,
+                            onWifiTextConsumed = { _sharedText.value = null },
+                            contactText = sharedContactText,
+                            onContactTextConsumed = { _sharedContactText.value = null },
+                            rawText = sharedRawText,
+                            onRawTextConsumed = { _sharedRawText.value = null }
+                        )
                     )
                 }
             }
