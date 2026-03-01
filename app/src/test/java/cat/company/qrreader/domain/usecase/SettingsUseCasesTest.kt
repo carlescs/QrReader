@@ -174,6 +174,8 @@ class SettingsUseCasesTest {
             override suspend fun setAiHumorousDescriptions(value: Boolean) {}
             override val showTagCounters = showTagCountersFlow
             override suspend fun setShowTagCounters(value: Boolean) { showTagCountersFlow.value = value }
+            override val biometricLockEnabled: Flow<Boolean> = MutableStateFlow(false)
+            override suspend fun setBiometricLockEnabled(value: Boolean) {}
         }
 
         val getShowTagCounters = GetShowTagCountersUseCase(settingsRepo)
