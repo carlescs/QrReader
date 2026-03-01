@@ -2,9 +2,9 @@ package cat.company.qrreader.ui.components.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -16,10 +16,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val MIN_CIRCLE_SIZE = 20.dp
+private val MIN_CIRCLE_SIZE = 16.dp
 
 /**
- * A perfectly circular count indicator that displays a number beside an icon.
+ * A circular or pill-shaped count indicator that displays a number beside an icon.
  *
  * Stays round for counts 1–99 (fixed [MIN_CIRCLE_SIZE] minimum size). For counts above 99 the
  * display text is capped at "99+" to prevent the indicator from growing unbounded.
@@ -38,8 +38,8 @@ fun CountCircle(count: Int, countDescription: String? = null) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = semanticsModifier
-            .defaultMinSize(minWidth = MIN_CIRCLE_SIZE, minHeight = MIN_CIRCLE_SIZE)
-            .aspectRatio(1f)
+            .height(MIN_CIRCLE_SIZE)
+            .widthIn(min = MIN_CIRCLE_SIZE)
             .background(MaterialTheme.colorScheme.primary, CircleShape)
             .padding(horizontal = 2.dp)
     ) {

@@ -10,11 +10,13 @@ import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUse
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.GetSearchAcrossAllTagsUseCase
+import cat.company.qrreader.domain.usecase.settings.GetShowTagCountersUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCase
+import cat.company.qrreader.domain.usecase.settings.SetShowTagCountersUseCase
 import cat.company.qrreader.domain.usecase.update.CheckAppUpdateUseCase
 import org.mockito.kotlin.mock
 import kotlinx.coroutines.Dispatchers
@@ -50,6 +52,7 @@ class SettingsViewModelTest {
         val aiEnabledFlow = MutableStateFlow(true)
         val aiLanguageFlow = MutableStateFlow("en")
         val aiHumorousFlow = MutableStateFlow(false)
+        val showTagCountersFlow = MutableStateFlow(true)
 
         override val hideTaggedWhenNoTagSelected: Flow<Boolean> = hideFlow
         override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) { hideFlow.value = value }
@@ -61,6 +64,8 @@ class SettingsViewModelTest {
         override suspend fun setAiLanguage(value: String) { aiLanguageFlow.value = value }
         override val aiHumorousDescriptions: Flow<Boolean> = aiHumorousFlow
         override suspend fun setAiHumorousDescriptions(value: Boolean) { aiHumorousFlow.value = value }
+        override val showTagCounters: Flow<Boolean> = showTagCountersFlow
+        override suspend fun setShowTagCounters(value: Boolean) { showTagCountersFlow.value = value }
         val biometricLockFlow = MutableStateFlow(false)
         override val biometricLockEnabled: Flow<Boolean> = biometricLockFlow
         override suspend fun setBiometricLockEnabled(value: Boolean) { biometricLockFlow.value = value }
@@ -98,6 +103,9 @@ class SettingsViewModelTest {
                 getHideTaggedSetting = GetHideTaggedSettingUseCase(fakeRepo),
                 setHideTaggedSetting = SetHideTaggedSettingUseCase(fakeRepo),
                 getSearchAcrossAllTags = GetSearchAcrossAllTagsUseCase(fakeRepo),
+                setSearchAcrossAllTags = SetSearchAcrossAllTagsUseCase(fakeRepo),
+                getShowTagCounters = GetShowTagCountersUseCase(fakeRepo),
+                setShowTagCounters = SetShowTagCountersUseCase(fakeRepo)
                 setSearchAcrossAllTags = SetSearchAcrossAllTagsUseCase(fakeRepo),
                 getBiometricLockEnabled = GetBiometricLockEnabledUseCase(fakeRepo),
                 setBiometricLockEnabled = SetBiometricLockEnabledUseCase(fakeRepo)
@@ -299,6 +307,40 @@ class SettingsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(false, viewModel.aiHumorousDescriptions.first())
+    }
+
+    // ── Show tag counters setting ─────────────────────────────────────────────
+
+    @Test
+    fun `showTagCounters emits initial value true`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(true, viewModel.showTagCounters.first())
+    }
+
+    @Test
+    fun `setShowTagCounters updates flow to false`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.setShowTagCounters(false)
+        advanceUntilIdle()
+
+        assertEquals(false, viewModel.showTagCounters.first())
+    }
+
+    @Test
+    fun `setShowTagCounters toggle back to true`() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.setShowTagCounters(false)
+        advanceUntilIdle()
+        viewModel.setShowTagCounters(true)
+        advanceUntilIdle()
+
+        assertEquals(true, viewModel.showTagCounters.first())
     }
 }
 

@@ -62,6 +62,17 @@ interface SettingsRepository {
     suspend fun setAiHumorousDescriptions(value: Boolean)
 
     /**
+     * Whether tag counters (barcode counts) should be shown next to tags in the history filter.
+     * Defaults to `true`.
+     */
+    val showTagCounters: Flow<Boolean>
+
+    /**
+     * Enable or disable tag counter badges in the history filter
+     */
+    suspend fun setShowTagCounters(value: Boolean)
+
+    /**
      * Whether biometric lock for sensitive barcodes is enabled
      */
     val biometricLockEnabled: Flow<Boolean>

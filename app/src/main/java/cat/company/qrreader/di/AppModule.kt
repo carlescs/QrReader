@@ -28,11 +28,13 @@ import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUse
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.GetSearchAcrossAllTagsUseCase
+import cat.company.qrreader.domain.usecase.settings.GetShowTagCountersUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCase
+import cat.company.qrreader.domain.usecase.settings.SetShowTagCountersUseCase
 import cat.company.qrreader.domain.usecase.tags.DeleteTagUseCase
 import cat.company.qrreader.domain.usecase.tags.GetAllTagsUseCase
 import cat.company.qrreader.domain.usecase.tags.GetOrCreateTagsByNameUseCase
@@ -101,6 +103,8 @@ val useCaseModule = module {
     factory { SetHideTaggedSettingUseCase(get()) }
     factory { GetSearchAcrossAllTagsUseCase(get()) }
     factory { SetSearchAcrossAllTagsUseCase(get()) }
+    factory { GetShowTagCountersUseCase(get()) }
+    factory { SetShowTagCountersUseCase(get()) }
     factory { GetAiGenerationEnabledUseCase(get()) }
     factory { SetAiGenerationEnabledUseCase(get()) }
     factory { GetAiLanguageUseCase(get()) }

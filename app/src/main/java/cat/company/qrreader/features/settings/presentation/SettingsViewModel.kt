@@ -11,11 +11,13 @@ import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUse
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.GetSearchAcrossAllTagsUseCase
+import cat.company.qrreader.domain.usecase.settings.GetShowTagCountersUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiGenerationEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.SetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.SetHideTaggedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.SetSearchAcrossAllTagsUseCase
+import cat.company.qrreader.domain.usecase.settings.SetShowTagCountersUseCase
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,12 +28,14 @@ import kotlinx.coroutines.launch
 /**
  * History-related settings use cases grouped for constructor injection.
  *
- * Encapsulates the four use cases that read and write history display settings.
+ * Encapsulates the use cases that read and write history display settings.
  *
  * @property getHideTaggedSetting Reads the "hide tagged when no tag selected" preference.
  * @property setHideTaggedSetting Writes the "hide tagged when no tag selected" preference.
  * @property getSearchAcrossAllTags Reads the "search across all tags when filtering" preference.
  * @property setSearchAcrossAllTags Writes the "search across all tags when filtering" preference.
+ * @property getShowTagCounters Reads the "show tag counters" preference.
+ * @property setShowTagCounters Writes the "show tag counters" preference.
  * @property getBiometricLockEnabled Reads the biometric lock enabled preference.
  * @property setBiometricLockEnabled Writes the biometric lock enabled preference.
  */
@@ -39,6 +43,9 @@ data class HistorySettingsUseCases(
     val getHideTaggedSetting: GetHideTaggedSettingUseCase,
     val setHideTaggedSetting: SetHideTaggedSettingUseCase,
     val getSearchAcrossAllTags: GetSearchAcrossAllTagsUseCase,
+    val setSearchAcrossAllTags: SetSearchAcrossAllTagsUseCase,
+    val getShowTagCounters: GetShowTagCountersUseCase,
+    val setShowTagCounters: SetShowTagCountersUseCase
     val setSearchAcrossAllTags: SetSearchAcrossAllTagsUseCase,
     val getBiometricLockEnabled: GetBiometricLockEnabledUseCase,
     val setBiometricLockEnabled: SetBiometricLockEnabledUseCase
@@ -111,6 +118,11 @@ class SettingsViewModel(
     val searchAcrossAllTagsWhenFiltering: Flow<Boolean> = historySettings.getSearchAcrossAllTags()
 
     /**
+     * Flow for the 'show tag counters' setting
+     */
+    val showTagCounters: Flow<Boolean> = historySettings.getShowTagCounters()
+
+    /**
      * Flow for the biometric lock enabled setting
      */
     val biometricLockEnabled: Flow<Boolean> = historySettings.getBiometricLockEnabled()
@@ -142,6 +154,12 @@ class SettingsViewModel(
     fun setSearchAcrossAllTagsWhenFiltering(value: Boolean) {
         viewModelScope.launch {
             historySettings.setSearchAcrossAllTags(value)
+        }
+    }
+
+    fun setShowTagCounters(value: Boolean) {
+        viewModelScope.launch {
+            historySettings.setShowTagCounters(value)
         }
     }
 
