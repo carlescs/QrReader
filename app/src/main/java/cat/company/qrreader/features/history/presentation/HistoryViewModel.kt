@@ -1,6 +1,9 @@
 package cat.company.qrreader.features.history.presentation
 
 import android.util.Log
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cat.company.qrreader.domain.model.BarcodeModel
@@ -90,7 +93,16 @@ class HistoryViewModel(
 
     private val _isAiSupportedOnDevice = MutableStateFlow(false)
 
+    private val appLifecycleObserver = object : DefaultLifecycleObserver {
+        override fun onStop(owner: LifecycleOwner) {
+            if (biometricLockEnabled.value) {
+                lockAllBarcodes()
+            }
+        }
+    }
+
     init {
+        ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleObserver)
         viewModelScope.launch {
             _isAiSupportedOnDevice.value = aiUseCases.generateBarcodeAiData.isAiSupportedOnDevice()
         }
@@ -322,6 +334,7 @@ class HistoryViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        ProcessLifecycleOwner.get().lifecycle.removeObserver(appLifecycleObserver)
         aiUseCases.generateBarcodeAiData.cleanup()
     }
 
