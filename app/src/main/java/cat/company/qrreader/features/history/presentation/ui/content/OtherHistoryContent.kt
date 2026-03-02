@@ -19,6 +19,7 @@ import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.features.history.presentation.ui.components.getTitle
 import cat.company.qrreader.features.history.presentation.ui.components.isIsbn
 import com.google.mlkit.vision.barcode.common.Barcode
+import java.net.URLEncoder
 import java.text.SimpleDateFormat
 
 /**
@@ -41,7 +42,7 @@ fun OtherHistoryContent(sdf:SimpleDateFormat, barcode:BarcodeModel){
                     append(barcode.barcode)
                 }
             }, modifier = Modifier.clickable {
-                uriHandler.openUri("https://openlibrary.org/isbn/${barcode.barcode}")
+                uriHandler.openUri("https://openlibrary.org/isbn/${URLEncoder.encode(barcode.barcode.trim(), "UTF-8")}")
             })
         }
         barcode.format == Barcode.FORMAT_EAN_13 ||
@@ -58,7 +59,7 @@ fun OtherHistoryContent(sdf:SimpleDateFormat, barcode:BarcodeModel){
                     append(barcode.barcode)
                 }
             }, modifier = Modifier.clickable {
-                uriHandler.openUri("https://www.google.com/search?q=${barcode.barcode}&tbm=shop")
+                uriHandler.openUri("https://www.google.com/search?q=${URLEncoder.encode(barcode.barcode, "UTF-8")}&tbm=shop")
             })
         }
         else ->

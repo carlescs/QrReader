@@ -464,4 +464,21 @@ class HistoryUtilsTest {
 
         assertFalse(isIsbn(barcode))
     }
+
+    /**
+     * Test isIsbn returns false for EAN-13 with ISBN prefix but non-digit content
+     */
+    @Test
+    fun isIsbn_ean13With978PrefixNonDigit_returnsFalse() {
+        val barcode = BarcodeModel(
+            id = 1,
+            date = Date(),
+            type = Barcode.TYPE_PRODUCT,
+            format = Barcode.FORMAT_EAN_13,
+            title = null,
+            barcode = "978074327356X"
+        )
+
+        assertFalse(isIsbn(barcode))
+    }
 }
