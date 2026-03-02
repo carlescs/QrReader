@@ -20,6 +20,7 @@ class TagsViewModel(
     val tags: Flow<List<TagModel>> = getAllTagsUseCase()
     val tagBarcodeCounts: Flow<Map<Int, Int>> = barcodeRepository.getTagBarcodeCounts()
     val favoritesCount: Flow<Int> = barcodeRepository.getFavoritesCount()
+    val lockedCount: Flow<Int> = barcodeRepository.getLockedCount()
     /** No-op kept for call-site compatibility; [tags] is now a stable Flow. */
     fun loadTags() {}
     fun deleteTag(tag: TagModel) {

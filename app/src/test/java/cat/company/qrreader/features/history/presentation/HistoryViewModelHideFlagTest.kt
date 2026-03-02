@@ -38,7 +38,8 @@ class HistoryViewModelHideFlagTest {
             query: String?,
             hideTaggedWhenNoTagSelected: Boolean,
             searchAcrossAllTagsWhenFiltering: Boolean,
-            showOnlyFavorites: Boolean
+            showOnlyFavorites: Boolean,
+            showOnlyLocked: Boolean
         ): Flow<List<BarcodeWithTagsModel>> {
             lastRequest = Triple(tagId, query, hideTaggedWhenNoTagSelected)
             return resultFlow

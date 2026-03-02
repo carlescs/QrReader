@@ -28,14 +28,16 @@ class GetBarcodesWithTagsUseCase(private val barcodeRepository: BarcodeRepositor
         query: String?,
         hideTaggedWhenNoTagSelected: Boolean,
         searchAcrossAllTagsWhenFiltering: Boolean,
-        showOnlyFavorites: Boolean = false
+        showOnlyFavorites: Boolean = false,
+        showOnlyLocked: Boolean = false
     ): Flow<List<BarcodeWithTagsModel>> {
         return barcodeRepository.getBarcodesWithTagsByFilter(
             tagId = tagId,
             query = query,
             hideTaggedWhenNoTagSelected = hideTaggedWhenNoTagSelected,
             searchAcrossAllTagsWhenFiltering = searchAcrossAllTagsWhenFiltering,
-            showOnlyFavorites = showOnlyFavorites
+            showOnlyFavorites = showOnlyFavorites,
+            showOnlyLocked = showOnlyLocked
         )
     }
 }

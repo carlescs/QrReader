@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterListOff
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import cat.company.qrreader.R
@@ -37,13 +39,18 @@ import cat.company.qrreader.features.tags.presentation.TagsViewModel
 import cat.company.qrreader.features.tags.presentation.ui.components.AddTagDialog
 import cat.company.qrreader.features.tags.presentation.ui.components.TagsFilterList
 import cat.company.qrreader.ui.components.common.CountCircle
+import cat.company.qrreader.utils.canAuthenticate
+import cat.company.qrreader.utils.findFragmentActivity
+import cat.company.qrreader.utils.showBiometricPrompt
 import org.koin.androidx.compose.koinViewModel
 
 /**
  * Content of the history modal drawer.
  *
- * Displays a favorites filter item and a tag filter list, allowing the user to:
+ * Displays a favorites filter item, a safe section filter item, and a tag filter list,
+ * allowing the user to:
  * - Toggle the favorites-only filter
+ * - Open the safe section (requires biometric authentication) to view locked barcodes
  * - Select a tag to filter by (using a modern icon + name chip style)
  * - Add, edit, or delete tags
  * - Navigate to the Settings screen via a pinned item at the bottom
@@ -51,6 +58,8 @@ import org.koin.androidx.compose.koinViewModel
  * @param selectedTagId Currently selected tag ID, or null if no tag is selected
  * @param showOnlyFavorites Whether the favorites filter is currently active
  * @param onToggleFavorites Callback invoked when the user toggles the favorites filter
+ * @param showOnlySafe Whether the safe section filter is currently active
+ * @param onToggleSafe Callback invoked when biometric authentication succeeds for the safe section
  * @param onNavigateToSettings Callback invoked when the user taps the Settings item
  * @param selectTag Callback invoked when the user selects or clears a tag filter
  */
@@ -60,13 +69,18 @@ fun HistoryModalDrawerContent(
     selectedTagId: Int?,
     showOnlyFavorites: Boolean,
     onToggleFavorites: () -> Unit,
+    showOnlySafe: Boolean,
+    onToggleSafe: () -> Unit,
     onNavigateToSettings: () -> Unit,
     selectTag: (TagModel?) -> Unit,
     tagsViewModel: TagsViewModel = koinViewModel(),
     settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
     val favoritesCount by tagsViewModel.favoritesCount.collectAsState(initial = 0)
+    val lockedCount by tagsViewModel.lockedCount.collectAsState(initial = 0)
     val showTagCounters by settingsViewModel.showTagCounters.collectAsState(initial = true)
+    val biometricLockEnabled by settingsViewModel.biometricLockEnabled.collectAsState(initial = false)
+    val context = LocalContext.current
     ModalDrawerSheet {
         Column(
             modifier = Modifier
@@ -105,6 +119,45 @@ fun HistoryModalDrawerContent(
                 selected = showOnlyFavorites,
                 onClick = onToggleFavorites
             )
+            if (biometricLockEnabled) {
+                NavigationDrawerItem(
+                    icon = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Filled.Lock,
+                                contentDescription = null
+                            )
+                            if (showTagCounters && lockedCount > 0) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                CountCircle(
+                                    count = lockedCount,
+                                    countDescription = stringResource(R.string.locked_count_description, lockedCount)
+                                )
+                            }
+                        }
+                    },
+                    label = { Text(stringResource(R.string.safe_section)) },
+                    selected = showOnlySafe,
+                    onClick = {
+                        if (showOnlySafe) {
+                            onToggleSafe()
+                        } else {
+                            val canAuth = canAuthenticate(context)
+                            val activity = context.findFragmentActivity()
+                            if (activity != null && canAuth) {
+                                showBiometricPrompt(
+                                    activity = activity,
+                                    title = context.getString(R.string.unlock_safe_section),
+                                    subtitle = context.getString(R.string.unlock_safe_section_subtitle),
+                                    negativeButtonText = context.getString(R.string.cancel),
+                                    onSuccess = { onToggleSafe() },
+                                    onError = {}
+                                )
+                            }
+                        }
+                    }
+                )
+            }
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             Box(modifier = Modifier.weight(1f)) {
                 TagsFilterList(viewModel = tagsViewModel, selectedTagId = selectedTagId, showTagCounters = showTagCounters) {

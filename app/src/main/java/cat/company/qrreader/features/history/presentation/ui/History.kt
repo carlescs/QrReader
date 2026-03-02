@@ -78,6 +78,7 @@ fun History(
     val drawerState = remember { mutableStateOf(DrawerValue.Closed) }
     val selectedTagId by viewModel.selectedTagId.collectAsStateWithLifecycle()
     val showOnlyFavorites by viewModel.showOnlyFavorites.collectAsStateWithLifecycle()
+    val showOnlySafe by viewModel.showOnlySafe.collectAsStateWithLifecycle()
 
     HistoryDrawerSetup(drawerState)
 
@@ -88,6 +89,8 @@ fun History(
                 selectedTagId = selectedTagId,
                 showOnlyFavorites = showOnlyFavorites,
                 onToggleFavorites = viewModel::toggleFavoritesFilter,
+                showOnlySafe = showOnlySafe,
+                onToggleSafe = viewModel::toggleSafeSection,
                 onNavigateToSettings = onNavigateToSettings,
                 selectTag = { viewModel.onTagSelected(it?.id) }
             )
@@ -155,9 +158,10 @@ private fun HistoryContent(
     val items by viewModel.savedBarcodes.collectAsStateWithLifecycle(initialValue = emptyList())
     val query by viewModel.searchQuery.collectAsStateWithLifecycle()
     val showOnlyFavorites by viewModel.showOnlyFavorites.collectAsStateWithLifecycle()
+    val showOnlySafe by viewModel.showOnlySafe.collectAsStateWithLifecycle()
     var searchActive by rememberSaveable { mutableStateOf(false) }
 
-    val isFiltered = query.isNotBlank() || selectedTagId != null || showOnlyFavorites
+    val isFiltered = query.isNotBlank() || selectedTagId != null || showOnlyFavorites || showOnlySafe
 
     Column(modifier = Modifier.fillMaxSize()) {
         val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)

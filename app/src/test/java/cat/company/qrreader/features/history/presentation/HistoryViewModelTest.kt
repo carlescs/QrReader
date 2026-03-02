@@ -67,7 +67,8 @@ class HistoryViewModelTest {
             query: String?,
             hideTaggedWhenNoTagSelected: Boolean,
             searchAcrossAllTagsWhenFiltering: Boolean,
-            showOnlyFavorites: Boolean
+            showOnlyFavorites: Boolean,
+            showOnlyLocked: Boolean
         ): Flow<List<BarcodeWithTagsModel>> {
             lastRequest = Triple(tagId, query, hideTaggedWhenNoTagSelected)
             return resultFlow
@@ -473,7 +474,8 @@ class HistoryViewModelTest {
                 tagId: Int?, query: String?,
                 hideTaggedWhenNoTagSelected: Boolean,
                 searchAcrossAllTagsWhenFiltering: Boolean,
-                showOnlyFavorites: Boolean
+                showOnlyFavorites: Boolean,
+                showOnlyLocked: Boolean
             ): Flow<List<BarcodeWithTagsModel>> {
                 lastShowOnlyFavorites = showOnlyFavorites
                 return resultFlow
@@ -549,7 +551,8 @@ class HistoryViewModelTest {
                 tagId: Int?, query: String?,
                 hideTaggedWhenNoTagSelected: Boolean,
                 searchAcrossAllTagsWhenFiltering: Boolean,
-                showOnlyFavorites: Boolean
+                showOnlyFavorites: Boolean,
+                showOnlyLocked: Boolean
             ): Flow<List<BarcodeWithTagsModel>> {
                 lastTagId = tagId
                 lastQuery = query
@@ -668,7 +671,8 @@ class HistoryViewModelTest {
                 tagId: Int?, query: String?,
                 hideTaggedWhenNoTagSelected: Boolean,
                 searchAcrossAllTagsWhenFiltering: Boolean,
-                showOnlyFavorites: Boolean
+                showOnlyFavorites: Boolean,
+                showOnlyLocked: Boolean
             ): Flow<List<BarcodeWithTagsModel>> = resultFlow
             override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
             override suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long = 0L
@@ -999,7 +1003,8 @@ class HistoryViewModelTest {
                 tagId: Int?, query: String?,
                 hideTaggedWhenNoTagSelected: Boolean,
                 searchAcrossAllTagsWhenFiltering: Boolean,
-                showOnlyFavorites: Boolean
+                showOnlyFavorites: Boolean,
+                showOnlyLocked: Boolean
             ): Flow<List<BarcodeWithTagsModel>> = resultFlow
             override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
             override suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long = 0L
