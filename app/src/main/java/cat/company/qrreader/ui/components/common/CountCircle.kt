@@ -18,7 +18,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val MIN_CIRCLE_SIZE = 16.dp
+private val MIN_CIRCLE_SIZE = 20.dp
 
 /**
  * A circular or pill-shaped count indicator that displays a number beside an icon.
@@ -43,14 +43,14 @@ fun CountCircle(count: Int, countDescription: String? = null) {
             .height(MIN_CIRCLE_SIZE)
             .widthIn(min = MIN_CIRCLE_SIZE)
             .background(MaterialTheme.colorScheme.primary, CircleShape)
-            .padding(horizontal = 2.dp)
+            .padding(horizontal = 3.dp)
     ) {
         Text(
             text = displayText,
             color = MaterialTheme.colorScheme.onPrimary,
             style = TextStyle(
-                fontSize = 9.sp,
-                lineHeight = 9.sp,
+                fontSize = 11.sp,
+                lineHeight = 11.sp,
                 platformStyle = PlatformTextStyle(includeFontPadding = false)
             )
         )
