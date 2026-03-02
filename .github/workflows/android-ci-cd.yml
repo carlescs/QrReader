@@ -30,7 +30,7 @@ permissions:
   statuses: write
 
 env:
-  JAVA_VERSION: '21'
+  JAVA_VERSION: '24'
   JAVA_DISTRIBUTION: 'temurin'
 
 jobs:
