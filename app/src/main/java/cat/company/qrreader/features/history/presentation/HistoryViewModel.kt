@@ -139,11 +139,13 @@ class HistoryViewModel(
     // Pre-combine favorites and safe flags to stay within the 5-arg combine limit
     private val filterFlags = combine(_showOnlyFavorites, _showOnlySafe) { fav, safe -> fav to safe }
 
-    // Pre-combine settings flags to stay within the 5-arg combine limit
+    // Pre-combine settings flags to stay within the 5-arg combine limit.
+    // hideLocked is effective only when biometric lock is enabled; if biometric lock is off,
+    // there's no Safe section to retrieve hidden items from, so we must not filter them out.
     private val settingsFlags = combine(
         settingsRepository.hideTaggedWhenNoTagSelected,
         settingsRepository.searchAcrossAllTagsWhenFiltering,
-        settingsRepository.hideLockedWhenNotInSafe
+        combine(settingsRepository.hideLockedWhenNotInSafe, settingsRepository.biometricLockEnabled) { hide, biometric -> hide && biometric }
     ) { hideTagged, searchAcrossAll, hideLocked -> Triple(hideTagged, searchAcrossAll, hideLocked) }
 
     val savedBarcodes: Flow<List<BarcodeWithTagsModel>> =

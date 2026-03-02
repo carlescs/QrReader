@@ -240,6 +240,11 @@ class SettingsViewModel(
     fun setBiometricLockEnabled(value: Boolean) {
         viewModelScope.launch {
             privacySettings.setBiometricLockEnabled(value)
+            // Turning off biometric lock implicitly disables "hide locked from history"
+            // to avoid barcodes becoming permanently unreachable (hidden but no Safe section).
+            if (!value) {
+                privacySettings.setHideLockedSetting(false)
+            }
         }
     }
 
