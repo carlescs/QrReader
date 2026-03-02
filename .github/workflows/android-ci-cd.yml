@@ -44,14 +44,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
       - name: Setup Java & Gradle
         uses: ./.github/actions/setup-java-gradle
         with:
           java-version: ${{ env.JAVA_VERSION }}
           java-distribution: ${{ env.JAVA_DISTRIBUTION }}
-
-      - name: Validate Gradle wrapper
-        uses: gradle/actions/wrapper-validation@v4
 
       - name: Run unit tests and generate coverage report
         run: ./gradlew testDebugUnitTest jacocoTestReport --no-configuration-cache --rerun-tasks
@@ -108,14 +108,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
       - name: Setup Java & Gradle
         uses: ./.github/actions/setup-java-gradle
         with:
           java-version: ${{ env.JAVA_VERSION }}
           java-distribution: ${{ env.JAVA_DISTRIBUTION }}
-
-      - name: Validate Gradle wrapper
-        uses: gradle/actions/wrapper-validation@v4
 
       - name: Download coverage reports
         uses: actions/download-artifact@v4
