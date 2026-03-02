@@ -22,7 +22,7 @@ This file provides context and guidelines for AI coding assistants working on th
 - **Build System**: Gradle with version catalogs (`gradle/libs.versions.toml`)
 - **Min SDK**: 29 (Android 10)
 - **Target SDK**: 36 (Android 15)
-- **Java Version**: 21
+- **Java Version**: 24
 
 ### Major Libraries
 - **UI Framework**: Jetpack Compose (1.10.2)
@@ -607,7 +607,7 @@ Primary CI/CD configured in `.github/workflows/android-ci-cd.yml`:
 - **Promote Job**: Promotes to Production track (requires manual approval)
 - **Triggers**: On push to master and pull requests
 - **VM Image**: ubuntu-latest
-- **Java Version**: 21
+- **Java Version**: 24
 
 **SonarCloud Configuration:**
 - Uses official `org.sonarqube` Gradle plugin (recommended for Android projects)
