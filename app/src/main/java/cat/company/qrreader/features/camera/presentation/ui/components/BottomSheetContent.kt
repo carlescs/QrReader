@@ -35,7 +35,8 @@ fun BottomSheetContent(
     state: BarcodeState,
     snackbarHostState: SnackbarHostState,
     onToggleTag: (barcodeHash: Int, tagName: String) -> Unit,
-    onNavigateToHistory: () -> Unit = {}
+    onNavigateToHistory: () -> Unit = {},
+    onSendToCodeCreator: (String) -> Unit = {}
 ) {
     val lastBarcode = state.lastBarcode
     val sharedRawText = state.sharedRawText
@@ -170,7 +171,8 @@ fun BottomSheetContent(
                                 isLoadingDescription = isLoadingDescription,
                                 descriptionError = descriptionError,
                                 onToggleTag = { tagName -> onToggleTag(textHash, tagName) },
-                                onNavigateToHistory = onNavigateToHistory
+                                onNavigateToHistory = onNavigateToHistory,
+                                onSendToCodeCreator = onSendToCodeCreator
                             )
                         }
                     }

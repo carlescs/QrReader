@@ -50,10 +50,16 @@ import org.koin.compose.koinInject
  * Create a QR code from a text
  */
 @Composable
-fun CodeCreatorScreen(viewModel: CodeCreatorViewModel = koinViewModel()) {
+fun CodeCreatorScreen(initialText: String = "", viewModel: CodeCreatorViewModel = koinViewModel()) {
     val text by viewModel.text.collectAsStateWithLifecycle()
     val qrCodeBitmap by viewModel.qrCodeBitmap.collectAsStateWithLifecycle()
     val isSharing by viewModel.isSharing.collectAsStateWithLifecycle()
+
+    LaunchedEffect(initialText) {
+        if (initialText.isNotEmpty()) {
+            viewModel.onTextChanged(initialText)
+        }
+    }
 
     val context = LocalContext.current
     val focusRequester = remember { FocusRequester() }

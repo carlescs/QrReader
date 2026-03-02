@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.HorizontalDivider
@@ -58,7 +59,8 @@ fun SharedTextContent(
     isLoadingDescription: Boolean = false,
     descriptionError: String? = null,
     onToggleTag: (String) -> Unit = {},
-    onNavigateToHistory: () -> Unit = {}
+    onNavigateToHistory: () -> Unit = {},
+    onSendToCodeCreator: (String) -> Unit = {}
 ) {
     val uriHandler = LocalUriHandler.current
     val saveBarcodeWithTagsUseCase: SaveBarcodeWithTagsUseCase = koinInject()
@@ -125,6 +127,13 @@ fun SharedTextContent(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Spacer(modifier = Modifier.weight(1f))
+        IconButton(onClick = { onSendToCodeCreator(rawText) }) {
+            Icon(
+                imageVector = Icons.Filled.QrCode,
+                contentDescription = stringResource(R.string.send_to_code_creator),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
         IconButton(
             onClick = {
                 coroutineScope.launch {

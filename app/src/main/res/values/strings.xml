@@ -60,6 +60,7 @@
     <string name="duplicate_save_again">Save again</string>
 
     <!-- Code Creator -->
+    <string name="send_to_code_creator">Send to Code Creator</string>
     <string name="enter_text_to_encode">Enter text to encode</string>
     <string name="qr_code_assistants">QR Code Assistants</string>
     <string name="wifi_qr_assistant">WiFi QR Code</string>
