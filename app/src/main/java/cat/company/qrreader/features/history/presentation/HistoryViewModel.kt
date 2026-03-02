@@ -92,6 +92,9 @@ class HistoryViewModel(
     private val _showOnlyFavorites = MutableStateFlow(false)
     val showOnlyFavorites = _showOnlyFavorites.asStateFlow()
 
+    private val _showOnlySafe = MutableStateFlow(false)
+    val showOnlySafe = _showOnlySafe.asStateFlow()
+
     private val _isAiSupportedOnDevice = MutableStateFlow(false)
 
     private val appLifecycleObserver = object : DefaultLifecycleObserver {
@@ -133,30 +136,37 @@ class HistoryViewModel(
         .map { it.trim() }
         .distinctUntilChanged()
 
+    // Pre-combine favorites and safe flags to stay within the 5-arg combine limit
+    private val filterFlags = combine(_showOnlyFavorites, _showOnlySafe) { fav, safe -> fav to safe }
+
     val savedBarcodes: Flow<List<BarcodeWithTagsModel>> =
         combine(
             _selectedTagId,
             debouncedQuery,
             settingsRepository.hideTaggedWhenNoTagSelected,
             settingsRepository.searchAcrossAllTagsWhenFiltering,
-            _showOnlyFavorites
-        ) { tagId, query, hideTagged, searchAcrossAll, showFavorites ->
-            FilterParams(tagId, query, hideTagged, searchAcrossAll, showFavorites)
+            filterFlags
+        ) { tagId, query, hideTagged, searchAcrossAll, (showFavorites, showSafe) ->
+            FilterParams(tagId, query, hideTagged, searchAcrossAll, showFavorites, showSafe)
         }
-            .flatMapLatest { (tagId, query, hideTagged, searchAcrossAll, showFavorites) ->
-                if (showFavorites) {
-                    // Favorites filter takes precedence: ignore tag, search, and hide-tagged filters
-                    barcodeUseCases.getBarcodes(null, null, false, false, true)
-                } else {
-                    val q = query.takeIf { it.isNotBlank() }
-                    val effectiveTagId = if (searchAcrossAll && q != null) null else tagId
-                    barcodeUseCases.getBarcodes(effectiveTagId, q, hideTagged, searchAcrossAll, false)
+            .flatMapLatest { params ->
+                when {
+                    params.showFavorites ->
+                        barcodeUseCases.getBarcodes(null, null, false, false, true, false)
+                    params.showOnlySafe ->
+                        barcodeUseCases.getBarcodes(null, null, false, false, false, true)
+                    else -> {
+                        val q = params.query.takeIf { it.isNotBlank() }
+                        val effectiveTagId = if (params.searchAcrossAll && q != null) null else params.tagId
+                        barcodeUseCases.getBarcodes(effectiveTagId, q, params.hideTagged, params.searchAcrossAll, false, false)
+                    }
                 }
             }
 
     fun onTagSelected(tagId: Int?) {
         _selectedTagId.value = tagId
         _showOnlyFavorites.value = false
+        _showOnlySafe.value = false
     }
 
     fun onQueryChange(query: String) {
@@ -168,6 +178,16 @@ class HistoryViewModel(
         _showOnlyFavorites.value = turningOn
         if (turningOn) {
             _selectedTagId.value = null
+            _showOnlySafe.value = false
+        }
+    }
+
+    fun toggleSafeSection() {
+        val turningOn = !_showOnlySafe.value
+        _showOnlySafe.value = turningOn
+        if (turningOn) {
+            _selectedTagId.value = null
+            _showOnlyFavorites.value = false
         }
     }
 
@@ -204,7 +224,7 @@ class HistoryViewModel(
     }
 
     /**
-     * Clears all temporarily unlocked barcodes from the in-memory cache.
+     * Clears all temporarily unlocked barcodes from the in-memory cache and closes the safe section.
      *
      * This does NOT modify the persistent lock state in the database. Barcodes that have
      * [BarcodeModel.isLocked] = true will appear locked again after this call, requiring
@@ -212,6 +232,7 @@ class HistoryViewModel(
      */
     fun lockAllBarcodes() {
         _unlockedBarcodeIds.value = emptySet()
+        _showOnlySafe.value = false
     }
 
     fun updateBarcode(barcode: BarcodeModel) {
@@ -358,6 +379,7 @@ class HistoryViewModel(
         val query: String,
         val hideTagged: Boolean,
         val searchAcrossAll: Boolean,
-        val showFavorites: Boolean
+        val showFavorites: Boolean,
+        val showOnlySafe: Boolean
     )
 }

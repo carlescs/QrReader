@@ -61,6 +61,10 @@ abstract class SavedBarcodeDao {
             -- Favorites filter: only show favorites when flag is true
             NOT :showOnlyFavorites OR is_favorite = 1
         )
+        AND (
+            -- Locked filter: only show locked items when flag is true
+            NOT :showOnlyLocked OR is_locked = 1
+        )
         """
     )
     abstract fun getSavedBarcodesWithTagsByTagIdAndQuery(
@@ -68,7 +72,8 @@ abstract class SavedBarcodeDao {
         query: String?,
         hideTaggedWhenNoTagSelected: Boolean,
         searchAcrossAllTagsWhenFiltering: Boolean,
-        showOnlyFavorites: Boolean
+        showOnlyFavorites: Boolean,
+        showOnlyLocked: Boolean = false
     ): Flow<List<SavedBarcodeWithTags>>
 
     @Query("UPDATE saved_barcodes SET is_favorite = :isFavorite WHERE id = :id")
