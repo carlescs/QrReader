@@ -71,13 +71,51 @@ private val SUPPORTED_LANGUAGES = listOf(
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = koinViewModel(),
-    appUpdateManager: AppUpdateManager = koinInject(),
     onNavigateToHistorySettings: () -> Unit = {},
     onNavigateToAiSettings: () -> Unit = {},
     onNavigateToSecuritySettings: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {}
 ) {
     val isAiAvailableOnDevice by viewModel.isAiAvailableOnDevice.collectAsState()
+
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        SettingsNavigationItem(
+            title = stringResource(R.string.history),
+            subtitle = stringResource(R.string.history_settings_description),
+            onClick = onNavigateToHistorySettings
+        )
+        HorizontalDivider()
+        SettingsNavigationItem(
+            title = stringResource(R.string.settings_section_security),
+            subtitle = stringResource(R.string.security_settings_description),
+            onClick = onNavigateToSecuritySettings
+        )
+        HorizontalDivider()
+        if (isAiAvailableOnDevice) {
+            SettingsNavigationItem(
+                title = stringResource(R.string.settings_section_ai),
+                subtitle = stringResource(R.string.ai_settings_description),
+                onClick = onNavigateToAiSettings
+            )
+            HorizontalDivider()
+        }
+        SettingsNavigationItem(
+            title = stringResource(R.string.about),
+            subtitle = stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
+            onClick = onNavigateToAbout
+        )
+    }
+}
+
+/**
+ * About sub-screen showing app name, version, copyright and licence information,
+ * as well as an option to check for updates.
+ */
+@Composable
+fun AboutScreen(
+    viewModel: SettingsViewModel = koinViewModel(),
+    appUpdateManager: AppUpdateManager = koinInject()
+) {
     val updateCheckResult by viewModel.updateCheckResult.collectAsState()
     val isCheckingForUpdates by viewModel.isCheckingForUpdates.collectAsState()
     val context = LocalContext.current
@@ -123,33 +161,27 @@ fun SettingsScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        SettingsNavigationItem(
-            title = stringResource(R.string.history),
-            subtitle = stringResource(R.string.history_settings_description),
-            onClick = onNavigateToHistorySettings
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium) },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
         )
-        HorizontalDivider()
-        SettingsNavigationItem(
-            title = stringResource(R.string.settings_section_security),
-            subtitle = stringResource(R.string.security_settings_description),
-            onClick = onNavigateToSecuritySettings
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.about_copyright)) },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
         )
-        HorizontalDivider()
-        if (isAiAvailableOnDevice) {
-            SettingsNavigationItem(
-                title = stringResource(R.string.settings_section_ai),
-                subtitle = stringResource(R.string.ai_settings_description),
-                onClick = onNavigateToAiSettings
-            )
-            HorizontalDivider()
-        }
-        SettingsNavigationItem(
-            title = stringResource(R.string.about),
-            subtitle = stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
-            onClick = onNavigateToAbout
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.about_licence)) },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
         )
-        HorizontalDivider()
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         AppVersionItem(
             isChecking = isCheckingForUpdates,
             onCheckForUpdates = { viewModel.checkForUpdates() }
@@ -165,35 +197,6 @@ fun SettingsScreen(
                 onDismiss = { viewModel.clearUpdateCheckResult() }
             )
         }
-    }
-}
-
-/**
- * About sub-screen showing app name, version, copyright and licence information.
- */
-@Composable
-fun AboutScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.app_name), style = MaterialTheme.typography.titleMedium) },
-            supportingContent = { Text(text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME)) },
-            colors = androidx.compose.material3.ListItemDefaults.colors()
-        )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.about_copyright)) },
-            colors = androidx.compose.material3.ListItemDefaults.colors()
-        )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        ListItem(
-            headlineContent = { Text(text = stringResource(R.string.about_licence)) },
-            colors = androidx.compose.material3.ListItemDefaults.colors()
-        )
     }
 }
 
