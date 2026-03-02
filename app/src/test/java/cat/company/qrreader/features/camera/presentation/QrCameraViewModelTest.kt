@@ -130,6 +130,8 @@ class QrCameraViewModelTest {
         override suspend fun setAppLockEnabled(value: Boolean) {}
         override val autoLockOnFocusLoss: kotlinx.coroutines.flow.Flow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(false)
         override suspend fun setAutoLockOnFocusLoss(value: Boolean) {}
+        override val hideLockedWhenNotInSafe: kotlinx.coroutines.flow.Flow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(false)
+        override suspend fun setHideLockedWhenNotInSafe(value: Boolean) {}
     }
     
     // Simple fake Barcode for testing - uses reflection to work around internal BarcodeSource

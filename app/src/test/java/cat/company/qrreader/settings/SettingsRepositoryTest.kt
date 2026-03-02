@@ -411,4 +411,33 @@ class SettingsRepositoryTest {
         repository.setAutoLockOnFocusLoss(false)
         assertFalse(repository.autoLockOnFocusLoss.first())
     }
+
+    /**
+     * Test that hide locked when not in safe is disabled by default
+     */
+    @Test
+    fun hideLockedWhenNotInSafe_defaultIsFalse() = runTest {
+        assertFalse(repository.hideLockedWhenNotInSafe.first())
+    }
+
+    /**
+     * Test that hide locked when not in safe can be enabled
+     */
+    @Test
+    fun setHideLockedWhenNotInSafe_true_updatesValue() = runTest {
+        repository.setHideLockedWhenNotInSafe(true)
+        assertTrue(repository.hideLockedWhenNotInSafe.first())
+    }
+
+    /**
+     * Test that hide locked when not in safe can be toggled off again
+     */
+    @Test
+    fun setHideLockedWhenNotInSafe_toggle_updatesValue() = runTest {
+        repository.setHideLockedWhenNotInSafe(true)
+        assertTrue(repository.hideLockedWhenNotInSafe.first())
+
+        repository.setHideLockedWhenNotInSafe(false)
+        assertFalse(repository.hideLockedWhenNotInSafe.first())
+    }
 }

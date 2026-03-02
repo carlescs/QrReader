@@ -58,6 +58,8 @@ class AppLockViewModelTest {
         override suspend fun setBiometricLockEnabled(value: Boolean) {}
         override val duplicateCheckEnabled: Flow<Boolean> = MutableStateFlow(true)
         override suspend fun setDuplicateCheckEnabled(value: Boolean) {}
+        override val hideLockedWhenNotInSafe: Flow<Boolean> = MutableStateFlow(false)
+        override suspend fun setHideLockedWhenNotInSafe(value: Boolean) {}
     }
 
     private fun createViewModel(

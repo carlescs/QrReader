@@ -29,7 +29,8 @@ interface BarcodeRepository {
         hideTaggedWhenNoTagSelected: Boolean,
         searchAcrossAllTagsWhenFiltering: Boolean,
         showOnlyFavorites: Boolean = false,
-        showOnlyLocked: Boolean = false
+        showOnlyLocked: Boolean = false,
+        hideLocked: Boolean = false
     ): Flow<List<BarcodeWithTagsModel>>
 
     /**
