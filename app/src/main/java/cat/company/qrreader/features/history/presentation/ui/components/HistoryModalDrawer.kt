@@ -146,7 +146,7 @@ fun HistoryModalDrawerContent(
                             onToggleSafe()
                         } else {
                             val activity = context.findFragmentActivity()
-                            if (activity != null) {
+                            if (activity != null && canAuth) {
                                 showBiometricPrompt(
                                     activity = activity,
                                     title = context.getString(R.string.unlock_safe_section),
