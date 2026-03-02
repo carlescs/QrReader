@@ -100,7 +100,8 @@ fun BarcodeCard(
     val tagSuggestionState = tagSuggestionStates[barcode.barcode.id]
     val biometricLockEnabled by historyViewModel.biometricLockEnabled.collectAsState()
     val unlockedBarcodeIds by historyViewModel.unlockedBarcodeIds.collectAsState()
-    val isActuallyLocked = biometricLockEnabled && barcode.barcode.isLocked && barcode.barcode.id !in unlockedBarcodeIds
+    val showOnlySafe by historyViewModel.showOnlySafe.collectAsState()
+    val isActuallyLocked = biometricLockEnabled && barcode.barcode.isLocked && barcode.barcode.id !in unlockedBarcodeIds && !showOnlySafe
     val biometricError = remember { mutableStateOf<String?>(null) }
     val contactInfo = remember(barcode.barcode.barcode) {
         if (barcode.barcode.type == Barcode.TYPE_CONTACT_INFO) parseContactVCard(barcode.barcode.barcode)
