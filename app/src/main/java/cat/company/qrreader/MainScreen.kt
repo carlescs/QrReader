@@ -1,5 +1,6 @@
 package cat.company.qrreader
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.camera.core.ExperimentalGetImage
 import androidx.compose.foundation.layout.Box
@@ -42,10 +43,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import cat.company.qrreader.features.camera.presentation.ui.QrCameraScreen
 import cat.company.qrreader.features.camera.presentation.ui.SharedContent
@@ -154,7 +157,7 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedContent: SharedConten
                             NavigationBarItem(
                                 icon = item.icon,
                                 label = { Text(stringResource(item.labelRes)) },
-                                selected = activeRoute.value?.destination?.route == item.route,
+                                selected = activeRoute.value?.destination?.route?.substringBefore("?") == item.route,
                                 onClick = {
                                     navController.navigate(item.route){
                                         popUpTo(navController.graph.findStartDestination().id){
@@ -191,6 +194,10 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedContent: SharedConten
                                 launchSingleTop = true
                                 restoreState = true
                             }
+                        }, onSendToCodeCreator = { text ->
+                            navController.navigate("codeCreator?initialText=${Uri.encode(text)}") {
+                                launchSingleTop = true
+                            }
                         })
                     }
                     composable("history") {
@@ -204,10 +211,15 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedContent: SharedConten
                         )
                     }
                     composable(
-                        route="codeCreator",
+                        route = "codeCreator?initialText={initialText}",
+                        arguments = listOf(navArgument("initialText") {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        }),
                         deepLinks = listOf(navDeepLink { uriPattern = "qrreader://codeCreator" })
-                    ) {
-                        CodeCreatorScreen()
+                    ) { backStackEntry ->
+                        val initialText = backStackEntry.arguments?.getString("initialText") ?: ""
+                        CodeCreatorScreen(initialText = initialText)
                     }
                     composable("settings") {
                         SettingsScreen(
@@ -290,7 +302,7 @@ private fun TopAppBar(
         },
         actions = {
             var menuExpanded by remember { mutableStateOf(false) }
-            if (currentRoute.value?.destination?.route.equals("codeCreator")) {
+            if (currentRoute.value?.destination?.route?.substringBefore("?").equals("codeCreator")) {
                 IconButton(onClick = {
                     if (!shareDisabled.value) {
                         shareDisabled.value = true

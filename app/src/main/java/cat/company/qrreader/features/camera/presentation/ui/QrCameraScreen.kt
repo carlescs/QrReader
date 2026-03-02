@@ -65,6 +65,7 @@ fun QrCameraScreen(
     snackbarHostState: SnackbarHostState,
     sharedContent: SharedContent = SharedContent(),
     onNavigateToHistory: () -> Unit = {},
+    onSendToCodeCreator: (String) -> Unit = {},
     viewModel: QrCameraViewModel = koinViewModel()
 ) {
     var openBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -219,7 +220,8 @@ fun QrCameraScreen(
                     onToggleTag = { barcodeHash, tagName ->
                         viewModel.toggleTagSelection(barcodeHash, tagName)
                     },
-                    onNavigateToHistory = onNavigateToHistory
+                    onNavigateToHistory = onNavigateToHistory,
+                    onSendToCodeCreator = onSendToCodeCreator
                 )
             }
         }
