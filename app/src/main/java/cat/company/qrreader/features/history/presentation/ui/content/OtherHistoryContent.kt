@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import cat.company.qrreader.features.camera.presentation.ui.components.Title
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.features.history.presentation.ui.components.getTitle
+import cat.company.qrreader.features.history.presentation.ui.components.isIsbn
 import com.google.mlkit.vision.barcode.common.Barcode
 import java.text.SimpleDateFormat
 
@@ -28,11 +29,25 @@ fun OtherHistoryContent(sdf:SimpleDateFormat, barcode:BarcodeModel){
     val uriHandler = LocalUriHandler.current
     Title(title = getTitle(barcode))
     Text(text = sdf.format(barcode.date))
-    when (barcode.format) {
-        Barcode.FORMAT_EAN_13,
-        Barcode.FORMAT_EAN_8,
-        Barcode.FORMAT_UPC_A,
-        Barcode.FORMAT_UPC_E -> {
+    when {
+        isIsbn(barcode) -> {
+            Text(text = buildAnnotatedString {
+                this.withStyle(
+                    SpanStyle(
+                        color = Color.Blue,
+                        textDecoration = TextDecoration.Underline
+                    )
+                ) {
+                    append(barcode.barcode)
+                }
+            }, modifier = Modifier.clickable {
+                uriHandler.openUri("https://openlibrary.org/isbn/${barcode.barcode}")
+            })
+        }
+        barcode.format == Barcode.FORMAT_EAN_13 ||
+        barcode.format == Barcode.FORMAT_EAN_8 ||
+        barcode.format == Barcode.FORMAT_UPC_A ||
+        barcode.format == Barcode.FORMAT_UPC_E -> {
             Text(text = buildAnnotatedString {
                 this.withStyle(
                     SpanStyle(
