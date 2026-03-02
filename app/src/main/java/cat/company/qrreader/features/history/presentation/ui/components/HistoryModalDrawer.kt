@@ -59,7 +59,8 @@ import org.koin.androidx.compose.koinViewModel
  * @param showOnlyFavorites Whether the favorites filter is currently active
  * @param onToggleFavorites Callback invoked when the user toggles the favorites filter
  * @param showOnlySafe Whether the safe section filter is currently active
- * @param onToggleSafe Callback invoked when biometric authentication succeeds for the safe section
+ * @param onToggleSafe Callback invoked when the user toggles the safe section filter.
+ *                     Opening requires successful biometric authentication; closing requires none.
  * @param onNavigateToSettings Callback invoked when the user taps the Settings item
  * @param selectTag Callback invoked when the user selects or clears a tag filter
  */
@@ -120,6 +121,7 @@ fun HistoryModalDrawerContent(
                 onClick = onToggleFavorites
             )
             if (biometricLockEnabled) {
+                val canAuth = canAuthenticate(context)
                 NavigationDrawerItem(
                     icon = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -138,13 +140,13 @@ fun HistoryModalDrawerContent(
                     },
                     label = { Text(stringResource(R.string.safe_section)) },
                     selected = showOnlySafe,
+                    enabled = canAuth,
                     onClick = {
                         if (showOnlySafe) {
                             onToggleSafe()
                         } else {
-                            val canAuth = canAuthenticate(context)
                             val activity = context.findFragmentActivity()
-                            if (activity != null && canAuth) {
+                            if (activity != null) {
                                 showBiometricPrompt(
                                     activity = activity,
                                     title = context.getString(R.string.unlock_safe_section),

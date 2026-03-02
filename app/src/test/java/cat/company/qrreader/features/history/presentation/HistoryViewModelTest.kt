@@ -658,6 +658,158 @@ class HistoryViewModelTest {
         assertEquals(false, vm.showOnlyFavorites.value)
     }
 
+    // -------------------------------------------------------------------
+    // Tests for Safe section state management
+    // -------------------------------------------------------------------
+
+    @Test
+    fun toggleSafeSection_turnsOn() {
+        val vm = makeViewModel(FakeBarcodeRepository())
+        assertEquals(false, vm.showOnlySafe.value)
+
+        vm.toggleSafeSection()
+        assertEquals(true, vm.showOnlySafe.value)
+    }
+
+    @Test
+    fun toggleSafeSection_turnsOff() {
+        val vm = makeViewModel(FakeBarcodeRepository())
+        vm.toggleSafeSection()
+        assertEquals(true, vm.showOnlySafe.value)
+
+        vm.toggleSafeSection()
+        assertEquals(false, vm.showOnlySafe.value)
+    }
+
+    @Test
+    fun toggleSafeSection_clearSelectedTag() {
+        val vm = makeViewModel(FakeBarcodeRepository())
+        vm.onTagSelected(3)
+        assertEquals(3, vm.selectedTagId.value)
+
+        vm.toggleSafeSection()
+        assertEquals(true, vm.showOnlySafe.value)
+        assertEquals(null, vm.selectedTagId.value)
+    }
+
+    @Test
+    fun toggleSafeSection_clearsFavoritesFilter() {
+        val vm = makeViewModel(FakeBarcodeRepository())
+        vm.toggleFavoritesFilter()
+        assertEquals(true, vm.showOnlyFavorites.value)
+
+        vm.toggleSafeSection()
+        assertEquals(true, vm.showOnlySafe.value)
+        assertEquals(false, vm.showOnlyFavorites.value)
+    }
+
+    @Test
+    fun toggleFavoritesFilter_clearsSafeSection() {
+        val vm = makeViewModel(FakeBarcodeRepository())
+        vm.toggleSafeSection()
+        assertEquals(true, vm.showOnlySafe.value)
+
+        vm.toggleFavoritesFilter()
+        assertEquals(true, vm.showOnlyFavorites.value)
+        assertEquals(false, vm.showOnlySafe.value)
+    }
+
+    @Test
+    fun onTagSelected_clearsSafeSection() {
+        val vm = makeViewModel(FakeBarcodeRepository())
+        vm.toggleSafeSection()
+        assertEquals(true, vm.showOnlySafe.value)
+
+        vm.onTagSelected(5)
+        assertEquals(false, vm.showOnlySafe.value)
+    }
+
+    @Test
+    fun lockAllBarcodes_closesSafeSection() {
+        val vm = makeViewModel(FakeBarcodeRepository())
+        vm.toggleSafeSection()
+        assertEquals(true, vm.showOnlySafe.value)
+
+        vm.lockAllBarcodes()
+        assertEquals(false, vm.showOnlySafe.value)
+        assertEquals(emptySet<Int>(), vm.unlockedBarcodeIds.value)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun toggleSafeSection_changesSavedBarcodesRequest() = runTest {
+        // Repository that records the showOnlyLocked parameter
+        var lastShowOnlyLocked = false
+        val repo = object : BarcodeRepository {
+            private val resultFlow = MutableStateFlow<List<BarcodeWithTagsModel>>(emptyList())
+            override fun getAllBarcodes(): Flow<List<BarcodeModel>> = flowOf(emptyList())
+            override fun getBarcodesWithTags(): Flow<List<BarcodeWithTagsModel>> = resultFlow
+            override fun getBarcodesWithTagsByFilter(
+                tagId: Int?, query: String?,
+                hideTaggedWhenNoTagSelected: Boolean,
+                searchAcrossAllTagsWhenFiltering: Boolean,
+                showOnlyFavorites: Boolean,
+                showOnlyLocked: Boolean
+            ): Flow<List<BarcodeWithTagsModel>> {
+                lastShowOnlyLocked = showOnlyLocked
+                return resultFlow
+            }
+            override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
+            override suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long = 0L
+            override suspend fun updateBarcode(barcode: BarcodeModel): Int = 0
+            override suspend fun deleteBarcode(barcode: BarcodeModel) {}
+            override suspend fun addTagToBarcode(barcodeId: Int, tagId: Int) {}
+            override suspend fun removeTagFromBarcode(barcodeId: Int, tagId: Int) {}
+            override suspend fun switchTag(barcode: BarcodeWithTagsModel, tag: TagModel) {}
+            override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
+            override suspend fun toggleLock(barcodeId: Int, isLocked: Boolean) {}
+            override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
+            override fun getFavoritesCount(): Flow<Int> = flowOf(0)
+            override fun getLockedCount(): Flow<Int> = flowOf(0)
+            override suspend fun findByContent(content: String): BarcodeModel? = null
+        }
+        val fakeSettingsRepo = makeFakeSettingsRepo()
+        val vm = HistoryViewModel(
+            HistoryBarcodeUseCases(
+                GetBarcodesWithTagsUseCase(repo),
+                UpdateBarcodeUseCase(repo),
+                DeleteBarcodeUseCase(repo),
+                ToggleFavoriteUseCase(repo),
+                ToggleLockBarcodeUseCase(repo)
+            ),
+            fakeSettingsRepo,
+            HistoryAiUseCases(
+                FakeGenerateBarcodeAiDataUseCase(),
+                GetAiLanguageUseCase(fakeSettingsRepo),
+                GetAiHumorousDescriptionsUseCase(fakeSettingsRepo)
+            )
+        )
+
+        val job = launch { vm.savedBarcodes.collect { } }
+
+        // Initially, showOnlyLocked should be false
+        advanceTimeBy(250)
+        runCurrent()
+        assertEquals(false, lastShowOnlyLocked)
+        assertEquals(false, vm.showOnlySafe.value)
+
+        // Toggle safe section on — should request only locked barcodes
+        vm.toggleSafeSection()
+        advanceTimeBy(250)
+        runCurrent()
+        assertEquals(true, lastShowOnlyLocked)
+        assertEquals(true, vm.showOnlySafe.value)
+
+        // Toggle safe section off — should stop filtering by locked
+        vm.toggleSafeSection()
+        advanceTimeBy(250)
+        runCurrent()
+        assertEquals(false, lastShowOnlyLocked)
+        assertEquals(false, vm.showOnlySafe.value)
+
+        job.cancel()
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun toggleFavorite_callsUseCaseWithCorrectArguments() = runTest {
