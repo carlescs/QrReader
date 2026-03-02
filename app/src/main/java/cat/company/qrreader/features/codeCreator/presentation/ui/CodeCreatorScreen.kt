@@ -55,7 +55,7 @@ fun CodeCreatorScreen(initialText: String = "", viewModel: CodeCreatorViewModel 
     val qrCodeBitmap by viewModel.qrCodeBitmap.collectAsStateWithLifecycle()
     val isSharing by viewModel.isSharing.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(initialText) {
         if (initialText.isNotEmpty()) {
             viewModel.onTextChanged(initialText)
         }

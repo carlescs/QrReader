@@ -80,7 +80,7 @@ fun MainScreen(firebaseAnalytics: FirebaseAnalytics, sharedContent: SharedConten
             val screenName = when (destination.route) {
                 "history" -> "History"
                 "camera" -> "Camera"
-                "codeCreator" -> "Code Creator"
+                "codeCreator?initialText={initialText}" -> "Code Creator"
                 "settings" -> "Settings"
                 "settings/history" -> "Settings - History"
                 "settings/security" -> "Settings - Security"
