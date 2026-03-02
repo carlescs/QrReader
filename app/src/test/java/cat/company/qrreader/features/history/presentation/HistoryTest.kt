@@ -56,7 +56,8 @@ class HistoryTest {
             hideTaggedWhenNoTagSelected: Boolean,
             searchAcrossAllTagsWhenFiltering: Boolean,
             showOnlyFavorites: Boolean,
-            showOnlyLocked: Boolean
+            showOnlyLocked: Boolean,
+            hideLocked: Boolean
         ): Flow<List<BarcodeWithTagsModel>> {
             lastRequest = Triple(tagId, query, hideTaggedWhenNoTagSelected)
             return resultFlow
@@ -149,6 +150,9 @@ class HistoryTest {
             override val autoLockOnFocusLoss: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setAutoLockOnFocusLoss(value: Boolean) {}
+            override val hideLockedWhenNotInSafe: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setHideLockedWhenNotInSafe(value: Boolean) {}
         }
         val viewModel = HistoryViewModel(
             HistoryBarcodeUseCases(
@@ -224,6 +228,9 @@ class HistoryTest {
             override val autoLockOnFocusLoss: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setAutoLockOnFocusLoss(value: Boolean) {}
+            override val hideLockedWhenNotInSafe: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setHideLockedWhenNotInSafe(value: Boolean) {}
         }
         val viewModel = HistoryViewModel(
             HistoryBarcodeUseCases(
@@ -292,6 +299,9 @@ class HistoryTest {
             override val autoLockOnFocusLoss: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setAutoLockOnFocusLoss(value: Boolean) {}
+            override val hideLockedWhenNotInSafe: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setHideLockedWhenNotInSafe(value: Boolean) {}
         }
         val viewModel = HistoryViewModel(
             HistoryBarcodeUseCases(
@@ -360,6 +370,9 @@ class HistoryTest {
             override val autoLockOnFocusLoss: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = kotlinx.coroutines.flow.flowOf(false)
             override suspend fun setAutoLockOnFocusLoss(value: Boolean) {}
+            override val hideLockedWhenNotInSafe: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = kotlinx.coroutines.flow.flowOf(false)
+            override suspend fun setHideLockedWhenNotInSafe(value: Boolean) {}
         }
         val viewModel = HistoryViewModel(
             HistoryBarcodeUseCases(

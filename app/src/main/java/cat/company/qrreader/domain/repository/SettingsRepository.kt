@@ -117,4 +117,17 @@ interface SettingsRepository {
      * Enable or disable auto-lock on focus loss
      */
     suspend fun setAutoLockOnFocusLoss(value: Boolean)
+
+    /**
+     * Whether locked barcodes should be hidden from the regular history view.
+     * When true, locked barcodes only appear inside the Safe section.
+     * Only meaningful when [biometricLockEnabled] is true.
+     * Defaults to false.
+     */
+    val hideLockedWhenNotInSafe: Flow<Boolean>
+
+    /**
+     * Enable or disable hiding locked barcodes from the regular history view
+     */
+    suspend fun setHideLockedWhenNotInSafe(value: Boolean)
 }

@@ -254,6 +254,7 @@ fun SecuritySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val duplicateCheckState by viewModel.duplicateCheckEnabled.collectAsState(initial = false)
     val appLockState by viewModel.appLockEnabled.collectAsState(initial = false)
     val autoLockState by viewModel.autoLockOnFocusLoss.collectAsState(initial = false)
+    val hideLockedState by viewModel.hideLockedWhenNotInSafe.collectAsState(initial = false)
     val context = LocalContext.current
     val canUseBiometrics = canAuthenticate(context)
 
@@ -306,6 +307,19 @@ fun SecuritySettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
                     checked = biometricLockState && canUseBiometrics,
                     onCheckedChange = { newValue -> viewModel.setBiometricLockEnabled(newValue) },
                     enabled = canUseBiometrics
+                )
+            },
+            colors = androidx.compose.material3.ListItemDefaults.colors()
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        ListItem(
+            headlineContent = { Text(text = stringResource(R.string.hide_locked_when_not_in_safe)) },
+            supportingContent = { Text(text = stringResource(R.string.hide_locked_when_not_in_safe_description)) },
+            trailingContent = {
+                Switch(
+                    checked = hideLockedState && biometricLockState,
+                    onCheckedChange = { newValue -> viewModel.setHideLockedWhenNotInSafe(newValue) },
+                    enabled = biometricLockState && canUseBiometrics
                 )
             },
             colors = androidx.compose.material3.ListItemDefaults.colors()

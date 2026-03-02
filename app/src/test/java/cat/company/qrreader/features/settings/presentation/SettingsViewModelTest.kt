@@ -12,6 +12,8 @@ import cat.company.qrreader.domain.usecase.settings.SetAutoLockOnFocusLossUseCas
 import cat.company.qrreader.domain.usecase.settings.SetBiometricLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetDuplicateCheckEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.SetDuplicateCheckEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetHideLockedSettingUseCase
+import cat.company.qrreader.domain.usecase.settings.SetHideLockedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
@@ -84,6 +86,9 @@ class SettingsViewModelTest {
         val autoLockFlow = MutableStateFlow(false)
         override val autoLockOnFocusLoss: Flow<Boolean> = autoLockFlow
         override suspend fun setAutoLockOnFocusLoss(value: Boolean) { autoLockFlow.value = value }
+        val hideLockedFlow = MutableStateFlow(false)
+        override val hideLockedWhenNotInSafe: Flow<Boolean> = hideLockedFlow
+        override suspend fun setHideLockedWhenNotInSafe(value: Boolean) { hideLockedFlow.value = value }
     }
 
     private class FakeGenerateBarcodeAiDataUseCase(
@@ -126,7 +131,9 @@ class SettingsViewModelTest {
                 getBiometricLockEnabled = GetBiometricLockEnabledUseCase(fakeRepo),
                 setBiometricLockEnabled = SetBiometricLockEnabledUseCase(fakeRepo),
                 getDuplicateCheckEnabled = GetDuplicateCheckEnabledUseCase(fakeRepo),
-                setDuplicateCheckEnabled = SetDuplicateCheckEnabledUseCase(fakeRepo)
+                setDuplicateCheckEnabled = SetDuplicateCheckEnabledUseCase(fakeRepo),
+                getHideLockedSetting = GetHideLockedSettingUseCase(fakeRepo),
+                setHideLockedSetting = SetHideLockedSettingUseCase(fakeRepo)
             ),
             appLockSettings = AppLockSettingsUseCases(
                 getAppLockEnabled = GetAppLockEnabledUseCase(fakeRepo),

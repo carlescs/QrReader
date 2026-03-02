@@ -68,7 +68,8 @@ class HistoryViewModelTest {
             hideTaggedWhenNoTagSelected: Boolean,
             searchAcrossAllTagsWhenFiltering: Boolean,
             showOnlyFavorites: Boolean,
-            showOnlyLocked: Boolean
+            showOnlyLocked: Boolean,
+            hideLocked: Boolean
         ): Flow<List<BarcodeWithTagsModel>> {
             lastRequest = Triple(tagId, query, hideTaggedWhenNoTagSelected)
             return resultFlow
@@ -153,6 +154,9 @@ class HistoryViewModelTest {
         override val autoLockOnFocusLoss: Flow<Boolean>
             get() = flowOf(false)
         override suspend fun setAutoLockOnFocusLoss(value: Boolean) {}
+        override val hideLockedWhenNotInSafe: Flow<Boolean>
+            get() = flowOf(false)
+        override suspend fun setHideLockedWhenNotInSafe(value: Boolean) {}
     }
 
     private class TestLifecycleOwner : LifecycleOwner {
@@ -280,6 +284,9 @@ class HistoryViewModelTest {
             override val autoLockOnFocusLoss: kotlinx.coroutines.flow.Flow<Boolean>
                 get() = flowOf(false)
             override suspend fun setAutoLockOnFocusLoss(value: Boolean) {}
+            override val hideLockedWhenNotInSafe: kotlinx.coroutines.flow.Flow<Boolean>
+                get() = flowOf(false)
+            override suspend fun setHideLockedWhenNotInSafe(value: Boolean) {}
         }
 
         val vm = HistoryViewModel(
@@ -475,7 +482,8 @@ class HistoryViewModelTest {
                 hideTaggedWhenNoTagSelected: Boolean,
                 searchAcrossAllTagsWhenFiltering: Boolean,
                 showOnlyFavorites: Boolean,
-                showOnlyLocked: Boolean
+                showOnlyLocked: Boolean,
+                hideLocked: Boolean
             ): Flow<List<BarcodeWithTagsModel>> {
                 lastShowOnlyFavorites = showOnlyFavorites
                 return resultFlow
@@ -552,7 +560,8 @@ class HistoryViewModelTest {
                 hideTaggedWhenNoTagSelected: Boolean,
                 searchAcrossAllTagsWhenFiltering: Boolean,
                 showOnlyFavorites: Boolean,
-                showOnlyLocked: Boolean
+                showOnlyLocked: Boolean,
+                hideLocked: Boolean
             ): Flow<List<BarcodeWithTagsModel>> {
                 lastTagId = tagId
                 lastQuery = query
@@ -749,7 +758,8 @@ class HistoryViewModelTest {
                 hideTaggedWhenNoTagSelected: Boolean,
                 searchAcrossAllTagsWhenFiltering: Boolean,
                 showOnlyFavorites: Boolean,
-                showOnlyLocked: Boolean
+                showOnlyLocked: Boolean,
+                hideLocked: Boolean
             ): Flow<List<BarcodeWithTagsModel>> {
                 lastShowOnlyLocked = showOnlyLocked
                 return resultFlow
@@ -824,7 +834,8 @@ class HistoryViewModelTest {
                 hideTaggedWhenNoTagSelected: Boolean,
                 searchAcrossAllTagsWhenFiltering: Boolean,
                 showOnlyFavorites: Boolean,
-                showOnlyLocked: Boolean
+                showOnlyLocked: Boolean,
+                hideLocked: Boolean
             ): Flow<List<BarcodeWithTagsModel>> = resultFlow
             override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
             override suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long = 0L
@@ -1156,7 +1167,8 @@ class HistoryViewModelTest {
                 hideTaggedWhenNoTagSelected: Boolean,
                 searchAcrossAllTagsWhenFiltering: Boolean,
                 showOnlyFavorites: Boolean,
-                showOnlyLocked: Boolean
+                showOnlyLocked: Boolean,
+                hideLocked: Boolean
             ): Flow<List<BarcodeWithTagsModel>> = resultFlow
             override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {}
             override suspend fun insertBarcodeAndGetId(barcode: BarcodeModel): Long = 0L

@@ -31,6 +31,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     private val DUPLICATE_CHECK_KEY = booleanPreferencesKey("duplicate_check_enabled")
     private val APP_LOCK_KEY = booleanPreferencesKey("app_lock_enabled")
     private val AUTO_LOCK_ON_FOCUS_LOSS_KEY = booleanPreferencesKey("auto_lock_on_focus_loss")
+    private val HIDE_LOCKED_WHEN_NOT_IN_SAFE_KEY = booleanPreferencesKey("hide_locked_when_not_in_safe")
 
     override val hideTaggedWhenNoTagSelected: Flow<Boolean> =
         context.dataStore.data.map { prefs -> prefs[HIDE_TAGGED_KEY] ?: false }
@@ -61,6 +62,9 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
 
     override val autoLockOnFocusLoss: Flow<Boolean> =
         context.dataStore.data.map { prefs -> prefs[AUTO_LOCK_ON_FOCUS_LOSS_KEY] ?: false }
+
+    override val hideLockedWhenNotInSafe: Flow<Boolean> =
+        context.dataStore.data.map { prefs -> prefs[HIDE_LOCKED_WHEN_NOT_IN_SAFE_KEY] ?: false }
 
     override suspend fun setHideTaggedWhenNoTagSelected(value: Boolean) {
         context.dataStore.edit { prefs ->
@@ -119,6 +123,12 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     override suspend fun setAutoLockOnFocusLoss(value: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[AUTO_LOCK_ON_FOCUS_LOSS_KEY] = value
+        }
+    }
+
+    override suspend fun setHideLockedWhenNotInSafe(value: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[HIDE_LOCKED_WHEN_NOT_IN_SAFE_KEY] = value
         }
     }
 }

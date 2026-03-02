@@ -147,6 +147,8 @@
     <string name="show_tag_counters_description">When enabled, the number of barcodes assigned to each tag is shown in the tag filter list.</string>
     <string name="biometric_lock_enabled">Lock individual barcodes</string>
     <string name="biometric_lock_description">When enabled, you can lock individual barcodes so they require biometric authentication to view.</string>
+    <string name="hide_locked_when_not_in_safe">Hide locked barcodes from history</string>
+    <string name="hide_locked_when_not_in_safe_description">When enabled, locked barcodes are only visible inside the Safe section.</string>
     <string name="duplicate_check_enabled">Duplicate scan detection</string>
     <string name="duplicate_check_description">When enabled, you will be prompted before saving a barcode that already exists in your history.</string>
     <string name="app_lock_enabled">Lock app with biometrics</string>

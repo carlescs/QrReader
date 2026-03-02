@@ -31,6 +31,8 @@ import cat.company.qrreader.domain.usecase.settings.SetBiometricLockEnabledUseCa
 import cat.company.qrreader.domain.usecase.camera.CheckDuplicateBarcodeUseCase
 import cat.company.qrreader.domain.usecase.settings.GetDuplicateCheckEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.SetDuplicateCheckEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetHideLockedSettingUseCase
+import cat.company.qrreader.domain.usecase.settings.SetHideLockedSettingUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
 import cat.company.qrreader.domain.usecase.settings.GetAiLanguageUseCase
 import cat.company.qrreader.domain.usecase.settings.GetHideTaggedSettingUseCase
@@ -110,6 +112,8 @@ val useCaseModule = module {
     factory { SetBiometricLockEnabledUseCase(get()) }
     factory { GetDuplicateCheckEnabledUseCase(get()) }
     factory { SetDuplicateCheckEnabledUseCase(get()) }
+    factory { GetHideLockedSettingUseCase(get()) }
+    factory { SetHideLockedSettingUseCase(get()) }
     factory { GetAllTagsUseCase(get()) }
     factory { GetOrCreateTagsByNameUseCase(get()) }
     factory { GenerateBarcodeAiDataUseCase() }
@@ -150,7 +154,7 @@ val viewModelModule = module {
     viewModel {
         SettingsViewModel(
             filterSettings = HistoryFilterSettingsUseCases(get(), get(), get(), get(), get(), get()),
-            privacySettings = HistoryPrivacySettingsUseCases(get(), get(), get(), get()),
+            privacySettings = HistoryPrivacySettingsUseCases(get(), get(), get(), get(), get(), get()),
             appLockSettings = AppLockSettingsUseCases(get(), get(), get(), get()),
             aiSettings = AiSettingsUseCases(get(), get(), get(), get(), get(), get(), get<GenerateBarcodeAiDataUseCase>()),
             checkAppUpdateUseCase = get()

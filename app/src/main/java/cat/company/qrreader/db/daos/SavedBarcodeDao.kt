@@ -65,6 +65,13 @@ abstract class SavedBarcodeDao {
             -- Locked filter: only show locked items when flag is true
             NOT :showOnlyLocked OR is_locked = 1
         )
+        AND (
+            -- Hide locked filter: hide locked items from normal history when flag is true.
+            -- The predicate is conditional on showOnlyLocked so that when both flags are true
+            -- (theoretically impossible via the ViewModel, but defensive here) the result is
+            -- not an empty set due to contradicting is_locked=1 AND is_locked=0 constraints.
+            NOT (:hideLocked AND NOT :showOnlyLocked) OR is_locked = 0
+        )
         """
     )
     abstract fun getSavedBarcodesWithTagsByTagIdAndQuery(
@@ -73,7 +80,8 @@ abstract class SavedBarcodeDao {
         hideTaggedWhenNoTagSelected: Boolean,
         searchAcrossAllTagsWhenFiltering: Boolean,
         showOnlyFavorites: Boolean,
-        showOnlyLocked: Boolean = false
+        showOnlyLocked: Boolean = false,
+        hideLocked: Boolean = false
     ): Flow<List<SavedBarcodeWithTags>>
 
     @Query("UPDATE saved_barcodes SET is_favorite = :isFavorite WHERE id = :id")

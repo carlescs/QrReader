@@ -11,6 +11,8 @@ import cat.company.qrreader.domain.usecase.settings.GetBiometricLockEnabledUseCa
 import cat.company.qrreader.domain.usecase.settings.SetBiometricLockEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.GetDuplicateCheckEnabledUseCase
 import cat.company.qrreader.domain.usecase.settings.SetDuplicateCheckEnabledUseCase
+import cat.company.qrreader.domain.usecase.settings.GetHideLockedSettingUseCase
+import cat.company.qrreader.domain.usecase.settings.SetHideLockedSettingUseCase
 import cat.company.qrreader.domain.usecase.update.CheckAppUpdateUseCase
 import cat.company.qrreader.domain.usecase.update.UpdateCheckResult
 import cat.company.qrreader.domain.usecase.settings.GetAiHumorousDescriptionsUseCase
@@ -61,12 +63,16 @@ data class HistoryFilterSettingsUseCases(
  * @property setBiometricLockEnabled Writes the biometric lock enabled preference.
  * @property getDuplicateCheckEnabled Reads the duplicate scan check enabled preference.
  * @property setDuplicateCheckEnabled Writes the duplicate scan check enabled preference.
+ * @property getHideLockedSetting Reads the "hide locked barcodes when not in Safe" preference.
+ * @property setHideLockedSetting Writes the "hide locked barcodes when not in Safe" preference.
  */
 data class HistoryPrivacySettingsUseCases(
     val getBiometricLockEnabled: GetBiometricLockEnabledUseCase,
     val setBiometricLockEnabled: SetBiometricLockEnabledUseCase,
     val getDuplicateCheckEnabled: GetDuplicateCheckEnabledUseCase,
-    val setDuplicateCheckEnabled: SetDuplicateCheckEnabledUseCase
+    val setDuplicateCheckEnabled: SetDuplicateCheckEnabledUseCase,
+    val getHideLockedSetting: GetHideLockedSettingUseCase,
+    val setHideLockedSetting: SetHideLockedSettingUseCase
 )
 
 /**
@@ -181,6 +187,11 @@ class SettingsViewModel(
     val duplicateCheckEnabled: Flow<Boolean> = privacySettings.getDuplicateCheckEnabled()
 
     /**
+     * Flow for the hide locked barcodes when not in Safe section setting
+     */
+    val hideLockedWhenNotInSafe: Flow<Boolean> = privacySettings.getHideLockedSetting()
+
+    /**
      * Flow for the app-level lock screen enabled setting
      */
     val appLockEnabled: Flow<Boolean> = appLockSettings.getAppLockEnabled()
@@ -229,12 +240,23 @@ class SettingsViewModel(
     fun setBiometricLockEnabled(value: Boolean) {
         viewModelScope.launch {
             privacySettings.setBiometricLockEnabled(value)
+            // Turning off biometric lock implicitly disables "hide locked from history"
+            // to avoid barcodes becoming permanently unreachable (hidden but no Safe section).
+            if (!value) {
+                privacySettings.setHideLockedSetting(false)
+            }
         }
     }
 
     fun setDuplicateCheckEnabled(value: Boolean) {
         viewModelScope.launch {
             privacySettings.setDuplicateCheckEnabled(value)
+        }
+    }
+
+    fun setHideLockedWhenNotInSafe(value: Boolean) {
+        viewModelScope.launch {
+            privacySettings.setHideLockedSetting(value)
         }
     }
 

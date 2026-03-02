@@ -36,7 +36,8 @@ class BarcodeRepositoryImpl(database: BarcodesDb) : BarcodeRepository {
         hideTaggedWhenNoTagSelected: Boolean,
         searchAcrossAllTagsWhenFiltering: Boolean,
         showOnlyFavorites: Boolean,
-        showOnlyLocked: Boolean
+        showOnlyLocked: Boolean,
+        hideLocked: Boolean
     ): Flow<List<BarcodeWithTagsModel>> {
         return barcodeDao.getSavedBarcodesWithTagsByTagIdAndQuery(
             tagId = tagId,
@@ -44,7 +45,8 @@ class BarcodeRepositoryImpl(database: BarcodesDb) : BarcodeRepository {
             hideTaggedWhenNoTagSelected = hideTaggedWhenNoTagSelected,
             searchAcrossAllTagsWhenFiltering = searchAcrossAllTagsWhenFiltering,
             showOnlyFavorites = showOnlyFavorites,
-            showOnlyLocked = showOnlyLocked
+            showOnlyLocked = showOnlyLocked,
+            hideLocked = hideLocked
         ).map { list ->
             list.map { it.toDomainModel() }
         }

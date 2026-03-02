@@ -31,7 +31,8 @@ class SaveBarcodeWithTagsUseCaseTest {
             hideTaggedWhenNoTagSelected: Boolean,
             searchAcrossAllTagsWhenFiltering: Boolean,
             showOnlyFavorites: Boolean,
-            showOnlyLocked: Boolean
+            showOnlyLocked: Boolean,
+            hideLocked: Boolean
         ): Flow<List<BarcodeWithTagsModel>> = flowOf(emptyList())
 
         override suspend fun insertBarcodes(vararg barcodes: BarcodeModel) {

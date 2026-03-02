@@ -139,15 +139,23 @@ class HistoryViewModel(
     // Pre-combine favorites and safe flags to stay within the 5-arg combine limit
     private val filterFlags = combine(_showOnlyFavorites, _showOnlySafe) { fav, safe -> fav to safe }
 
+    // Pre-combine settings flags to stay within the 5-arg combine limit.
+    // hideLocked is effective only when biometric lock is enabled; if biometric lock is off,
+    // there's no Safe section to retrieve hidden items from, so we must not filter them out.
+    private val settingsFlags = combine(
+        settingsRepository.hideTaggedWhenNoTagSelected,
+        settingsRepository.searchAcrossAllTagsWhenFiltering,
+        combine(settingsRepository.hideLockedWhenNotInSafe, settingsRepository.biometricLockEnabled) { hide, biometric -> hide && biometric }
+    ) { hideTagged, searchAcrossAll, hideLocked -> Triple(hideTagged, searchAcrossAll, hideLocked) }
+
     val savedBarcodes: Flow<List<BarcodeWithTagsModel>> =
         combine(
             _selectedTagId,
             debouncedQuery,
-            settingsRepository.hideTaggedWhenNoTagSelected,
-            settingsRepository.searchAcrossAllTagsWhenFiltering,
+            settingsFlags,
             filterFlags
-        ) { tagId, query, hideTagged, searchAcrossAll, (showFavorites, showSafe) ->
-            FilterParams(tagId, query, hideTagged, searchAcrossAll, showFavorites, showSafe)
+        ) { tagId, query, (hideTagged, searchAcrossAll, hideLocked), (showFavorites, showSafe) ->
+            FilterParams(tagId, query, hideTagged, searchAcrossAll, showFavorites, showSafe, hideLocked)
         }
             .flatMapLatest { params ->
                 when {
@@ -158,7 +166,7 @@ class HistoryViewModel(
                     else -> {
                         val q = params.query.takeIf { it.isNotBlank() }
                         val effectiveTagId = if (params.searchAcrossAll && q != null) null else params.tagId
-                        barcodeUseCases.getBarcodes(effectiveTagId, q, params.hideTagged, params.searchAcrossAll, false, false)
+                        barcodeUseCases.getBarcodes(effectiveTagId, q, params.hideTagged, params.searchAcrossAll, false, false, params.hideLocked)
                     }
                 }
             }
@@ -380,6 +388,7 @@ class HistoryViewModel(
         val hideTagged: Boolean,
         val searchAcrossAll: Boolean,
         val showFavorites: Boolean,
-        val showOnlySafe: Boolean
+        val showOnlySafe: Boolean,
+        val hideLocked: Boolean = false
     )
 }

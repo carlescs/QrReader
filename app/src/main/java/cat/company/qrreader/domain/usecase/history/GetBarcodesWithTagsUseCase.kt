@@ -24,6 +24,8 @@ class GetBarcodesWithTagsUseCase(private val barcodeRepository: BarcodeRepositor
      * @param showOnlyFavorites Whether to show only favorited barcodes
      * @param showOnlyLocked Whether to show only locked barcodes (used by the Safe section).
      *                       When true, all other filters (tag, query, favorites) are ignored.
+     * @param hideLocked Whether to hide locked barcodes from the normal history view.
+     *                   Only applies when [showOnlyLocked] is false.
      */
     operator fun invoke(
         tagId: Int?,
@@ -31,7 +33,8 @@ class GetBarcodesWithTagsUseCase(private val barcodeRepository: BarcodeRepositor
         hideTaggedWhenNoTagSelected: Boolean,
         searchAcrossAllTagsWhenFiltering: Boolean,
         showOnlyFavorites: Boolean = false,
-        showOnlyLocked: Boolean = false
+        showOnlyLocked: Boolean = false,
+        hideLocked: Boolean = false
     ): Flow<List<BarcodeWithTagsModel>> {
         return barcodeRepository.getBarcodesWithTagsByFilter(
             tagId = tagId,
@@ -39,7 +42,8 @@ class GetBarcodesWithTagsUseCase(private val barcodeRepository: BarcodeRepositor
             hideTaggedWhenNoTagSelected = hideTaggedWhenNoTagSelected,
             searchAcrossAllTagsWhenFiltering = searchAcrossAllTagsWhenFiltering,
             showOnlyFavorites = showOnlyFavorites,
-            showOnlyLocked = showOnlyLocked
+            showOnlyLocked = showOnlyLocked,
+            hideLocked = hideLocked
         )
     }
 }
