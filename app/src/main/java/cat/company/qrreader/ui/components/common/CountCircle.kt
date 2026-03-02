@@ -49,8 +49,8 @@ fun CountCircle(count: Int, countDescription: String? = null) {
             text = displayText,
             color = MaterialTheme.colorScheme.onPrimary,
             style = TextStyle(
-                fontSize = 11.sp,
-                lineHeight = 11.sp,
+                fontSize = 9.sp,
+                lineHeight = 9.sp,
                 platformStyle = PlatformTextStyle(includeFontPadding = false)
             )
         )
