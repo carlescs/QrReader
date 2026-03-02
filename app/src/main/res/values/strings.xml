@@ -136,17 +136,17 @@
     <!-- Settings -->
     <string name="settings_section_ai">AI</string>
     <string name="settings_section_security">Security</string>
-    <string name="history_settings_description">Manage history display preferences</string>
-    <string name="ai_settings_description">Configure AI-powered features</string>
-    <string name="security_settings_description">Manage biometric lock and access security</string>
-    <string name="hide_tagged_when_no_tag_selected">Hide tagged elements when no tag selected</string>
-    <string name="hide_tagged_description">When enabled, elements that have any tag will be hidden if the user hasn\'t selected a tag in the history filter.</string>
-    <string name="search_across_all_tags">Search across all tags when filtering</string>
-    <string name="search_across_all_tags_description">When enabled, typing in the search field will search across all tags even if a particular tag is selected.</string>
-    <string name="show_tag_counters">Show tag counters</string>
-    <string name="show_tag_counters_description">When enabled, displays the number of barcodes for each tag in the history filter.</string>
-    <string name="biometric_lock_enabled">Biometric lock</string>
-    <string name="biometric_lock_description">When enabled, selected barcodes can be locked and require fingerprint or face authentication to view.</string>
+    <string name="history_settings_description">Customize barcode filtering and display</string>
+    <string name="ai_settings_description">Configure AI descriptions and tag suggestions</string>
+    <string name="security_settings_description">Manage biometric app lock and per-barcode protection</string>
+    <string name="hide_tagged_when_no_tag_selected">Hide tagged barcodes</string>
+    <string name="hide_tagged_description">When enabled, barcodes with tags are hidden unless you select a tag filter.</string>
+    <string name="search_across_all_tags">Search across all tags</string>
+    <string name="search_across_all_tags_description">When enabled, search results include barcodes from all tags, even with an active tag filter.</string>
+    <string name="show_tag_counters">Show barcode count per tag</string>
+    <string name="show_tag_counters_description">When enabled, the number of barcodes assigned to each tag is shown in the tag filter list.</string>
+    <string name="biometric_lock_enabled">Lock individual barcodes</string>
+    <string name="biometric_lock_description">When enabled, you can lock individual barcodes so they require biometric authentication to view.</string>
     <string name="duplicate_check_enabled">Duplicate scan detection</string>
     <string name="duplicate_check_description">When enabled, you will be prompted before saving a barcode that already exists in your history.</string>
     <string name="app_lock_enabled">Lock app with biometrics</string>
@@ -157,12 +157,12 @@
     <string name="unlock_app">Unlock</string>
     <string name="unlock_app_subtitle">Authenticate to unlock the app</string>
     <string name="ai_features">AI features</string>
-    <string name="ai_features_description">When enabled, AI-generated tag suggestions and barcode descriptions will be shown for scanned barcodes on supported devices.</string>
+    <string name="ai_features_description">When enabled, AI-generated tag suggestions and barcode descriptions are shown for scanned barcodes.</string>
     <string name="ai_language">AI language</string>
-    <string name="ai_language_description">Language for AI-generated tags and descriptions</string>
+    <string name="ai_language_description">Language used for AI-generated tags and descriptions</string>
     <string name="change_language">Change</string>
     <string name="ai_humorous_descriptions">Humorous descriptions</string>
-    <string name="ai_humorous_descriptions_description">When enabled, AI will generate funny and witty barcode descriptions instead of factual ones.</string>
+    <string name="ai_humorous_descriptions_description">When enabled, AI generates funny and witty barcode descriptions instead of factual ones.</string>
 
     <!-- AI language options -->
     <string name="language_device">Device language</string>
