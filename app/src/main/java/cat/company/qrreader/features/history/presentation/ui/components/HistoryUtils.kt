@@ -91,6 +91,26 @@ fun shareBarcode(context: Context, barcode: BarcodeModel) {
 }
 
 /**
+ * Returns true if the barcode is an ISBN — either explicitly typed as such by ML Kit,
+ * or an EAN-13 whose 13-digit numeric content starts with the 978 or 979 ISBN prefix.
+ */
+fun isIsbn(barcode: BarcodeModel): Boolean {
+    if (barcode.type == Barcode.TYPE_ISBN) {
+        return true
+    }
+
+    if (barcode.format != Barcode.FORMAT_EAN_13) {
+        return false
+    }
+
+    val content = barcode.barcode.trim()
+
+    return content.length == 13 &&
+        content.all { it.isDigit() } &&
+        (content.startsWith("978") || content.startsWith("979"))
+}
+
+/**
  * Get the title of a barcode
  */
 fun getTitle(barcode: BarcodeModel): String {
@@ -98,12 +118,13 @@ fun getTitle(barcode: BarcodeModel): String {
         return barcode.title
 
     // Return a default based on type if no custom title
-    return when (barcode.type) {
-        Barcode.TYPE_URL -> "URL"
-        Barcode.TYPE_CONTACT_INFO -> "Contact"
-        Barcode.TYPE_EMAIL -> "Email"
-        Barcode.TYPE_PHONE -> "Phone"
-        Barcode.TYPE_WIFI -> "Wi-Fi"
+    return when {
+        barcode.type == Barcode.TYPE_URL -> "URL"
+        barcode.type == Barcode.TYPE_CONTACT_INFO -> "Contact"
+        barcode.type == Barcode.TYPE_EMAIL -> "Email"
+        barcode.type == Barcode.TYPE_PHONE -> "Phone"
+        barcode.type == Barcode.TYPE_WIFI -> "Wi-Fi"
+        isIsbn(barcode) -> "ISBN"
         else ->
             when (barcode.format) {
                 Barcode.FORMAT_EAN_13 -> "EAN13"

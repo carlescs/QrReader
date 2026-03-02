@@ -3,8 +3,11 @@ package cat.company.qrreader.features.history.presentation
 import cat.company.qrreader.domain.model.BarcodeModel
 import cat.company.qrreader.features.history.presentation.ui.components.getBarcodeIcon
 import cat.company.qrreader.features.history.presentation.ui.components.getTitle
+import cat.company.qrreader.features.history.presentation.ui.components.isIsbn
 import com.google.mlkit.vision.barcode.common.Barcode
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -305,5 +308,177 @@ class HistoryUtilsTest {
         )
 
         assertEquals("URL", getTitle(barcode))
+    }
+
+    /**
+     * Test getTitle returns "ISBN" for TYPE_ISBN barcodes
+     */
+    @Test
+    fun getTitle_isbnTypeNoTitle_returnsIsbn() {
+        val barcode = BarcodeModel(
+            id = 1,
+            date = Date(),
+            type = Barcode.TYPE_ISBN,
+            format = Barcode.FORMAT_EAN_13,
+            title = null,
+            barcode = "9780743273565"
+        )
+
+        assertEquals("ISBN", getTitle(barcode))
+    }
+
+    /**
+     * Test getTitle returns "ISBN" for EAN-13 with 978 prefix even when type is not TYPE_ISBN
+     */
+    @Test
+    fun getTitle_ean13With978PrefixNoTitle_returnsIsbn() {
+        val barcode = BarcodeModel(
+            id = 1,
+            date = Date(),
+            type = Barcode.TYPE_PRODUCT,
+            format = Barcode.FORMAT_EAN_13,
+            title = null,
+            barcode = "9780743273565"
+        )
+
+        assertEquals("ISBN", getTitle(barcode))
+    }
+
+    /**
+     * Test getTitle returns "ISBN" for EAN-13 with 979 prefix
+     */
+    @Test
+    fun getTitle_ean13With979PrefixNoTitle_returnsIsbn() {
+        val barcode = BarcodeModel(
+            id = 1,
+            date = Date(),
+            type = Barcode.TYPE_PRODUCT,
+            format = Barcode.FORMAT_EAN_13,
+            title = null,
+            barcode = "9791032318881"
+        )
+
+        assertEquals("ISBN", getTitle(barcode))
+    }
+
+    /**
+     * Test getTitle returns "EAN13" for EAN-13 without ISBN prefix
+     */
+    @Test
+    fun getTitle_ean13WithoutIsbnPrefixNoTitle_returnsEan13() {
+        val barcode = BarcodeModel(
+            id = 1,
+            date = Date(),
+            type = Barcode.TYPE_PRODUCT,
+            format = Barcode.FORMAT_EAN_13,
+            title = null,
+            barcode = "8412345678901"
+        )
+
+        assertEquals("EAN13", getTitle(barcode))
+    }
+
+    // --- isIsbn tests ---
+
+    /**
+     * Test isIsbn returns true for TYPE_ISBN barcodes
+     */
+    @Test
+    fun isIsbn_isbnType_returnsTrue() {
+        val barcode = BarcodeModel(
+            id = 1,
+            date = Date(),
+            type = Barcode.TYPE_ISBN,
+            format = Barcode.FORMAT_EAN_13,
+            title = null,
+            barcode = "9780743273565"
+        )
+
+        assertTrue(isIsbn(barcode))
+    }
+
+    /**
+     * Test isIsbn returns true for EAN-13 with 978 prefix
+     */
+    @Test
+    fun isIsbn_ean13With978Prefix_returnsTrue() {
+        val barcode = BarcodeModel(
+            id = 1,
+            date = Date(),
+            type = Barcode.TYPE_PRODUCT,
+            format = Barcode.FORMAT_EAN_13,
+            title = null,
+            barcode = "9780743273565"
+        )
+
+        assertTrue(isIsbn(barcode))
+    }
+
+    /**
+     * Test isIsbn returns true for EAN-13 with 979 prefix
+     */
+    @Test
+    fun isIsbn_ean13With979Prefix_returnsTrue() {
+        val barcode = BarcodeModel(
+            id = 1,
+            date = Date(),
+            type = Barcode.TYPE_PRODUCT,
+            format = Barcode.FORMAT_EAN_13,
+            title = null,
+            barcode = "9791032318881"
+        )
+
+        assertTrue(isIsbn(barcode))
+    }
+
+    /**
+     * Test isIsbn returns false for regular EAN-13
+     */
+    @Test
+    fun isIsbn_regularEan13_returnsFalse() {
+        val barcode = BarcodeModel(
+            id = 1,
+            date = Date(),
+            type = Barcode.TYPE_PRODUCT,
+            format = Barcode.FORMAT_EAN_13,
+            title = null,
+            barcode = "8412345678901"
+        )
+
+        assertFalse(isIsbn(barcode))
+    }
+
+    /**
+     * Test isIsbn returns false for non-EAN-13 formats
+     */
+    @Test
+    fun isIsbn_upcAFormat_returnsFalse() {
+        val barcode = BarcodeModel(
+            id = 1,
+            date = Date(),
+            type = Barcode.TYPE_PRODUCT,
+            format = Barcode.FORMAT_UPC_A,
+            title = null,
+            barcode = "012345678901"
+        )
+
+        assertFalse(isIsbn(barcode))
+    }
+
+    /**
+     * Test isIsbn returns false for EAN-13 with ISBN prefix but non-digit content
+     */
+    @Test
+    fun isIsbn_ean13With978PrefixNonDigit_returnsFalse() {
+        val barcode = BarcodeModel(
+            id = 1,
+            date = Date(),
+            type = Barcode.TYPE_PRODUCT,
+            format = Barcode.FORMAT_EAN_13,
+            title = null,
+            barcode = "978074327356X"
+        )
+
+        assertFalse(isIsbn(barcode))
     }
 }
