@@ -265,4 +265,114 @@ class SavedBarcodeDaoRobolectricTest {
         val ids = results.map { it.barcode.id }.sorted()
         assertEquals(listOf(1, 3), ids)
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `getTagBarcodeCountsFiltered with no filters should return all counts`() = runTest {
+        val tag = Tag(id = 1, name = "Tag1", color = "#ff0000")
+        val b1 = SavedBarcode(id = 1, date = Date(), type = 1, format = 1, title = "B1", barcode = "111")
+        val b2 = SavedBarcode(id = 2, date = Date(), type = 1, format = 1, title = "B2", barcode = "222")
+
+        db.tagDao().insertAll(tag)
+        dao.insertAll(b1, b2)
+        dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = b1.id, tagId = tag.id))
+        dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = b2.id, tagId = tag.id))
+
+        val counts = dao.getTagBarcodeCountsFiltered(
+            showOnlyFavorites = false,
+            showOnlyLocked = false,
+            hideLocked = false,
+            query = null
+        ).first()
+
+        assertEquals(2, counts.first { it.tagId == tag.id }.count)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `getTagBarcodeCountsFiltered with showOnlyFavorites should count only favorites`() = runTest {
+        val tag = Tag(id = 1, name = "Tag1", color = "#ff0000")
+        val fav = SavedBarcode(id = 1, date = Date(), type = 1, format = 1, title = "Fav", barcode = "111", isFavorite = true)
+        val notFav = SavedBarcode(id = 2, date = Date(), type = 1, format = 1, title = "NotFav", barcode = "222")
+
+        db.tagDao().insertAll(tag)
+        dao.insertAll(fav, notFav)
+        dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = fav.id, tagId = tag.id))
+        dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = notFav.id, tagId = tag.id))
+
+        val counts = dao.getTagBarcodeCountsFiltered(
+            showOnlyFavorites = true,
+            showOnlyLocked = false,
+            hideLocked = false,
+            query = null
+        ).first()
+
+        assertEquals(1, counts.first { it.tagId == tag.id }.count)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `getTagBarcodeCountsFiltered with hideLocked should exclude locked barcodes`() = runTest {
+        val tag = Tag(id = 1, name = "Tag1", color = "#ff0000")
+        val normal = SavedBarcode(id = 1, date = Date(), type = 1, format = 1, title = "Normal", barcode = "111")
+        val locked = SavedBarcode(id = 2, date = Date(), type = 1, format = 1, title = "Locked", barcode = "222", isLocked = true)
+
+        db.tagDao().insertAll(tag)
+        dao.insertAll(normal, locked)
+        dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = normal.id, tagId = tag.id))
+        dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = locked.id, tagId = tag.id))
+
+        val counts = dao.getTagBarcodeCountsFiltered(
+            showOnlyFavorites = false,
+            showOnlyLocked = false,
+            hideLocked = true,
+            query = null
+        ).first()
+
+        assertEquals(1, counts.first { it.tagId == tag.id }.count)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `getTagBarcodeCountsFiltered with showOnlyLocked should count only locked barcodes`() = runTest {
+        val tag = Tag(id = 1, name = "Tag1", color = "#ff0000")
+        val normal = SavedBarcode(id = 1, date = Date(), type = 1, format = 1, title = "Normal", barcode = "111")
+        val locked = SavedBarcode(id = 2, date = Date(), type = 1, format = 1, title = "Locked", barcode = "222", isLocked = true)
+
+        db.tagDao().insertAll(tag)
+        dao.insertAll(normal, locked)
+        dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = normal.id, tagId = tag.id))
+        dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = locked.id, tagId = tag.id))
+
+        val counts = dao.getTagBarcodeCountsFiltered(
+            showOnlyFavorites = false,
+            showOnlyLocked = true,
+            hideLocked = false,
+            query = null
+        ).first()
+
+        assertEquals(1, counts.first { it.tagId == tag.id }.count)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `getTagBarcodeCountsFiltered with search query should count only matching barcodes`() = runTest {
+        val tag = Tag(id = 1, name = "Tag1", color = "#ff0000")
+        val match = SavedBarcode(id = 1, date = Date(), type = 1, format = 1, title = "Coffee Shop", barcode = "111")
+        val noMatch = SavedBarcode(id = 2, date = Date(), type = 1, format = 1, title = "Other", barcode = "222")
+
+        db.tagDao().insertAll(tag)
+        dao.insertAll(match, noMatch)
+        dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = match.id, tagId = tag.id))
+        dao.insertBarcodeTag(BarcodeTagCrossRef(barcodeId = noMatch.id, tagId = tag.id))
+
+        val counts = dao.getTagBarcodeCountsFiltered(
+            showOnlyFavorites = false,
+            showOnlyLocked = false,
+            hideLocked = false,
+            query = "coffee"
+        ).first()
+
+        assertEquals(1, counts.first { it.tagId == tag.id }.count)
+    }
 }

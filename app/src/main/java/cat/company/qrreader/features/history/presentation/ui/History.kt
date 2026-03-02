@@ -79,6 +79,8 @@ fun History(
     val selectedTagId by viewModel.selectedTagId.collectAsStateWithLifecycle()
     val showOnlyFavorites by viewModel.showOnlyFavorites.collectAsStateWithLifecycle()
     val showOnlySafe by viewModel.showOnlySafe.collectAsStateWithLifecycle()
+    val hideLocked by viewModel.hideLocked.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
 
     HistoryDrawerSetup(drawerState)
 
@@ -92,7 +94,9 @@ fun History(
                 showOnlySafe = showOnlySafe,
                 onToggleSafe = viewModel::toggleSafeSection,
                 onNavigateToSettings = onNavigateToSettings,
-                selectTag = { viewModel.onTagSelected(it?.id) }
+                selectTag = { viewModel.onTagSelected(it?.id) },
+                hideLocked = hideLocked,
+                searchQuery = searchQuery
             )
         }
     ) {

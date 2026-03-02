@@ -100,6 +100,22 @@ class BarcodeRepositoryImpl(database: BarcodesDb) : BarcodeRepository {
         }
     }
 
+    override fun getTagBarcodeCountsFiltered(
+        showOnlyFavorites: Boolean,
+        showOnlyLocked: Boolean,
+        hideLocked: Boolean,
+        query: String?
+    ): Flow<Map<Int, Int>> {
+        return barcodeDao.getTagBarcodeCountsFiltered(
+            showOnlyFavorites = showOnlyFavorites,
+            showOnlyLocked = showOnlyLocked,
+            hideLocked = hideLocked,
+            query = query
+        ).map { list ->
+            list.associate { it.tagId to it.count }
+        }
+    }
+
     override fun getFavoritesCount(): Flow<Int> {
         return barcodeDao.getFavoritesCount()
     }

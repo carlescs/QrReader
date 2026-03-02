@@ -54,6 +54,7 @@ class SaveBarcodeWithTagsUseCaseTest {
         override suspend fun toggleFavorite(barcodeId: Int, isFavorite: Boolean) {}
         override suspend fun toggleLock(barcodeId: Int, isLocked: Boolean) {}
         override fun getTagBarcodeCounts(): Flow<Map<Int, Int>> = flowOf(emptyMap())
+        override fun getTagBarcodeCountsFiltered(showOnlyFavorites: Boolean, showOnlyLocked: Boolean, hideLocked: Boolean, query: String?): Flow<Map<Int, Int>> = flowOf(emptyMap())
         override fun getFavoritesCount(): Flow<Int> = flowOf(0)
         override fun getLockedCount(): Flow<Int> = flowOf(0)
         override suspend fun findByContent(content: String): BarcodeModel? = null

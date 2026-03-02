@@ -148,6 +148,11 @@ class HistoryViewModel(
         combine(settingsRepository.hideLockedWhenNotInSafe, settingsRepository.biometricLockEnabled) { hide, biometric -> hide && biometric }
     ) { hideTagged, searchAcrossAll, hideLocked -> Triple(hideTagged, searchAcrossAll, hideLocked) }
 
+    /** Whether locked barcodes are hidden from the main history list. */
+    val hideLocked: StateFlow<Boolean> = settingsFlags
+        .map { it.third }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     val savedBarcodes: Flow<List<BarcodeWithTagsModel>> =
         combine(
             _selectedTagId,
