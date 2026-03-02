@@ -35,11 +35,20 @@ fun TagsFilterList(
     viewModel: TagsViewModel = koinViewModel(),
     selectedTagId: Int?,
     showTagCounters: Boolean = true,
+    showOnlyFavorites: Boolean = false,
+    showOnlyLocked: Boolean = false,
+    hideLocked: Boolean = false,
+    searchQuery: String = "",
     selectTag: (TagModel?) -> Unit
 ) {
     viewModel.loadTags()
     val items by viewModel.tags.collectAsState(initial = emptyList())
-    val tagCounts by viewModel.tagBarcodeCounts.collectAsState(initial = emptyMap())
+    val tagCounts by viewModel.getTagBarcodeCountsFiltered(
+        showOnlyFavorites = showOnlyFavorites,
+        showOnlyLocked = showOnlyLocked,
+        hideLocked = hideLocked,
+        query = searchQuery.trim().takeIf { it.isNotBlank() }
+    ).collectAsState(initial = emptyMap())
     val ioCoroutine = rememberCoroutineScope()
     val listState = rememberLazyListState()
 

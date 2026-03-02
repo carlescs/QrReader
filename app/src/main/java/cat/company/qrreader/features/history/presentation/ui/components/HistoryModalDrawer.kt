@@ -64,6 +64,8 @@ import org.koin.androidx.compose.koinViewModel
  *                     Opening requires successful biometric authentication; closing requires none.
  * @param onNavigateToSettings Callback invoked when the user taps the Settings item
  * @param selectTag Callback invoked when the user selects or clears a tag filter
+ * @param hideLocked Whether locked barcodes are hidden from the main history list
+ * @param searchQuery Current search query text used to filter the main history list
  */
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,6 +77,8 @@ fun HistoryModalDrawerContent(
     onToggleSafe: () -> Unit,
     onNavigateToSettings: () -> Unit,
     selectTag: (TagModel?) -> Unit,
+    hideLocked: Boolean = false,
+    searchQuery: String = "",
     tagsViewModel: TagsViewModel = koinViewModel(),
     settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
@@ -163,7 +167,15 @@ fun HistoryModalDrawerContent(
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             Box(modifier = Modifier.weight(1f)) {
-                TagsFilterList(viewModel = tagsViewModel, selectedTagId = selectedTagId, showTagCounters = showTagCounters) {
+                TagsFilterList(
+                    viewModel = tagsViewModel,
+                    selectedTagId = selectedTagId,
+                    showTagCounters = showTagCounters,
+                    showOnlyFavorites = showOnlyFavorites,
+                    showOnlyLocked = showOnlySafe,
+                    hideLocked = hideLocked,
+                    searchQuery = searchQuery
+                ) {
                     selectTag(it)
                 }
             }

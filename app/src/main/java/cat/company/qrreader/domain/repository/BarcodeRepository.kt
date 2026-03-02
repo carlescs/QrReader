@@ -89,6 +89,16 @@ interface BarcodeRepository {
     fun getTagBarcodeCounts(): Flow<Map<Int, Int>>
 
     /**
+     * Get barcode counts grouped by tag ID, applying active history filters
+     */
+    fun getTagBarcodeCountsFiltered(
+        showOnlyFavorites: Boolean,
+        showOnlyLocked: Boolean,
+        hideLocked: Boolean,
+        query: String?
+    ): Flow<Map<Int, Int>>
+
+    /**
      * Get the count of favorite barcodes
      */
     fun getFavoritesCount(): Flow<Int>

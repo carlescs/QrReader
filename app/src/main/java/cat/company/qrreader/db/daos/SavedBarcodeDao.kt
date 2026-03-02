@@ -114,6 +114,42 @@ abstract class SavedBarcodeDao {
     @Query("SELECT tagId, COUNT(*) as count FROM barcode_tag_cross_ref GROUP BY tagId")
     abstract fun getTagBarcodeCounts(): Flow<List<TagBarcodeCount>>
 
+    @Query(
+        """
+        SELECT tagId, COUNT(*) as count FROM barcode_tag_cross_ref
+        WHERE barcodeId IN (
+            SELECT id FROM saved_barcodes
+            WHERE (
+                -- Favorites filter
+                NOT :showOnlyFavorites OR is_favorite = 1
+            )
+            AND (
+                -- Locked filter: only show locked items when flag is true
+                NOT :showOnlyLocked OR is_locked = 1
+            )
+            AND (
+                -- Hide locked filter: hide locked items when flag is true.
+                -- Conditional on showOnlyLocked so contradicting constraints don't produce an empty set.
+                NOT (:hideLocked AND NOT :showOnlyLocked) OR is_locked = 0
+            )
+            AND (
+                -- Search filter: match query in title, description, or barcode
+                COALESCE(TRIM(:query), '') = '' OR
+                title LIKE '%' || TRIM(:query) || '%' COLLATE NOCASE OR
+                description LIKE '%' || TRIM(:query) || '%' COLLATE NOCASE OR
+                barcode LIKE '%' || TRIM(:query) || '%' COLLATE NOCASE
+            )
+        )
+        GROUP BY tagId
+        """
+    )
+    abstract fun getTagBarcodeCountsFiltered(
+        showOnlyFavorites: Boolean,
+        showOnlyLocked: Boolean,
+        hideLocked: Boolean,
+        query: String?
+    ): Flow<List<TagBarcodeCount>>
+
     @Query("SELECT COUNT(*) FROM saved_barcodes WHERE is_favorite = 1")
     abstract fun getFavoritesCount(): Flow<Int>
 

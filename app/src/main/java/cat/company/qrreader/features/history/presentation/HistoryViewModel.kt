@@ -126,6 +126,11 @@ class HistoryViewModel(
         settingsRepository.biometricLockEnabled
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    /** Whether locked barcodes are hidden from the main history list. */
+    val hideLocked: StateFlow<Boolean> = settingsFlags
+        .map { it.third }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     private val _unlockedBarcodeIds = MutableStateFlow<Set<Int>>(emptySet())
     val unlockedBarcodeIds: StateFlow<Set<Int>> = _unlockedBarcodeIds.asStateFlow()
 
