@@ -144,7 +144,7 @@
     <string name="search_across_all_tags">Search across all tags</string>
     <string name="search_across_all_tags_description">When enabled, search results include barcodes from all tags, even with an active tag filter.</string>
     <string name="show_tag_counters">Show barcode count per tag</string>
-    <string name="show_tag_counters_description">Shows the number of barcodes assigned to each tag in the tag filter list.</string>
+    <string name="show_tag_counters_description">When enabled, the number of barcodes assigned to each tag is shown in the tag filter list.</string>
     <string name="biometric_lock_enabled">Lock individual barcodes</string>
     <string name="biometric_lock_description">When enabled, you can lock individual barcodes so they require biometric authentication to view.</string>
     <string name="duplicate_check_enabled">Duplicate scan detection</string>
