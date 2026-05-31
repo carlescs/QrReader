@@ -22,8 +22,8 @@ print = "1.1.0"
 navigation = "2.9.8"
 
 # Compose
-composeUi = "1.11.1"
-composeMaterial = "1.11.1"
+composeUi = "1.11.2"
+composeMaterial = "1.11.2"
 composeMaterial3 = "1.4.0"
 composeCompiler = "1.5.11"
 composeIconsExtended = "1.7.8"
